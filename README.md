@@ -1,7 +1,7 @@
 # Compiler for Go-like programming language
 
 * Implementation of a Go-like language compiler done in C. 
-* [BUT FIT](https://www.fit.vut.cz/) school project from the subject [Formal Languages and Compilers](https://www.fit.vut.cz/study/course/13305/.cs) (IFJ).
+* [BUT FIT](https://www.fit.vut.cz/) school project from the subject [Formal Languages and Compilers](https://www.fit.vut.cz/study/course/13305/.en) (IFJ).
 
 ## Stakeholders 
 * [Tomáš Hrúz](https://github.com/Zokinko), the One with the C# Mind
