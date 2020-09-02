@@ -1,6 +1,6 @@
-# Compiler for Python-like programming language
+# Compiler for Go-like programming language
 
-* Implementation of a python-like language compiler done in C. 
+* Implementation of a Go-like language compiler done in C. 
 * [BUT FIT](https://www.fit.vut.cz/) school project from the subject [Formal Languages and Compilers](https://www.fit.vut.cz/study/course/13305/.cs) (IFJ).
 
 ## Stakeholders 
