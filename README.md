@@ -19,9 +19,11 @@
 
 ## Timeline
 * Deadlines:
-	* **9.12.2020 The Absolute Deadline**
-	* 27.11.2020 The Soft Deadline
+	* 30.9.2020 Team leader registration
 	* 20.11.2020 The Ideal Deadline
+	* 27.11.2020 The Soft Deadline
+	* **9.12.2020 The Absolute Deadline**
+
 	
 * Implementation planning
 	* By the 10.9.2020 have finished organization, analysis and planning
