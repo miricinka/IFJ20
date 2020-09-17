@@ -20,7 +20,7 @@
 ## Timeline
 * Deadlines:
 	* **10.12.2020 The Absolute Deadline**
-	* 29.11.2020 The Soft Deadline
+	* 27.11.2020 The Soft Deadline
 	* 20.11.2020 The Ideal Deadline
 	
 * Implementation planning
