@@ -20,6 +20,7 @@
 ## Timeline
 * Deadlines:
 	* 30.9.2020 Team leader registration
+	* 2.10.2020 Adding members to the team
 	* 20.11.2020 The Ideal Deadline
 	* 27.11.2020 The Soft Deadline
 	* **9.12.2020 The Absolute Deadline**
