@@ -7,7 +7,6 @@
 * [Tomáš Hrúz](https://github.com/Zokinko), the One with the C# Mind
 * [Mirka Kolaříková](https://github.com/miricinka), the One who actually codes
 * [Aleš Řezáč](https://github.com/xrezac21), the brilliant Mathematician
-* Ľubomír Závodský, the Miracle of the East
 * [Martin Žovinec](https://github.com/xzovin00), the planning Mastermind
 
 ## Goals
