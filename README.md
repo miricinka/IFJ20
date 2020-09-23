@@ -11,10 +11,8 @@
 
 ## Goals
 * Have a **working project so we pass the subject** (*obviously*)
-* Make a project using the agile methodology and Scrum framework
 * Have a Github repository with efficient planning via usage of many Github funcitions for a nice CV
 * Learn to use tests for headache-less debugging process
-* Learn how to use CMake for a glorious MakeFile
 
 ## Timeline
 * Deadlines:
