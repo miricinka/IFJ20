@@ -21,9 +21,3 @@
 	* 20.11.2020 The Ideal Deadline
 	* 27.11.2020 The Soft Deadline
 	* **9.12.2020 The Absolute Deadline**
-
-	
-* Implementation planning
-	* By the 10.9.2020 have finished organization, analysis and planning
-	* By the 31.9.2020 have implemented a "*nice chunk*" of the project.
-	* By the 1.11. have implemented either the whole project in some way and start testing/debugging it + extensions or have a "*big chunk*" of project implemented, tested, pristine and bugless.
