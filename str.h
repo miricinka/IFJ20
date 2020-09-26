@@ -46,6 +46,6 @@ int strCmpConstStr(string *s1, char *s2);
 char *strGetStr(string *s);
 int strGetLength(string *s);
 
-#endif //UNTITLED_STRING_H
+#endif //IFJ_STRING_H
 
 

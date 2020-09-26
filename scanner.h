@@ -15,11 +15,16 @@
  *  Kolaříková Mirka    <xkolar76@stud.fit.vutbr.cz>
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
+#ifndef SCANNER_H
+#define SCANNER_H
+
 
 #include <stdio.h>
 #include <ctype.h> 
 #include <stdlib.h>
 
+#include "str.h"
+#include "main.h"
 /*** State definitions ***/
 
 #define ID          0
@@ -46,9 +51,9 @@
 
 #define EQ          20  //  ==
 #define NEQ         21  //  !=
-#define L           22  //  <
-#define LEQ         23  //  >
-#define G           24  //  <=
+#define LESS        22  //  <
+#define GREAT       23  //  >
+#define LEQ         24  //  <=
 #define GEQ         25  //  >=
 
 /* Types */
@@ -59,10 +64,14 @@
 
 /* Special Characters */
 
-#define L_BRACKET   41  //  (
-#define R_BRACKET   42  //  )
-#define ASSIGN      43  //  =
-#define COMMA       44  //  ,
+#define L_PAR       41  //  (
+#define R_PAR       42  //  )
+#define L_BR        43  //  {
+#define R_BR        44  //  }
+#define ASSIGN      45  //  =
+#define COMMA       46  //  ,
+#define SEMICOL     47  //  ;
+#define VAR_DEF     48  //  :=
 
 #define EOL         50
 #define ENDFILE     51
@@ -70,7 +79,7 @@
 /* Non-finate states */
 
 #define START       60
-#define S_EQ        61
+#define S_ASSIGN    61
 #define S_DIV       62
 #define S_L         63
 #define S_G         64
@@ -81,4 +90,6 @@
 #define S_FLOAT     69
 #define S_STRING    70
 
-int get_next_char();
+int get_new_token(string *tokenStr);
+
+#endif /* SCANNER_H*/

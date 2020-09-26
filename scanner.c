@@ -16,13 +16,15 @@
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
+
 #include "scanner.h"
 
 int state = START;
 
-int get_next_char() {
+int get_new_token(string *tokenStr) {
 
     char next_char;
+    tokenStr = NULL;
 
 
     while (1){
@@ -38,7 +40,7 @@ int get_next_char() {
                     state = START;
                 }
 
-                // Finite states
+                // end states
 
                 switch (next_char){
 
@@ -49,11 +51,17 @@ int get_next_char() {
                     case '*':
                         return MUL;
                     case '(':
-                        return L_BRACKET;
+                        return L_PAR;
                     case ')':
-                        return R_BRACKET;
+                        return R_PAR;
                     case ',':
                         return COMMA;
+                    case ';':
+                        return SEMICOL;
+                    case '{':
+                        return L_BR;
+                    case '}':
+                        return R_BR;
                     case '\n':
                         return EOL;
                     case EOF:
@@ -65,7 +73,7 @@ int get_next_char() {
                         state = S_DIV;
                         break;
                     case '=':
-                        state = S_EQ;
+                        state = S_ASSIGN;
                         break;
                     case '<':
                         state = S_L;
@@ -85,6 +93,13 @@ int get_next_char() {
                 }
                 break;
             
+            case S_ASSIGN:
+                state = START;
+                if(next_char == '=')
+                    return EQ;
+                ungetc(next_char, stdin);
+                return ASSIGN;
+                break;
 
             default:
                 break;

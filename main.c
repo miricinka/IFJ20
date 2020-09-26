@@ -22,7 +22,13 @@
 #include "main.h"
 
 int main() {
-   int i = get_next_char();
-   printf("%d\n",i);
-   return 0;
+
+	string *tokenStr = NULL;
+	int i = 0;
+	while(i != 51){
+		i = get_new_token(tokenStr);
+		printf("%d\n",i);
+	}
+
+	return 0;
 }
