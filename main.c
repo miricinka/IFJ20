@@ -23,12 +23,17 @@
 
 int main() {
 
-	string *tokenStr = NULL;
+	string tokenStr;
+	strInit(&tokenStr);
 	int i = 0;
 	while(i != 51){
-		i = get_new_token(tokenStr);
+		i = get_new_token(&tokenStr);
 		printf("%d\n",i);
+		if(i == 0){
+			printf("%s\n",tokenStr.str);
+		}
 	}
 
+	strFree(&tokenStr);
 	return 0;
 }

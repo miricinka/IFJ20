@@ -24,7 +24,7 @@ int state = START;
 int get_new_token(string *tokenStr) {
 
     char next_char;
-    tokenStr = NULL;
+    //tokenStr = NULL;
 
 
     while (1){
