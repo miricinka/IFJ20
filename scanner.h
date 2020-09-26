@@ -89,6 +89,8 @@
 #define S_INT       68
 #define S_FLOAT     69
 #define S_STRING    70
+#define L_COM       71
+#define S_VAR_DEF   72
 
 int get_new_token(string *tokenStr);
 

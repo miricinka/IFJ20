@@ -69,7 +69,7 @@ int get_new_token(string *tokenStr) {
 
                 // Possible non-finite states 
 
-                    case '/':
+                    case '/': //TODO
                         state = S_DIV;
                         break;
                     case '=':
@@ -84,22 +84,89 @@ int get_new_token(string *tokenStr) {
                     case '!':
                         state = S_NEG;
                         break;
-                    case '\'':
+                    case ':':
+                        state = S_VAR_DEF;
+                        break;
+                    case '\'': //TODO
                         state = S_STRING;
                         break;
+                    case '_':
+                        if(strAddChar(tokenStr, next_char)){
+                            exit(ERR_INTERNAL);}
+                        state = S_ID;
 
                     default:
                         break;
                 }
                 break;
             
-            case S_ASSIGN:
+            case S_ASSIGN: // ==
                 state = START;
                 if(next_char == '=')
                     return EQ;
                 ungetc(next_char, stdin);
                 return ASSIGN;
                 break;
+
+            case S_L: // <=
+                state = START;
+                if(next_char == '=')
+                    return LEQ;
+                ungetc(next_char, stdin);
+                return LESS;
+                break;
+
+            case S_G: // >=
+                state = START;
+                if(next_char == '=')
+                    return GEQ;
+                ungetc(next_char, stdin);
+                return GREAT;
+                break;
+
+            case S_NEG: //!=
+                state = START;
+                if(next_char == '=')
+                    return NEQ;
+                exit(ERR_LEXICAL); //invalid lexem start
+
+            case S_VAR_DEF: // :=
+                state = START;
+                if(next_char == '=')
+                    return VAR_DEF;
+                exit(ERR_LEXICAL); //invalid lexem start
+
+            case S_DIV:
+                if(next_char == '/'){ //
+                    state = L_COM;
+                    break;
+                }
+                state = START;
+                ungetc(next_char, stdin); // /
+                return DIV;
+                break;
+
+            case L_COM:
+                if(next_char == '\n'){ //end of comment
+                    state = START;
+                    ungetc(next_char, stdin);
+                }else if(next_char == EOF){
+                    state = START;
+                    ungetc(next_char, stdin); //EOF in line commentar
+                }else{} //ignor comment
+                break;
+
+            case S_ID:
+                if(isalnum(next_char) || next_char == '_'){
+                   if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);} 
+                }else{
+                    state = START;
+                    ungetc(next_char, stdin);
+                    return ID;
+                }
+                break;
+
 
             default:
                 break;

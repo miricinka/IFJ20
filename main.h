@@ -36,5 +36,3 @@
 #define ERR_SEMANTIC_OTHER 7
 #define ERR_RUNTIME 9
 #define ERR_INTERNAL 99
-
-#define MACRO_NAME_PRINT(x) printf("%s\n",#x)
