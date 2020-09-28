@@ -158,11 +158,13 @@ int get_new_token(string *tokenStr) {
             case S_DIV:
                 if(next_char == '/'){ //
                     state = L_COM;
-                    break;
+                }else if(next_char == '*'){ // /*
+                    state = S_BLOCK;
+                }else{ // /
+                    state = START;
+                    ungetc(next_char, stdin); 
+                    return DIV;
                 }
-                state = START;
-                ungetc(next_char, stdin); // /
-                return DIV;
                 break;
 
             case L_COM:
@@ -303,14 +305,89 @@ int get_new_token(string *tokenStr) {
                 }else if(next_char == '\n' || next_char == EOF){
                     exit(ERR_LEXICAL); //EOF EOL before end of string
                 }else if(next_char <= 31){
-                    exit(ERR_LEXICAL); //chars <31 must use escape sequence
+                    exit(ERR_LEXICAL); //chars <=31 must use escape sequence
+                }else if(next_char == '\\'){
+                    state = S_ESC;   //hexadecimal sequence
                 }else{
                     if(strAddChar(tokenStr, next_char)){
                         exit(ERR_INTERNAL);}
                 }
+                break;
+            case S_BLOCK:
+                if(next_char == '*'){
+                    next_char = getc(stdin);
+                    if(next_char == '/'){
+                        state = START;
+                        break;
+                    }else{
+                    //   
+                    }
+                }else if(next_char == EOF){
+                    exit(ERR_LEXICAL); //unfinished block comment
+                }
+                break;
+            case S_ESC:
+                if(next_char == '\n' || next_char == EOF){
+                    exit(ERR_LEXICAL); //EOF or EOL before end of string
+                }else if(next_char == '"'){
+                    if(strAddChar(tokenStr, '"')){
+                        exit(ERR_INTERNAL);}
+                        state = S_STRING;
+                }else if(next_char == 'n'){
+                    if(strAddChar(tokenStr, '\n')){
+                        exit(ERR_INTERNAL);}
+                        state = S_STRING;
+                }else if(next_char == 't'){
+                    if(strAddChar(tokenStr, '\t')){
+                        exit(ERR_INTERNAL);}
+                        state = S_STRING;
+                }else if(next_char == '\\'){
+                    if(strAddChar(tokenStr, '\\')){
+                        exit(ERR_INTERNAL);}
+                        state = S_STRING;
+                }else if(next_char == 'x'){
+                    state = S_HEX;
+                }else{
+                    exit(ERR_LEXICAL); //incorrect escape sequence
+                }
+                break;
+
+            case S_HEX:
+                //todo
+                if(isxdigit(next_char)){
+                    int hex1 = hex_to_int(next_char);
+                    next_char = getc(stdin);
+                    if(isxdigit(next_char)){
+                        int hex2 = hex_to_int(next_char);
+                        int hexadecimal = hex1 * 16 + hex2;
+                        if(hexadecimal <= 0){
+                            exit(ERR_LEXICAL); //incorrect hexadecimal escape sequence
+                        }
+                        if(strAddChar(tokenStr, hexadecimal)){
+                            exit(ERR_INTERNAL);}
+                            state = S_STRING;
+                    }else{
+                        exit(ERR_LEXICAL); //incorrect hexadecimal escape sequence
+                    }
+
+                }else{
+                    exit(ERR_LEXICAL); //incorrect hexadecimal escape sequence
+                }
+                break;
 
             default:
                 break;
         }
     }
+}
+
+int hex_to_int(char ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    else if (ch >= 'a' && ch <= 'f')
+        return ch - 'a' + 10;
+    else if (ch >= 'A' && ch <= 'F')
+        return ch - 'A' + 10;
+    return -1;
 }

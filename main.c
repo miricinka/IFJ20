@@ -29,8 +29,8 @@ int main() {
 	while(i != 51){
 		i = get_new_token(&tokenStr);
 		printf("%d\n",i);
-		if(i == 0){
-			printf("%s\n",tokenStr.str);
+		if(i == 0 || i == 30 || i == 31 || i == 32){
+			printf("tokenStr: %s\n",tokenStr.str);
 		}
 	}
 

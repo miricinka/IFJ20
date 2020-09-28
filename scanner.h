@@ -103,7 +103,11 @@
 #define S_STRING    72
 #define L_COM       73
 #define S_VAR_DEF   74
+#define S_BLOCK     75
+#define S_ESC       76
+#define S_HEX       77
 
 int get_new_token(string *tokenStr);
+int hex_to_int(char ch);
 
 #endif /* SCANNER_H*/
