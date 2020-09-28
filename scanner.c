@@ -24,7 +24,7 @@ int state = START;
 int get_new_token(string *tokenStr) {
 
     char next_char;
-    //tokenStr = NULL;
+    strClear(tokenStr);
 
 
     while (1){
@@ -38,6 +38,8 @@ int get_new_token(string *tokenStr) {
                 // Ignore all white chars
                 if (isspace(next_char)){
                     state = START;
+                    if (next_char != '\n' && next_char != EOF)
+                        break;
                 }
 
                 // end states
@@ -94,8 +96,18 @@ int get_new_token(string *tokenStr) {
                         if(strAddChar(tokenStr, next_char)){
                             exit(ERR_INTERNAL);}
                         state = S_ID;
+                        break;
 
                     default:
+                        if(isalpha(next_char)){
+                            if(strAddChar(tokenStr, next_char)){
+                                exit(ERR_INTERNAL);}
+                            state = S_KW;
+                        }
+                        else{
+                            //printf("IM HERE, new char '%c'\n", next_char);
+                            exit(ERR_LEXICAL); //unknown lexem
+                        }
                         break;
                 }
                 break;
@@ -166,7 +178,39 @@ int get_new_token(string *tokenStr) {
                     return ID;
                 }
                 break;
-
+            case S_KW:
+                if(isalpha(next_char) || isdigit(next_char)){
+                    if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);}
+                }else if(next_char == '_'){ //no _ in KW
+                    if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);}
+                    state = S_ID;
+                    //ungetc(next_char, stdin);
+                }else{
+                    state = START;
+                    ungetc(next_char, stdin);
+                    if(strcmp(tokenStr->str, "func") == 0){
+                        strClear(tokenStr);return KW_FUNC;}
+                    else if(strcmp(tokenStr->str, "return") == 0){
+                        strClear(tokenStr);return KW_RETURN;}
+                    else if(strcmp(tokenStr->str, "float64") == 0){
+                        strClear(tokenStr);return KW_FLOAT64;} 
+                    else if(strcmp(tokenStr->str, "int") == 0){
+                        strClear(tokenStr);return KW_INT;}
+                    else if(strcmp(tokenStr->str, "string") == 0){
+                        strClear(tokenStr);return KW_STRING;} 
+                    else if(strcmp(tokenStr->str, "for") == 0){
+                        strClear(tokenStr);return KW_FOR;}
+                    else if(strcmp(tokenStr->str, "if") == 0){
+                        strClear(tokenStr);return KW_IF;}
+                    else if(strcmp(tokenStr->str, "else") == 0){
+                        strClear(tokenStr);return KW_ELSE;}
+                    else if(strcmp(tokenStr->str, "package") == 0){
+                        strClear(tokenStr);return KW_PACKAGE;}     
+                    else{return ID;}
+                }
+                break;
 
             default:
                 break;

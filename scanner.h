@@ -42,6 +42,8 @@
 #define KW_IF       7
 #define KW_ELSE     8
 
+#define KW_PACKAGE  9
+
 /* Operators*/
 
 #define ADD         10  //  +
