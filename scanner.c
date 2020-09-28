@@ -26,6 +26,9 @@ int get_new_token(string *tokenStr) {
     char next_char;
     strClear(tokenStr);
 
+    bool dot = false;       //temp var to ensure decimal point is in number just once
+    bool exp = false;       //temp var to ensure exponent is in number just once
+    bool sign = false;      //temp var to ensure sign is set correctly
 
     while (1){
 
@@ -89,7 +92,7 @@ int get_new_token(string *tokenStr) {
                     case ':':
                         state = S_VAR_DEF;
                         break;
-                    case '\'': //TODO
+                    case '"': //TODO
                         state = S_STRING;
                         break;
                     case '_':
@@ -103,6 +106,10 @@ int get_new_token(string *tokenStr) {
                             if(strAddChar(tokenStr, next_char)){
                                 exit(ERR_INTERNAL);}
                             state = S_KW;
+                        }else if(isdigit(next_char)){
+                            if(strAddChar(tokenStr, next_char)){
+                                exit(ERR_INTERNAL);}
+                            state = S_INT;
                         }
                         else{
                             //printf("IM HERE, new char '%c'\n", next_char);
@@ -211,6 +218,96 @@ int get_new_token(string *tokenStr) {
                     else{return ID;}
                 }
                 break;
+            case S_INT:
+                if(next_char == '.'){
+                    dot = true; //NUM.something
+                    if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);}
+                    state = S_FLOAT;
+                }else if(next_char == 'e' || next_char == 'E'){
+                    exp = true; //NUMesomething
+                    if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);}
+                    state = S_FLOAT;
+                }else if(isdigit(next_char)){
+                    if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);}
+                    //
+                }else if(isalpha(next_char)){
+                    exit(ERR_LEXICAL); //character is not allowed in number
+                }else{
+                    state = START;
+                    ungetc(next_char, stdin);
+                    return T_INT;
+                }
+                break;
+            case S_FLOAT:
+                if(dot == true && exp == false){
+                    if(isdigit(next_char)){ //only digit allowed after decimal point
+                        if(strAddChar(tokenStr, next_char)){
+                            exit(ERR_INTERNAL);}
+                    }else{
+                        exit(ERR_LEXICAL); //no decimal after decimal point
+                    }
+                    state = S_FLOAT2;
+                }else if(exp == true){
+                    if(isdigit(next_char)){
+                        if(strAddChar(tokenStr, next_char)){
+                            exit(ERR_INTERNAL);}
+                        state = S_FLOAT_E;
+                    }else if((next_char == '+' || next_char == '-')&& sign==false){
+                        sign = true; //set sign
+                        if(strAddChar(tokenStr, next_char)){
+                            exit(ERR_INTERNAL);}
+                        next_char = getc(stdin);
+                        if(isdigit(next_char)){
+                            if(strAddChar(tokenStr, next_char)){
+                                exit(ERR_INTERNAL);}
+                            state = S_FLOAT_E;
+                        }
+                    }else{exit(ERR_LEXICAL);} //bad exponent
+                }
+                break;
+            case S_FLOAT2:
+                if(isdigit(next_char)){
+                    if(strAddChar(tokenStr, next_char)){
+                            exit(ERR_INTERNAL);}
+                    //
+                }else if(next_char == 'e' || next_char == 'E'){
+                    exp = true;
+                    if(strAddChar(tokenStr, next_char)){
+                            exit(ERR_INTERNAL);}
+                    state = S_FLOAT;
+                }else{
+                    state = START;
+                    ungetc(next_char, stdin);
+                    return T_FLOAT;
+                }
+                break;
+            case S_FLOAT_E:
+                if(isdigit(next_char)){
+                   if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);} 
+                }else if(next_char == '.'){
+                    exit(ERR_LEXICAL); //decimal point after exponent
+                }else{
+                    state = START;
+                    ungetc(next_char, stdin);
+                    return T_FLOAT;
+                }
+                break;
+            case S_STRING:
+                if(next_char == '"'){
+                    state = START;
+                    return T_STRING;
+                }else if(next_char == '\n' || next_char == EOF){
+                    exit(ERR_LEXICAL); //EOF EOL before end of string
+                }else if(next_char <= 31){
+                    exit(ERR_LEXICAL); //chars <31 must use escape sequence
+                }else{
+                    if(strAddChar(tokenStr, next_char)){
+                        exit(ERR_INTERNAL);}
+                }
 
             default:
                 break;
