@@ -6,10 +6,10 @@
  *  Faculty of Information Technology, Brno University of Technology
  * 
  * FILE:
- *  main.c
+ *  main.h
  * 
  * DESCRIPTION:
- *  Main file
+ *  Main header file
  * 
  * AUTHORS:
  *  Tomáš Hrúz          <xhruzt00@stud.fit.vutbr.cz>
@@ -18,22 +18,21 @@
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <errno.h>
 
-#include "main.h"
+#include "scanner.h"
+#include "str.h"
 
-int main() {
-
-	string tokenStr;
-	strInit(&tokenStr);
-	int i = 0;
-	while(i != 51){
-		i = get_new_token(&tokenStr);
-		printf("%d\n",i);
-		if(i == 0 || i == 30 || i == 31 || i == 32){
-			printf("tokenStr: %s\n",tokenStr.str);
-		}
-	}
-
-	strFree(&tokenStr);
-	return 0;
-}
+#define ERR_LEXICAL 1
+#define ERR_SYNTAX 2
+#define ERR_SEMANTIC_DEFINITION 3
+#define ERR_SEMANTIC_DATATYPE 4
+#define ERR_SEMANTIC_COMPATIBILITY 5
+#define ERR_SEMANTIC_PARAM 6
+#define ERR_SEMANTIC_OTHER 7
+#define ERR_RUNTIME 9
+#define ERR_INTERNAL 99
