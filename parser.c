@@ -17,6 +17,3 @@
  *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
-// #include "parser.h"
-
-// tListOfInstr *list;

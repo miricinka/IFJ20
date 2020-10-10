@@ -21,12 +21,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <list.h>
 #include <stdbool.h>
 #include <errno.h>
 
+#include "ilist.h"
 #include "scanner.h"
 #include "str.h"
+
 
 #define ERR_LEXICAL 1
 #define ERR_SYNTAX 2

@@ -17,9 +17,3 @@
  *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
-// #include <stdlib.h>
-// #include <string.h>
-// #include <stdio.h>
-// #include <stdbool.h>
-// #include "scanner.h"
-// #include "ilist.h"

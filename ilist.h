@@ -15,7 +15,11 @@
  *  Hrúz Tomáš    <xhruzt00@stud.fit.vutbr.cz>
  *  
 */
+#include <stdio.h>
+#include <malloc.h>
 
+#ifndef IFJ_ILIST_H
+#define IFJ_ILIST_H
 // typy jednotlivych instrukci
 #define ID          0
 
@@ -126,3 +130,5 @@ void listNext(tListOfInstr *L);
 void listGoto(tListOfInstr *L, void *gotoInstr);
 void *listGetPointerLast(tListOfInstr *L);
 tInstr *listGetData(tListOfInstr *L);
+
+#endif //IFJ_ILIST_H

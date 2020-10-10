@@ -16,9 +16,7 @@
  *  
 */
 
-#include <stdio.h>
-#include <malloc.h>
-#include "list.h"
+#include "ilist.h"
 
 void listInit(tListOfInstr *L)
 // funkce inicializuje seznam instrukci
