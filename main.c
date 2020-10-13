@@ -22,19 +22,16 @@
 #include "main.h"
 
 int main() {
+	//initialize list of instructions
+	tListOfInstr instrList;
+   	listInit(&instrList);
 
-	string tokenStr;
-	strInit(&tokenStr);
-	int i = 0;
-	while(i != 51){
-		i = get_new_token(&tokenStr);
-		printf("%d\n",i);
-		if(i == 0 || i == 30 || i == 31 || i == 32){
-			printf("tokenStr: %s\n",tokenStr.str);
-		}
-
+   	int result = 0;
+   	result = parse(&instrList); // provedeme syntaktickou analyzu
+	if (result == 0)
+	{
+		printf("NOICE\n");
 	}
-
-	strFree(&tokenStr);
+	listFree(&instrList);   
 	return 0;
 }

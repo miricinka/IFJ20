@@ -26,7 +26,9 @@
 
 #include "ilist.h"
 #include "scanner.h"
+#include "parser.h"
 #include "str.h"
+
 
 
 #define ERR_LEXICAL 1

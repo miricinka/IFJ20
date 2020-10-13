@@ -13,6 +13,7 @@
  * 
  * AUTHORS:
  *  Hrúz Tomáš    <xhruzt00@stud.fit.vutbr.cz>
+ *  Taken from reference compiler by VUT FIT in Brno
  *  
 */
 

@@ -17,3 +17,18 @@
  *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
+
+#ifndef PARSER_H
+#define PARSER_H
+
+
+#include <stdio.h>
+#include <ctype.h> 
+#include <stdlib.h>
+
+#include "main.h"
+
+void generateInstruction(int instType);
+int parse(tListOfInstr *instrList);
+
+#endif /* PARSER_H*/
