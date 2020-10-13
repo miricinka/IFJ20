@@ -97,7 +97,9 @@ int isFull_precStack(struc_prec_stack *stackPtr);
  * @return pointer to token at top
  *         Null if empty
  */
-struc_token* peek_precStack(struc_prec_stack *stackPtr);
+struc_token* peek1_precStack(struc_prec_stack *stackPtr);
+struc_token* peek2_precStack(struc_prec_stack *stackPtr);
+struc_token* peek3_precStack(struc_prec_stack *stackPtr);
 
 /**
  * @brief adds new token (tokenNum, tokenStr) to stack top 

@@ -53,11 +53,29 @@ int isFull_precStack(struc_prec_stack *stackPtr){
 }
 
 /* returns pointer to token at top, or NULL if empty*/
-struc_token* peek_precStack(struc_prec_stack *stackPtr){
+struc_token* peek1_precStack(struc_prec_stack *stackPtr){
 	if(!isEmpty_precStack(stackPtr)){
 		return &stackPtr->token[stackPtr->top];
 	}else{
 		return NULL;
+	}
+}
+
+/* returns pointer to token at top-1, or NULL if empty*/
+struc_token* peek2_precStack(struc_prec_stack *stackPtr){
+	if(size_precStack(stackPtr) < 2){
+		return NULL;
+	}else{
+		return &stackPtr->token[stackPtr->top-1];
+	}
+}
+
+/* returns pointer to token at top-2, or NULL if empty*/
+struc_token* peek3_precStack(struc_prec_stack *stackPtr){
+	if(size_precStack(stackPtr) < 3){
+		return NULL;
+	}else{
+		return &stackPtr->token[stackPtr->top-2];
 	}
 }
 
