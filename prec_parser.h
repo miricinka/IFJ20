@@ -61,6 +61,8 @@
 #define RULE_EQ       33  //E -> E==E
 #define RULE_NEQ      34  //E -> E!=E
 
+#define TYPE_BOOL     40
+
 int prec_parse();
 struc_token* get_NT(struc_prec_stack *stackPtr);
 //int main();
