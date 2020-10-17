@@ -216,7 +216,9 @@ int get_new_token(string *tokenStr) {
                     else if(strcmp(tokenStr->str, "else") == 0){
                         strClear(tokenStr);return KW_ELSE;}
                     else if(strcmp(tokenStr->str, "package") == 0){
-                        strClear(tokenStr);return KW_PACKAGE;}     
+                        strClear(tokenStr);return KW_PACKAGE;}
+                    else if(strcmp(tokenStr->str, "main") == 0){
+                        strClear(tokenStr);return MAIN;}        
                     else{return ID;}
                 }
                 break;

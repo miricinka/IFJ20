@@ -30,5 +30,8 @@
 
 void generateInstruction(int instType);
 int parse(tListOfInstr *instrList);
+int program();
+int prolog();
+int fun_def_list();
 
 #endif /* PARSER_H*/

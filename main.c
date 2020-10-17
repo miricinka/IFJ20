@@ -28,6 +28,7 @@ int main() {
 
    	int result = 0;
    	result = parse(&instrList); // provedeme syntaktickou analyzu
+	   printf("RESULT:%d\n", result);
 	if (result == 0)
 	{
 		printf("NOICE\n");

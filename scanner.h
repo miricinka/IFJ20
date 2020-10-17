@@ -70,6 +70,7 @@
 #define F_CHR       37
 #define F_INT2FLOAT 38
 #define F_FLOAT2INT 39
+#define MAIN        40
 
 
 /* Special Characters */

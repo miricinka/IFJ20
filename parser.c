@@ -43,23 +43,61 @@ int parse(tListOfInstr *instrList)
   int result = 0;
   list = instrList;
   //kontrola prveho lexemu ak to je v poriadku zavola sa prvy non terminal <program> a ten spracuje dalej
-  if ((token = get_new_token(&tokenStr)) == ERR_LEXICAL)
-  {
-     // nastala chyba jiz pri nacteni prvniho lexemu
-     result = ERR_LEXICAL;
-  }
-  else if (token == 51)
-  {
-    printf("Soubor je prazdny\n");
-  }
+  token = get_new_token(&tokenStr);
+  //ak bude prazdny subor hodi chybu
+  if (token == ENDFILE)  result = ERR_SYNTAX;
   else
   {
-  generateInstruction(token);
-	printf("Token: %d\n",token);
-    //result = program();
+  //generateInstruction(token);
+  result = program();
   }
   
      
   strFree(&tokenStr);
   return result;	
+}
+//<prog>	<opt_eol>,	<prolog>,  <fun_def_list>,  <EOF>								
+int program()
+{
+  int result = 0;
+  switch (token)
+  {
+    case KW_PACKAGE:
+      // nejprve zavolame funkci prolog
+      result = prolog();      
+      // pokud v ramci teto funkce nastala chyba, vracime jeji kod a nepokracujeme dal
+      if (result != 0) return result;
+      // pokud probehlo vse v poradku, hlasime vysledek, ktery dostaneme od funkce fun_def_list
+      return fun_def_list();
+
+    case EOL:
+    //prisiel EOL pytame si dalsi token a musi to byt EOL alebo package a rekurzivne
+    //zavolame program a ak bol dalsi token package vybavi sa to v druhom case ak eol opakujeme
+      token = get_new_token(&tokenStr);
+      if (token != EOL && token != KW_PACKAGE) return ERR_SYNTAX;
+      return program();
+    break;
+  }
+  // pokud aktualni token je jiny nez vyse uvedene, jedna se o syntaktickou chybu
+  return ERR_SYNTAX;
+}
+
+//<prolog>	package,	main, 	EOL									
+int prolog()
+{
+  int result = 0;
+  //kontrola ci je za package token main
+  token = get_new_token(&tokenStr);
+  if (token != MAIN) return ERR_SYNTAX;
+  //kontrola ci je za main eol 
+  token = get_new_token(&tokenStr);
+  if (token != EOL) return ERR_SYNTAX;
+  return result;
+}
+
+int fun_def_list()
+{
+int result = 0;
+printf("hi\n");
+return result;
 }
