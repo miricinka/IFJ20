@@ -97,23 +97,22 @@ int get_new_token(string *tokenStr) {
                         break;
                     case '_':
                         if(strAddChar(tokenStr, next_char)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         state = S_ID;
                         break;
 
                     default:
                         if(isalpha(next_char)){
                             if(strAddChar(tokenStr, next_char)){
-                                exit(ERR_INTERNAL);}
+                                errorMsg(ERR_INTERNAL, "str.c allocation error");}
                             state = S_KW;
                         }else if(isdigit(next_char)){
                             if(strAddChar(tokenStr, next_char)){
-                                exit(ERR_INTERNAL);}
+                                errorMsg(ERR_INTERNAL, "str.c allocation error");}
                             state = S_INT;
                         }
                         else{
-                            //printf("IM HERE, new char '%c'\n", next_char);
-                            exit(ERR_LEXICAL); //unknown lexem
+                            errorMsg(ERR_LEXICAL, "unknown lexem");
                         }
                         break;
                 }
@@ -147,13 +146,13 @@ int get_new_token(string *tokenStr) {
                 state = START;
                 if(next_char == '=')
                     return NEQ;
-                exit(ERR_LEXICAL); //invalid lexem start
+                errorMsg(ERR_LEXICAL, "\"!\" is invalid lexem");
 
             case S_VAR_DEF: // :=
                 state = START;
                 if(next_char == '=')
                     return VAR_DEF;
-                exit(ERR_LEXICAL); //invalid lexem start
+                errorMsg(ERR_LEXICAL, "\":\" is invalid lexem");
 
             case S_DIV:
                 if(next_char == '/'){ //
@@ -180,7 +179,7 @@ int get_new_token(string *tokenStr) {
             case S_ID:
                 if(isalnum(next_char) || next_char == '_'){
                    if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);} 
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");} 
                 }else{
                     state = START;
                     ungetc(next_char, stdin);
@@ -190,10 +189,10 @@ int get_new_token(string *tokenStr) {
             case S_KW:
                 if(isalpha(next_char) || isdigit(next_char)){
                     if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                 }else if(next_char == '_'){ //no _ in KW
                     if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                     state = S_ID;
                     //ungetc(next_char, stdin);
                 }else{
@@ -250,16 +249,16 @@ int get_new_token(string *tokenStr) {
                 if(next_char == '.'){
                     dot = true; //NUM.something
                     if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                     state = S_FLOAT;
                 }else if(next_char == 'e' || next_char == 'E'){
                     exp = true; //NUMesomething
                     if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                     state = S_FLOAT;
                 }else if(isdigit(next_char)){
                     if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                 }else{
                     state = START;
                     ungetc(next_char, stdin);
@@ -270,38 +269,38 @@ int get_new_token(string *tokenStr) {
                 if(dot == true && exp == false){
                     if(isdigit(next_char)){ //only digit allowed after decimal point
                         if(strAddChar(tokenStr, next_char)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                     }else{
-                        exit(ERR_LEXICAL); //no decimal after decimal point
+                        errorMsg(ERR_LEXICAL, "no decimal after decimal point");
                     }
                     state = S_FLOAT2;
                 }else if(exp == true){
                     if(isdigit(next_char)){
                         if(strAddChar(tokenStr, next_char)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         state = S_FLOAT_E;
                     }else if((next_char == '+' || next_char == '-')&& sign==false){
                         sign = true; //set sign
                         if(strAddChar(tokenStr, next_char)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         next_char = getc(stdin);
                         if(isdigit(next_char)){
                             if(strAddChar(tokenStr, next_char)){
-                                exit(ERR_INTERNAL);}
+                                errorMsg(ERR_INTERNAL, "str.c allocation error");}
                             state = S_FLOAT_E;
                         }
-                    }else{exit(ERR_LEXICAL);} //bad exponent
+                    }else{errorMsg(ERR_LEXICAL, "incorrect exponent");}
                 }
                 break;
             case S_FLOAT2:
                 if(isdigit(next_char)){
                     if(strAddChar(tokenStr, next_char)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                     //
                 }else if(next_char == 'e' || next_char == 'E'){
                     exp = true;
                     if(strAddChar(tokenStr, next_char)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                     state = S_FLOAT;
                 }else{
                     state = START;
@@ -312,9 +311,9 @@ int get_new_token(string *tokenStr) {
             case S_FLOAT_E:
                 if(isdigit(next_char)){
                    if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);} 
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");} 
                 }else if(next_char == '.'){
-                    exit(ERR_LEXICAL); //decimal point after exponent
+                    errorMsg(ERR_LEXICAL, "decimal point after exponent");
                 }else{
                     state = START;
                     ungetc(next_char, stdin);
@@ -326,14 +325,14 @@ int get_new_token(string *tokenStr) {
                     state = START;
                     return T_STRING;
                 }else if(next_char == '\n' || next_char == EOF){
-                    exit(ERR_LEXICAL); //EOF EOL before end of string
+                    errorMsg(ERR_LEXICAL, "EOF or EOL before end of string");
                 }else if(next_char <= 31){
-                    exit(ERR_LEXICAL); //chars <=31 must use escape sequence
+                    errorMsg(ERR_LEXICAL, "chars <= must be written in escape sequence");
                 }else if(next_char == '\\'){
                     state = S_ESC;   //hexadecimal sequence
                 }else{
                     if(strAddChar(tokenStr, next_char)){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                 }
                 break;
             case S_BLOCK:
@@ -346,32 +345,32 @@ int get_new_token(string *tokenStr) {
                     //   
                     }
                 }else if(next_char == EOF){
-                    exit(ERR_LEXICAL); //unfinished block comment
+                    errorMsg(ERR_LEXICAL, "unfinished block comment");
                 }
                 break;
             case S_ESC:
                 if(next_char == '\n' || next_char == EOF){
-                    exit(ERR_LEXICAL); //EOF or EOL before end of string
+                    errorMsg(ERR_LEXICAL, "EOL or EOF before end of string"); //EOF or EOL before end of string
                 }else if(next_char == '"'){
                     if(strAddChar(tokenStr, '"')){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         state = S_STRING;
                 }else if(next_char == 'n'){
                     if(strAddChar(tokenStr, '\n')){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         state = S_STRING;
                 }else if(next_char == 't'){
                     if(strAddChar(tokenStr, '\t')){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         state = S_STRING;
                 }else if(next_char == '\\'){
                     if(strAddChar(tokenStr, '\\')){
-                        exit(ERR_INTERNAL);}
+                        errorMsg(ERR_INTERNAL, "str.c allocation error");}
                         state = S_STRING;
                 }else if(next_char == 'x'){
                     state = S_HEX;
                 }else{
-                    exit(ERR_LEXICAL); //incorrect escape sequence
+                    errorMsg(ERR_LEXICAL, "incorrect escape sequence");
                 }
                 break;
 
@@ -384,17 +383,17 @@ int get_new_token(string *tokenStr) {
                         int hex2 = hex_to_int(next_char);
                         int hexadecimal = hex1 * 16 + hex2;
                         if(hexadecimal <= 0){
-                            exit(ERR_LEXICAL); //incorrect hexadecimal escape sequence
+                            errorMsg(ERR_LEXICAL, "incorrect hexadecimal escape sequence");
                         }
                         if(strAddChar(tokenStr, hexadecimal)){
-                            exit(ERR_INTERNAL);}
+                            errorMsg(ERR_INTERNAL, "str.c allocation error");}
                             state = S_STRING;
                     }else{
-                        exit(ERR_LEXICAL); //incorrect hexadecimal escape sequence
+                        errorMsg(ERR_LEXICAL, "incorrect hexadecimal escape sequence");
                     }
 
                 }else{
-                    exit(ERR_LEXICAL); //incorrect hexadecimal escape sequence
+                    errorMsg(ERR_LEXICAL, "incorrect hexadecimal escape sequence");
                 }
                 break;
 

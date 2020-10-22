@@ -25,6 +25,8 @@
 
 #include "str.h"
 #include "main.h"
+#include "error.h"
+
 /*** State definitions ***/
 
 #define ID          0
