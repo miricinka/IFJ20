@@ -18,6 +18,6 @@
 #include "error.h"
 
 void errorMsg(int error_number, char* errorMessage){
-    fprintf(stderr,"Error number: %i) -- %s\n", error_number, errorMessage);
+    fprintf(stderr,"ERROR: (%i) -- %s\n", error_number, errorMessage);
     exit(error_number);
 }
