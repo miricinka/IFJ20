@@ -21,10 +21,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-
-#include <stdio.h>
 #include <ctype.h> 
-#include <stdlib.h>
 
 #include "main.h"
 
@@ -33,5 +30,12 @@ int parse(tListOfInstr *instrList);
 int program();
 int prolog();
 int fun_def_list();
+int fun_def();
+int stat_list();
+int fun_params();
+int fun_returns();
+int stat();
+int ass_exps();
+int fun_call_param();
 
 #endif /* PARSER_H*/
