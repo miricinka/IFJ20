@@ -260,9 +260,6 @@ int get_new_token(string *tokenStr) {
                 }else if(isdigit(next_char)){
                     if(strAddChar(tokenStr, next_char)){
                         exit(ERR_INTERNAL);}
-                    //
-                }else if(isalpha(next_char)){
-                    exit(ERR_LEXICAL); //character is not allowed in number
                 }else{
                     state = START;
                     ungetc(next_char, stdin);
