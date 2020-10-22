@@ -61,17 +61,6 @@
 #define T_FLOAT      31
 #define T_STRING     32 
 
-/* Build-in functions */
-
-#define F_PRINT     33
-#define F_LEN       34
-#define F_SUBSTR    35
-#define F_ORD       36
-#define F_CHR       37
-#define F_INT2FLOAT 38
-#define F_FLOAT2INT 39
-#define MAIN        40
-
 
 /* Special Characters */
 
@@ -86,6 +75,7 @@
 
 #define EOL         50
 #define ENDFILE     51
+
 
 /* Non-finate states */
 
@@ -107,6 +97,21 @@
 #define S_BLOCK     75
 #define S_ESC       76
 #define S_HEX       77
+
+/* Build-in functions */
+
+#define MAIN        80
+
+#define F_INPUTS    81
+#define F_INPUTI    82
+#define F_INPUTF    83
+#define F_PRINT     84
+#define F_INT2FLOAT 85
+#define F_FLOAT2INT 86
+#define F_LEN       87
+#define F_SUBSTR    88
+#define F_ORD       89
+#define F_CHR       90
 
 int get_new_token(string *tokenStr);
 int hex_to_int(char ch);

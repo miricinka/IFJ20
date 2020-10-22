@@ -199,6 +199,7 @@ int get_new_token(string *tokenStr) {
                 }else{
                     state = START;
                     ungetc(next_char, stdin);
+                    /* key-words */
                     if(strcmp(tokenStr->str, "func") == 0){
                         strClear(tokenStr);return KW_FUNC;}
                     else if(strcmp(tokenStr->str, "return") == 0){
@@ -217,8 +218,31 @@ int get_new_token(string *tokenStr) {
                         strClear(tokenStr);return KW_ELSE;}
                     else if(strcmp(tokenStr->str, "package") == 0){
                         strClear(tokenStr);return KW_PACKAGE;}
+                    /* main function */
                     else if(strcmp(tokenStr->str, "main") == 0){
-                        strClear(tokenStr);return MAIN;}     
+                        strClear(tokenStr);return MAIN;} 
+                    /* build-in functions */
+                    else if(strcmp(tokenStr->str, "inputs") == 0){
+                        strClear(tokenStr);return F_INPUTS;}
+                    else if(strcmp(tokenStr->str, "inputi") == 0){
+                        strClear(tokenStr);return F_INPUTI;}
+                    else if(strcmp(tokenStr->str, "inputf") == 0){
+                        strClear(tokenStr);return F_INPUTF;}
+                    else if(strcmp(tokenStr->str, "print") == 0){
+                        strClear(tokenStr);return F_PRINT;}
+                    else if(strcmp(tokenStr->str, "int2float") == 0){
+                        strClear(tokenStr);return F_INT2FLOAT;}
+                    else if(strcmp(tokenStr->str, "float2int") == 0){
+                        strClear(tokenStr);return F_FLOAT2INT;}
+                    else if(strcmp(tokenStr->str, "len") == 0){
+                        strClear(tokenStr);return F_LEN;}
+                    else if(strcmp(tokenStr->str, "substr") == 0){
+                        strClear(tokenStr);return F_SUBSTR;}
+                    else if(strcmp(tokenStr->str, "ord") == 0){
+                        strClear(tokenStr);return F_ORD;}
+                    else if(strcmp(tokenStr->str, "chr") == 0){
+                        strClear(tokenStr);return F_CHR;}
+                    /* ID */
                     else{return ID;}
                 }
                 break;
