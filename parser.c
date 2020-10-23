@@ -149,21 +149,19 @@ int fun_def()
     token = get_new_token(&tokenStr);
     if (token != L_PAR) return ERR_SYNTAX;  
     //spracujeme fun_params a ak je v poriadku tak pokracujeme dalej 
-    fun_params();
+    result = fun_params();
     if (result != 0) return result;
-    token = get_new_token(&tokenStr);
     if (token != R_PAR) return ERR_SYNTAX; 
     token = get_new_token(&tokenStr);
     if (token != L_PAR) return ERR_SYNTAX;
     //spracujeme fun_returns a ak je v poriadku tak pokracujeme dalej
-    fun_returns();
+    result = fun_returns();
     if (result != 0) return result;
-    token = get_new_token(&tokenStr);
     if (token != R_PAR) return ERR_SYNTAX;
     token = get_new_token(&tokenStr);
     if (token != L_BR) return ERR_SYNTAX;   
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej 
-    stat_list();
+    result = stat_list();
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) return ERR_SYNTAX;
@@ -301,15 +299,13 @@ int stat()
       token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != EOL) return ERR_SYNTAX;
     }
-    /*else if(token == COMMA)
-    {
-      ass_stat();
-    }*/
+    //<fun>	ID	(	<fun_call_param>	)												
     else if(token == L_PAR)
     {
       return fun_call_param();
     }
   }
+  //<stat>	return	<ass_exps>														
   else if(token == KW_RETURN)
   {
     return ass_exps();
@@ -318,33 +314,45 @@ int stat()
   return result;
 }
 
-/*int ass_stat()
+int ass_stat()
 {
   int result = 0;
-  token = get_new_token(&tokenStr);
-  if (token != ID) return ERR_SYNTAX;
-  token = get_new_token(&tokenStr);
-  if (token != COMMA && token != ASSIGN) return ERR_SYNTAX;
-  if (token == COMMA) return ass_stat();
-  if (token != ASSIGN) return ERR_SYNTAX;
-  token = get_new_token(&tokenStr);
-  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) return ERR_SYNTAX;
-  ass_exps();
-  return result;
-}*/
-
-int ass_exps()
-{
-  int result = 0;
-  token = get_new_token(&tokenStr);
-  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) return ERR_SYNTAX;
-  //zavolame precedencku na vyraz!!!
-  token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati COMMA alebo EOL token 
-  if (token != COMMA && token != EOL) return ERR_SYNTAX;
-  if (token == COMMA) return ass_exps();
+  //token = get_new_token(&tokenStr);
   return result;
 }
 
+//<ass_exps>	<exp>	<ass_exps>	
+//<ass_exps>	,	<exp>	<ass_exps>
+//<ass_exps>	<ass_ids>		
+//<ass_exps>	<fun>		
+int ass_exps()
+// toto sa bude menit ked pride ID opytame sa ci existuje taka funkcia v tabulke symbolov
+//ak existuje spracuvame ako funkciu inak posielame precedencke
+{
+  int result = 0;
+  token = get_new_token(&tokenStr);
+  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) return ERR_SYNTAX;
+  if (token == ID)
+  {
+    token = get_new_token(&tokenStr);
+    if (token != L_PAR && token != COMMA && token != EOL) return ERR_SYNTAX;
+    if (token == L_PAR)
+    {
+      result = fun_call_param();
+      if (result != 0) return result;
+      token = get_new_token(&tokenStr);
+      if (token != COMMA && token != EOL) return ERR_SYNTAX;
+      if (token == COMMA) return ass_exps();
+      return result;
+    }
+    else if (token == COMMA) return ass_exps();
+    else 
+  }
+  return result;
+}
+//<fun_call_param>	ID	<fun_call_param>														
+//<fun_call_param>	,	ID	<fun_call_param>													
+//<fun_call_param>	e															
 int fun_call_param()
 {
   int result = 0;
@@ -360,15 +368,48 @@ int fun_call_param()
   if (token == COMMA) return fun_call_param();
   return result;
 }
-
+//<fun_params>	<par>	<par_next>														
+//<fun_params>	e															
+//<par_next>	,	<par>	<par_next>													
+//<par_next>	e															
+//<par>	ID	<type>														
+//<type>	FLOAT64															
+//<type>	INT															
+//<type>	STRING															
 int fun_params()
 {
   int result = 0;
+  int multipleParams = 0;
+  if (token == COMMA) multipleParams = 1;
+
+  token = get_new_token(&tokenStr);
+  if (token != ID && token != R_PAR) return ERR_SYNTAX;
+  if (token == R_PAR && multipleParams == 0) return result;
+  else if (token == R_PAR && multipleParams == 1) return ERR_SYNTAX;
+  token = get_new_token(&tokenStr);
+  if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) return ERR_SYNTAX;
+  token = get_new_token(&tokenStr);
+  if (token != COMMA && token != R_PAR) return ERR_SYNTAX;
+  if (token == COMMA) return fun_params();
   return result;
 }
-
+//<fun_returns>	<ret>	<ret_next>														
+//<fun_returns>	e	 														
+//<ret_next>	, 	<ret>	<ret_next>													
+//<ret_next>	e	
+//<ret>	<type>															
 int fun_returns()
 {
   int result = 0;
+  int multipleParams = 0;
+  if (token == COMMA) multipleParams = 1;
+
+  token = get_new_token(&tokenStr);
+  if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING && token != R_PAR) return ERR_SYNTAX;
+  if (token == R_PAR && multipleParams == 0) return result;
+  else if (token == R_PAR && multipleParams == 1) return ERR_SYNTAX;
+  token = get_new_token(&tokenStr);
+  if (token != COMMA && token != R_PAR) return ERR_SYNTAX;
+  if (token == COMMA) return fun_returns();
   return result;
 }
