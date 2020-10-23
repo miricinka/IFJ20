@@ -38,7 +38,7 @@ int table [17][17] = {
 /* $ */     { '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', 'X', '<', '<', '<', '<', '#' }
 };
 
-/*    +    -    *    /    <   <=    >   >=   ==   !=    (    )    ID  INT FLOAT STR   $     */
+
 /* Converts token to symbol used in precedence table */
 int token_to_NT(int token_num){
 	switch(token_num){
@@ -82,11 +82,31 @@ int token_to_NT(int token_num){
 		case ENDFILE:
 			return NT_DOLLAR;
 		default:
-			printf("ERROR - token num je chybne : %d\n", token_num);
-			exit(ERR_SYNTAX); //CHECK
+			errorMsg(ERR_SYNTAX, "Incorrect expression token");
 	}
+	return 666; //program wont ever get here
 }
 
+/*converts NT to token or bool if bool*/
+int end_datatype(struc_prec_stack *stackPtr){
+
+	struc_token *top1 = peek1_precStack(stackPtr);
+	switch(top1->tokenNum){
+		case RULE_INT:
+			return T_INT;
+		case RULE_FLOAT:
+			return T_FLOAT;
+		case RULE_STR:
+			return T_STRING;
+		case TYPE_BOOL:
+			return TYPE_BOOL;
+		default:
+		errorMsg(ERR_SYNTAX, "Problem on expression stack");
+	}
+	return 666; //program wont ever get here
+}
+
+/* pops 3 elements */
 void pop3(struc_prec_stack *stackPtr){
 	pop_precStack(stackPtr);
 	pop_precStack(stackPtr);
@@ -94,6 +114,7 @@ void pop3(struc_prec_stack *stackPtr){
 	return;
 }
 
+/* checks datatypes compability in arithmetic expressions */
 void arithm_semantic_check(struc_prec_stack *stackPtr){
 	string Str1; strInit(&Str1); strClear(&Str1);
 	struc_token *top1 = peek1_precStack(stackPtr);
@@ -111,13 +132,12 @@ void arithm_semantic_check(struc_prec_stack *stackPtr){
 		pop3(stackPtr);
 		push_precStack(stackPtr, RULE_STR, Str1);
 	}else{
-		printf("ERROR - semanticka chyba\n");
-		exit(ERR_SEMANTIC_COMPATIBILITY);
+		errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
 	}
 	return;
 }
 
-//gets nonterminal from stack - basicly if top is terminal it looks under it
+/* gets nonterminal from stack - basicly if top is terminal it looks under it */
 struc_token* get_NT(struc_prec_stack *stackPtr){
 	struc_token *top = peek1_precStack(stackPtr);
 	if(top->tokenNum >= RULE_ID){
@@ -125,6 +145,8 @@ struc_token* get_NT(struc_prec_stack *stackPtr){
 	}
 	return top;
 }
+
+/* reduces boolean expression on stack */
 void reduce_boolean(struc_prec_stack *stackPtr){
 	string Str1; strInit(&Str1); strClear(&Str1);
 	struc_token *top1 = peek1_precStack(stackPtr);
@@ -136,12 +158,11 @@ void reduce_boolean(struc_prec_stack *stackPtr){
 		pop3(stackPtr);
 		push_precStack(stackPtr, TYPE_BOOL, Str1);
 	}else{
-		printf("ERROR - semanticka chyba\n");
-		exit(ERR_SEMANTIC_COMPATIBILITY);
+		errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
 	}
-
 }
 
+/* does rule E -> (E) */
 void reduce_parenthesis(struc_prec_stack *stackPtr){
 	string Str1; strInit(&Str1); strClear(&Str1);
 	struc_token *top2 = peek2_precStack(stackPtr);
@@ -149,15 +170,15 @@ void reduce_parenthesis(struc_prec_stack *stackPtr){
 	pop3(stackPtr);
 	push_precStack(stackPtr, TMP_NT_NUM, Str1);
 
-
 }
 
+/* reduces expression on stack */
 void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 
 	//E -> id pushs id
 	if(topNT->tokenNum == NT_ID){
 		topNT->tokenNum = RULE_ID;
-		printf("#####INTRUCTION PUSHS ID");
+		printf("#####INTRUCTION PUSHS ID\n");
 	//E -> int pushs int
 	}else if(topNT->tokenNum == NT_INT){ 
 		topNT->tokenNum = RULE_INT;
@@ -186,9 +207,16 @@ void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 	}else if(topNT->tokenNum == NT_DIV){
 		struc_token *top1 = peek1_precStack(stackPtr);
 		struc_token *top3 = top3 = peek3_precStack(stackPtr);
+
+		//E -> E/0 division by zero constant error
+		if(strcmp(top1->tokenStr.str,"0") == 0){
+			errorMsg(ERR_RUNTIME, "division by zero constant");
+		}
+
 		if(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_INT){
 			printf("#####INTRUCTION DIVS\n");
 			arithm_semantic_check(stackPtr);
+			print_precStack(stackPtr);
 
 		}else if((top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT) || 
 			(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_FLOAT) ||
@@ -199,8 +227,7 @@ void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 			push_precStack(stackPtr, RULE_FLOAT, Str1);
 
 		}else{
-			printf("ERROR - semanticka chyba1\n");
-			exit(ERR_SEMANTIC_COMPATIBILITY);
+			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
 		}
 	//E -> (E)
 	}else if(topNT->tokenNum == NT_RPAR){
@@ -227,24 +254,27 @@ void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 		reduce_boolean(stackPtr);
 	//E -> E>=E
 	}else if(topNT->tokenNum == NT_LEQ){
-		printf("#####INTRUCTION NT_LEQ DODELAT\n");
+		printf("#####INTRUCTION LTS\n");
+		printf("#####INTRUCTION NOT\n");
 		reduce_boolean(stackPtr);
 	//E -> E<=E
 	}else if(topNT->tokenNum == NT_GEQ){
-		printf("#####INTRUCTION NT_GEQ DODELAT\n");
+		printf("#####INTRUCTION GTS\n");
+		printf("#####INTRUCTION NOT\n");
 		reduce_boolean(stackPtr);
 
 	}else{
-		printf("Nejaka chyba\n");
-		print_precStack(stackPtr);
-		exit(ERR_SYNTAX);
+		//print_precStack(stackPtr);
+		errorMsg(ERR_SYNTAX, "Non existing rule for expression");
 	}
 
 	return;
 }
 
-//konec vyrazu: , \n { ; 
-int prec_parse(){
+/* main funtion
+ checks syntax and semantics of expression
+ returns final datatype and end token */
+prec_end_struct prec_parse(){
 
 	string testStr; strInit(&testStr); strClear(&testStr);
 	string tokenStr; strInit(&tokenStr);
@@ -258,13 +288,14 @@ int prec_parse(){
 	struc_token *topNT = peek1_precStack(ptrStack);
 
 	//current token
-	int new_token = get_new_token(&tokenStr); //get from Tom
+	//GET FROM TOM
+	int new_token = get_new_token(&tokenStr);
 
-	bool end_has_come = false; //CHANGE LATER
+	bool prec_analisis_end = false;
 
+	//checks first token
 	if(token_to_NT(new_token) < 10 ||  token_to_NT(new_token) == NT_RPAR){
-		printf("Spatny zacatek vyrazu\n");
-		exit(ERR_SYNTAX);
+		errorMsg(ERR_SYNTAX, "Incorrect first expression token");
 	}
 
 	//main parse loop
@@ -274,7 +305,8 @@ int prec_parse(){
 	
 		switch(table[topNT->tokenNum][token_to_NT(new_token)]){
 			case '#':
-				end_has_come = true;
+				prec_analisis_end = true;
+				break;
 			case '=': 
 			case '<':
 				if(push_precStack(ptrStack, token_to_NT(new_token), tokenStr)){exit(99);}
@@ -283,17 +315,20 @@ int prec_parse(){
 			case '>':
 				reduce(ptrStack, topNT);
 				break;
-				//break;
 			default:
-				//printf("ERROR - not in precedence table \n");
-				exit(ERR_SEMANTIC_COMPATIBILITY); //not in precedence table
+				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
 		}
 
-	}while(end_has_come != true);
+	}while(prec_analisis_end != true);
 
-	print_precStack(ptrStack);
-	printf("konec precedence\n");
-	return 51; //ok
+	//prepare structure to hold final datatype of expression and final token
+
+	prec_end_struct end_struct;
+	end_struct.end_token = new_token;
+	end_struct.end_datatype = end_datatype(ptrStack);
+
+
+	return end_struct; //send structure to parser
 
 }
 

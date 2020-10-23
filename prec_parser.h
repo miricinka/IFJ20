@@ -22,7 +22,13 @@
 #include "str.h"
 #include "scanner.h"
 #include "precedence_stack.h"
+#include "error.h"
 
+/* structure to return datatype and final token*/
+typedef struct{
+	int end_token;
+	int end_datatype;
+}prec_end_struct;
 
 //precedence table symbol 
 #define NT_ADD         0
@@ -63,9 +69,34 @@
 
 #define TYPE_BOOL     40
 
-int prec_parse();
+/* main funtion
+ checks syntax and semantics of expression
+ returns final datatype and end token */
+prec_end_struct prec_parse();
+
+/* Converts token to symbol used in precedence table */
+int token_to_NT(int token_num);
+
+/*converts NT to token or bool if bool*/
+int end_datatype(struc_prec_stack *stackPtr);
+
+/* pops 3 elements */
+void pop3(struc_prec_stack *stackPtr);
+
+/* checks datatypes compability in arithmetic expressions */
+void arithm_semantic_check(struc_prec_stack *stackPtr);
+
+/* gets nonterminal from stack */
 struc_token* get_NT(struc_prec_stack *stackPtr);
-//int main();
+
+/* reduces boolean expression on stack */
+void reduce_boolean(struc_prec_stack *stackPtr);
+
+/* does rule E -> (E) */
+void reduce_parenthesis(struc_prec_stack *stackPtr);
+
+/* reduces expression on stack */
+void reduce(struc_prec_stack *stackPtr, struc_token *topNT);
 
 
 #endif //PREC_PARSER_H
