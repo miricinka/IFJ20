@@ -24,19 +24,6 @@
 #include <stdbool.h>
 #include <errno.h>
 
-#include "ilist.h"
 #include "scanner.h"
-#include "parser.h"
 #include "str.h"
 
-
-
-#define ERR_LEXICAL 1
-#define ERR_SYNTAX 2
-#define ERR_SEMANTIC_DEFINITION 3
-#define ERR_SEMANTIC_DATATYPE 4
-#define ERR_SEMANTIC_COMPATIBILITY 5
-#define ERR_SEMANTIC_PARAM 6
-#define ERR_SEMANTIC_OTHER 7
-#define ERR_RUNTIME 9
-#define ERR_INTERNAL 99
