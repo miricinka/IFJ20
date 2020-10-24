@@ -147,12 +147,14 @@ int get_new_token(string *tokenStr) {
                 if(next_char == '=')
                     return NEQ;
                 errorMsg(ERR_LEXICAL, "\"!\" is invalid lexem");
+                break;
 
             case S_VAR_DEF: // :=
                 state = START;
                 if(next_char == '=')
                     return VAR_DEF;
                 errorMsg(ERR_LEXICAL, "\":\" is invalid lexem");
+                break;
 
             case S_DIV:
                 if(next_char == '/'){ //

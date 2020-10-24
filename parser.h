@@ -24,6 +24,7 @@
 #include <ctype.h> 
 
 #include "main.h"
+#include "prec_parser.h"
 
 void generateInstruction(int instType);
 int parse(tListOfInstr *instrList);

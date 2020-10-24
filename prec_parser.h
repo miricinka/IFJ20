@@ -72,7 +72,7 @@ typedef struct{
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse();
+prec_end_struct prec_parse(int new_token, string tokenStr);
 
 /* Converts token to symbol used in precedence table */
 int token_to_NT(int token_num);

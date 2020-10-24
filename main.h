@@ -26,4 +26,6 @@
 
 #include "scanner.h"
 #include "str.h"
+#include "ilist.h"
+#include "parser.h"
 

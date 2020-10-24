@@ -212,13 +212,18 @@ switch (token)
 int stat()
 {
   int result = 0;
+  prec_end_struct precResult;
   //<stat>	if	<exp>	{	<stat_list>	}	else	{	<stat_list>	}			
   if (token == KW_IF)
   {
     token = get_new_token(&tokenStr);
     if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) return ERR_SYNTAX;
-    //zavolame precedencku na vyraz!!!
-    token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati L_BR token 
+    //zavolame precedencku na vyraz, posleme tam token a jeho string
+    precResult = prec_parse(token, tokenStr);
+    token = precResult.end_token;
+    //v ife moze byt vyraz iba boolovskeh hodnoty inak nastava chyba 5
+    if (precResult.end_datatype != TYPE_BOOL) return ERR_SEMANTIC_COMPATIBILITY;
+    //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati L_BR token 
     if (token != L_BR) return ERR_SYNTAX;
     stat_list();
     if (result != 0) return result;
@@ -249,20 +254,33 @@ int stat()
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) return ERR_SYNTAX;
       //zavolame precedencku na vyraz!!!
-      token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
+      precResult = prec_parse(token, tokenStr);
+      token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
+      if (precResult.end_datatype == TYPE_BOOL) return ERR_SEMANTIC_COMPATIBILITY;
+      //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != SEMICOL) return ERR_SYNTAX;
     }
     token = get_new_token(&tokenStr);
     if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) return ERR_SYNTAX;
-    //zavolame precedencku na vyraz!!!
-    token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
+    //zavolame precedencku na vyraz, posleme tam token a jeho string
+    precResult = prec_parse(token, tokenStr);
+    token = precResult.end_token;
+    //v ife moze byt vyraz iba boolovskeh hodnoty inak nastava chyba 5
+    if (precResult.end_datatype != TYPE_BOOL) return ERR_SEMANTIC_COMPATIBILITY;
+    //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
     if (token != SEMICOL) return ERR_SYNTAX;
     token = get_new_token(&tokenStr);
-    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_BR) return ERR_SYNTAX;
-    if (token != L_BR)
+    if (token != ID && token != L_BR) return ERR_SYNTAX;
+    if (token == ID)
     {
       //zavolame precedencku na vyraz!!!
       token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
+      if (token != ASSIGN) return ERR_SYNTAX;
+      token = get_new_token(&tokenStr);
+      precResult = prec_parse(token, tokenStr);
+      token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
+      if (precResult.end_datatype == TYPE_BOOL) return ERR_SEMANTIC_COMPATIBILITY;
+      //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != L_BR) return ERR_SYNTAX;
     }
     token = get_new_token(&tokenStr);
@@ -346,7 +364,6 @@ int ass_exps()
       return result;
     }
     else if (token == COMMA) return ass_exps();
-    else 
   }
   return result;
 }
