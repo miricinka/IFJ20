@@ -37,6 +37,7 @@ int fun_params();
 int fun_returns();
 int stat();
 int ass_exps();
+int ass_stat();
 int fun_call_param();
 
 #endif /* PARSER_H*/
