@@ -373,14 +373,21 @@ int ass_exps()
   int result = 0;
   prec_end_struct precResult;
   token = get_new_token(&tokenStr);
-  printf("THIS TOKEN %d\n",token);
   //printf("token je %d\n", token);
   if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
   precResult = prec_parse(token, tokenStr);
   token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
-  printf("THIS TOKEN %d\n",token);
-  if (precResult.end_datatype == TYPE_BOOL)
-    errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
+
+  //kontrola toho ci spracovavame funkciu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  /*if (token == L_PAR)
+  {
+    result = fun_call_param();
+    if (result != 0) return result;
+    if (token != R_PAR) errorMsg(ERR_SYNTAX, "FUNCTION CALL statement - ')' missing");
+    token = get_new_token(&tokenStr);
+  }*/
+
+  if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
   //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
   if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
   if (token == COMMA) return ass_exps();
