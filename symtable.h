@@ -31,7 +31,6 @@
 typedef struct Node{
     int type;
 	string name;
-    string value;
 
 	struct Node *LPtr;
 	struct Node *RPtr;
@@ -41,7 +40,7 @@ typedef struct Node{
 
 void BSTInit   (Node *);
 Node BSTSearch (Node, string);
-void BSTInsert (Node *, string, string, int);
+void BSTInsert (Node *, string, int);
 void BSTDelete (Node *, string);
 void BSTDispose(Node *);
 bool isDeclared (Node, string);

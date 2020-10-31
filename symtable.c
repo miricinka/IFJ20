@@ -61,7 +61,7 @@ Node BSTSearch (Node RootPtr, string Key)	{
 	return RootPtr;
 }
 
-void BSTInsert (Node *RootPtr, string Key, string Content, int Type)	{
+void BSTInsert (Node *RootPtr, string Key, int Type)	{
 
 	if( !*RootPtr ) {
 		(*RootPtr) = (Node)malloc(sizeof(struct Node));
@@ -74,11 +74,8 @@ void BSTInsert (Node *RootPtr, string Key, string Content, int Type)	{
 		// STAY WHERE YOU ARE FILTHY BUGGY CODE!
 
 		strInit(&((*RootPtr)->name));
-		strInit(&((*RootPtr)->value));
 	
 		strCopyString(&((*RootPtr)->name),&Key);
-
-		strCopyString(&((*RootPtr)->value),&Content);
 
 		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
 		return;
@@ -86,18 +83,17 @@ void BSTInsert (Node *RootPtr, string Key, string Content, int Type)	{
 
 
 	if ( strCmpString(&Key, &((*RootPtr)->name)) < 0) {
-		BSTInsert ( &((*RootPtr)->LPtr), Key, Content, Type);
+		BSTInsert ( &((*RootPtr)->LPtr), Key, Type);
 		return;
 	}
 
 	if ( strCmpString(&Key, &((*RootPtr)->name)) > 0) {
-		BSTInsert ( &((*RootPtr)->RPtr), Key, Content, Type);
+		BSTInsert ( &((*RootPtr)->RPtr), Key, Type);
 		return;
 	}
 
 		(*RootPtr)->type = Type;
 		strCopyString(&((*RootPtr)->name), &Key);
-		strCopyString(&((*RootPtr)->value), &Content);
 }
 
 void BSTDispose (Node *RootPtr) {
@@ -107,58 +103,9 @@ void BSTDispose (Node *RootPtr) {
         BSTDispose(&(( *RootPtr )->RPtr));
 
 		strFree(&((*RootPtr)->name));
-		strFree(&((*RootPtr)->value));
 		
         free( *RootPtr );
         *RootPtr = NULL;
     }
 }
 
-/*
-void ReplaceByRightmost (NodePtr PtrReplaced, NodePtr *RootPtr) {
-
-	if( !*RootPtr )
-		return;
-
-
-	if(( *RootPtr)->RPtr)
-		ReplaceByRightmost( PtrReplaced, &(( *RootPtr )->RPtr ));
-	else{
-		NodePtr delete_me = ( *RootPtr );
-		
-		PtrReplaced->Key = delete_me->Key;
-		PtrReplaced->BSTNodeCont = delete_me->BSTNodeCont;
-		
-		( *RootPtr ) = ( *RootPtr )->LPtr;
-
-		free(delete_me);
-	}
-}
-*/
-
-/*
-void BSTDelete (NodePtr *RootPtr, char K){
-
-	if( !*RootPtr )
-		return;
-
-	if (K < ( *RootPtr )->Key)
-			BSTDelete( &(( *RootPtr )->LPtr), K);
-
-	else if ( K > ( *RootPtr )->Key) 
-			BSTDelete( &(( *RootPtr )->RPtr), K);
-
-	else if ( ( *RootPtr )->LPtr && ( *RootPtr )->RPtr )
-		ReplaceByRightmost( ( *RootPtr ), &(( *RootPtr )->LPtr));
-
-	else{
-		NodePtr delete_me = ( *RootPtr );
-
-		if(( *RootPtr )->LPtr)
-			 *RootPtr = ( *RootPtr )->LPtr;
-		else
-			 *RootPtr = ( *RootPtr )->RPtr;
-		free(delete_me);
-	}
-}
-*/
