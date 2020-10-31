@@ -25,6 +25,7 @@
 
 #include "main.h"
 #include "prec_parser.h"
+#include "symtable.h"
 
 void generateInstruction(int instType);
 int parse(tListOfInstr *instrList);
@@ -32,10 +33,10 @@ int program();
 int prolog();
 int fun_def_list();
 int fun_def();
-int stat_list();
+int stat_list(Node treePtr);
 int fun_params();
 int fun_returns();
-int stat();
+int stat(Node treePtr);
 int ass_exps();
 int ass_stat();
 int fun_call_param();

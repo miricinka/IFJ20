@@ -139,8 +139,11 @@ int fun_def()
     if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing ')' ");
     token = get_new_token(&tokenStr);
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
+    //vytvorenie stromu pre funkciu na lokalne premenne
+    Node treePtr;
+    BSTInit (&treePtr);
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej
-    result = stat_list();
+    result = stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '}' ");
@@ -162,8 +165,11 @@ int fun_def()
     if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
     token = get_new_token(&tokenStr);
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");   
+    //vytvorenie stromu pre funkciu na lokalne premenne
+    Node treePtr;
+    BSTInit (&treePtr);
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej 
-    result = stat_list();
+    result = stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
@@ -174,7 +180,7 @@ int fun_def()
   return result;
 }
 
-int stat_list()
+int stat_list(Node treePtr)
 {
   int result = 0;
   token = get_new_token(&tokenStr);
@@ -194,15 +200,15 @@ switch (token)
     case F_INT2FLOAT:
     case F_FLOAT2INT:
       // nejprve zavolame funkci stat
-      result = stat();      
+      result = stat(treePtr);      
       // pokud v ramci teto funkce nastala chyba, vracime jeji kod a nepokracujeme dal
       if (result != 0) return result;
       // pokud probehlo vse v poradku, hlasime vysledek, ktery dostaneme od funkce stat_list
-      return stat_list();
+      return stat_list(treePtr);
 
     case EOL:
     //prisiel EOL a rekurzivne zavolame stat_list kym nenajdeme funkciu alebo koniec suboru
-      return stat_list();
+      return stat_list(treePtr);
     case R_BR:
       return result;
     break;
@@ -212,7 +218,7 @@ switch (token)
   return result;
 }
 
-int stat()
+int stat(Node treePtr)
 {
   int result = 0;
   prec_end_struct precResult;
@@ -230,7 +236,7 @@ int stat()
         errorMsg(ERR_SEMANTIC_COMPATIBILITY, "IF statement expression must be boolean");
     //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati L_BR token 
     if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
-    stat_list();
+    stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
@@ -240,7 +246,7 @@ int stat()
     if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
     token = get_new_token(&tokenStr);
     if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - no EOL after ELSE");
-        stat_list();
+        stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing } in ELSE");
@@ -295,7 +301,7 @@ int stat()
     }
     token = get_new_token(&tokenStr);
     if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
-    stat_list();
+    stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "FOR statement - '}' missing");
@@ -307,17 +313,38 @@ int stat()
   //<stat>	<fun>											
   else if(token == ID)
   {
+    bool isIDDeclared = isDeclared(treePtr, tokenStr);
+    string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
+    if (isIDDeclared == true)
+    {
+      printf("deklarovane\n");
+    }
+    else
+    {
+      printf("nedeklarovane\n");
+    }
+    
     token = get_new_token(&tokenStr);
     if (token != VAR_DEF && token != COMMA && token != ASSIGN && token != L_PAR) 
       errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after ID");
     //<var_def>	ID	:=	<exp>									
     if (token == VAR_DEF)
     {
+      if (isIDDeclared == true)
+      {
+        errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
+      }
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");
+        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");       
+      printf("%d\n",token);  
+      printf("%s\n",tokenStr.str);          
       //zavolame precedencku na vyraz!!!
-      token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
+      precResult = prec_parse(token, tokenStr);
+      token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
+      //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
+      BSTInsert(&treePtr, stringID, stringID, precResult.end_datatype);
+
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
     }
     //<ass_stat>	<ass_ids>	=	<ass_exps> IBA PRE JEDNO PRIRADENIE								
