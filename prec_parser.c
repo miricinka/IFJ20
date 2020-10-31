@@ -216,7 +216,7 @@ void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 		if(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_INT){
 			printf("#####INTRUCTION DIVS\n");
 			arithm_semantic_check(stackPtr);
-			print_precStack(stackPtr);
+			//print_precStack(stackPtr);
 
 		}else if((top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT) || 
 			(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_FLOAT) ||
@@ -274,10 +274,10 @@ void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse(){
+prec_end_struct prec_parse(int new_token, string tokenStr){
 
 	string testStr; strInit(&testStr); strClear(&testStr);
-	string tokenStr; strInit(&tokenStr);
+	//string tokenStr; strInit(&tokenStr);
 	int fullstack = 0;
 
 	struc_prec_stack *ptrStack = create_precStack(1000);
@@ -289,7 +289,7 @@ prec_end_struct prec_parse(){
 
 	//current token
 	//GET FROM TOM
-	int new_token = get_new_token(&tokenStr);
+	//int new_token = get_new_token(&tokenStr);
 
 	bool prec_analisis_end = false;
 
@@ -331,6 +331,5 @@ prec_end_struct prec_parse(){
 	return end_struct; //send structure to parser
 
 }
-
 
 
