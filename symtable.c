@@ -17,20 +17,54 @@
 
 #include "symtable.h"
 
+void Print_tree2(Node TempTree, char* sufix, char fromdir){
+    if (TempTree != NULL){
+		char* suf2 = (char*) malloc(strlen(sufix) + 4);
+		strcpy(suf2, sufix);
+
+        if (fromdir == 'L'){
+	   		suf2 = strcat(suf2, "  |");
+	   		printf("%s\n", suf2);
+		}else
+	   		suf2 = strcat(suf2, "   ");
+
+		Print_tree2(TempTree->RPtr, suf2, 'R');
+        printf("%s  +-[%s,%d]\n", sufix,  TempTree->name.str, TempTree->type);
+		strcpy(suf2, sufix);
+
+        if (fromdir == 'R')
+	   		suf2 = strcat(suf2, "  |");	
+		else
+	   		suf2 = strcat(suf2, "   ");
+		Print_tree2(TempTree->LPtr, suf2, 'L');
+
+		if (fromdir == 'R') printf("%s\n", suf2);
+			free(suf2);
+    }
+}
+
+void Print_tree(Node TempTree){
+  	printf("Struktura binarniho stromu:\n");
+  	printf("\n");
+
+  	if (TempTree != NULL)
+     	Print_tree2(TempTree, "", 'X');
+  	else
+     printf("strom je prazdny\n");
+
+  	printf("\n");
+  	printf("=================================================\n");
+} 
+
+/*************** Variable tree operations *****************/
+
 void BSTInit (Node *RootPtr) {
 	*RootPtr = NULL;
 }
 
 bool isDeclared (Node RootPtr, string Key) {
-	if(!RootPtr)
+	if(BSTSearch(RootPtr, Key) == NULL)
 		return false;
-
-	else if ( strCmpString(&Key, &(RootPtr->name)) < 0)
-		return isDeclared (RootPtr->LPtr, Key);
-
-	else if ( strCmpString(&Key, &(RootPtr->name)) > 0)
-		return isDeclared (RootPtr->RPtr, Key);
-
 	return true;
 }
 
@@ -109,3 +143,70 @@ void BSTDispose (Node *RootPtr) {
     }
 }
 
+/*************** Function tree operations *****************/
+
+void funBSTInit (funNode *RootPtr) {
+	*RootPtr = NULL;
+}
+
+bool funIsDeclared (funNode RootPtr, string Key) {
+	if(funBSTSearch(RootPtr, Key) == NULL)
+		return false;
+	return true;
+}
+
+funNode funBSTSearch (funNode RootPtr, string Key)	{
+
+	if(!RootPtr)
+		return NULL;
+
+	else if (strCmpString(&Key, &(RootPtr->name)) < 0)
+		return funBSTSearch(RootPtr->LPtr, Key);
+
+	else if (strCmpString(&Key, &(RootPtr->name)) > 0)
+		return funBSTSearch(RootPtr->RPtr, Key);
+
+	return RootPtr;
+}
+
+void funBSTInsert (funNode *RootPtr, string Key, int Type)	{
+
+	if( !*RootPtr ) {
+		(*RootPtr) = (funNode)malloc(sizeof(struct funNode));
+		if(RootPtr == NULL)
+			return;
+
+		strInit(&((*RootPtr)->name));
+	
+		strCopyString(&((*RootPtr)->name),&Key);
+
+		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
+		return;
+	}
+
+
+	if ( strCmpString(&Key, &((*RootPtr)->name)) < 0) {
+		funBSTInsert ( &((*RootPtr)->LPtr), Key, Type);
+		return;
+	}
+
+	if ( strCmpString(&Key, &((*RootPtr)->name)) > 0) {
+		funBSTInsert ( &((*RootPtr)->RPtr), Key, Type);
+		return;
+	}
+
+		strCopyString(&((*RootPtr)->name), &Key);
+}
+
+void funBSTDispose (funNode *RootPtr) {
+
+	if( *RootPtr != NULL){
+        funBSTDispose(&(( *RootPtr )->LPtr));
+        funBSTDispose(&(( *RootPtr )->RPtr));
+
+		strFree(&((*RootPtr)->name));
+		
+        free( *RootPtr );
+        *RootPtr = NULL;
+    }
+}

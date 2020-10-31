@@ -36,12 +36,36 @@ typedef struct Node{
 	struct Node *RPtr;
 } *Node;
 
-/* function prototypes */
+typedef struct funNode{
+	string name;
 
-void BSTInit   (Node *);
-Node BSTSearch (Node, string);
-void BSTInsert (Node *, string, int);
-void BSTDelete (Node *, string);
-void BSTDispose(Node *);
+	Node *params;
+	Node *retrunCodes;
+
+	struct funNode *LPtr;
+	struct funNode *RPtr;
+} *funNode;
+
+/* Prototypes of tree printing functions */
+
+void Print_tree(Node TempTree);
+void Print_tree2(Node TempTree, char* sufix, char fromdir);
+
+/* Prototypes of variable operations */
+
+void BSTInit   	(Node *);
+Node BSTSearch 	(Node, string);
+void BSTInsert 	(Node *, string, int);
+void BSTDelete 	(Node *, string);
+void BSTDispose	(Node *);
 bool isDeclared (Node, string);
-int getType(Node, string);
+int  getType	(Node, string);
+
+/* Prototypes of function operations */
+
+void funBSTInit    (funNode *);
+funNode funBSTSearch  (funNode, string);
+void funBSTInsert  (funNode *, string, int);
+void funBSTDelete  (funNode *, string);
+void funBSTDispose (funNode *);
+bool funIsDeclared (funNode, string);
