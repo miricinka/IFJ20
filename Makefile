@@ -1,6 +1,6 @@
   
 PROJ=ifj20
-CFLAGS=-std=gnu99 -Wall -Wextra -Werror -pedantic 
+CFLAGS=-std=gnu99 -Wall -Wextra 
 CC=gcc
 LIBS=-lm
 RM=rm -f

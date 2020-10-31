@@ -141,9 +141,12 @@ int fun_def()
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
     //vytvorenie stromu pre funkciu na lokalne premenne
     Node treePtr;
+    //printf("treeptr num before init: %p\n", &treePtr);
     BSTInit (&treePtr);
+    //printf("treeptr num after init: %p\n", &treePtr);
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej
-    result = stat_list(treePtr);
+    //printf("treeptr num before stat_list call: %p\n", &treePtr);
+    result = stat_list(&treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '}' ");
@@ -167,9 +170,11 @@ int fun_def()
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");   
     //vytvorenie stromu pre funkciu na lokalne premenne
     Node treePtr;
+    //printf("treeptr num before init: %p\n", &treePtr);
     BSTInit (&treePtr);
+    //printf("treeptr num after init: %p\n", &treePtr);
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej 
-    result = stat_list(treePtr);
+    result = stat_list(&treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
@@ -180,8 +185,9 @@ int fun_def()
   return result;
 }
 
-int stat_list(Node treePtr)
+int stat_list(Node * treePtr)
 {
+  //printf("treeptr num after stat_list call: %p\n", &treePtr);
   int result = 0;
   token = get_new_token(&tokenStr);
 switch (token)
@@ -218,7 +224,7 @@ switch (token)
   return result;
 }
 
-int stat(Node treePtr)
+int stat(Node * treePtr)
 {
   int result = 0;
   prec_end_struct precResult;
@@ -313,49 +319,67 @@ int stat(Node treePtr)
   //<stat>	<fun>											
   else if(token == ID)
   {
-    bool isIDDeclared = isDeclared(treePtr, tokenStr);
+    //pozrieme do stromu ci tam id premennej je
+    bool isIDDeclared = isDeclared(*treePtr, tokenStr);
     string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
-    if (isIDDeclared == true)
-    {
-      printf("deklarovane\n");
-    }
-    else
-    {
-      printf("nedeklarovane\n");
-    }
-    
+   
     token = get_new_token(&tokenStr);
     if (token != VAR_DEF && token != COMMA && token != ASSIGN && token != L_PAR) 
       errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after ID");
     //<var_def>	ID	:=	<exp>									
     if (token == VAR_DEF)
     {
+      if (strcmp(stringID.str, "_") == 0){errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'");}
+      //kontrola ak je id uz deklarovane hodime chybu 3
       if (isIDDeclared == true)
       {
         errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
       }
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");       
-      printf("%d\n",token);  
-      printf("%s\n",tokenStr.str);          
+        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");          
       //zavolame precedencku na vyraz!!!
       precResult = prec_parse(token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-      BSTInsert(&treePtr, stringID, stringID, precResult.end_datatype);
+
+      //deklaracia prebehla a ID a typ premennej ulozime do stromu
+      BSTInsert(treePtr, stringID, precResult.end_datatype);
+      //printf("BST after inserting:\n");
 
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
     }
     //<ass_stat>	<ass_ids>	=	<ass_exps> IBA PRE JEDNO PRIRADENIE								
     else if(token == ASSIGN)
     {
+      //ak je ID '_' nemusime kontrolovat ci je v strome
+      if(strcmp(stringID.str, "_") != 0)
+      {
+        //kontrola ci je v strome ID
+        if (isIDDeclared == false)
+        {
+          errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");
+        }
+      }
+
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
       //zavolame precedencku na vyraz!!!
-      token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token
+      precResult = prec_parse(token, tokenStr);
+      token = precResult.end_token;
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement assign - missing EOL");
+      //kontrola typov ci priradovany typ odpoveda typu premennej
+      int variableType = getType(*treePtr,stringID);
+      if (strcmp(stringID.str, "_") != 0)
+      {
+      if (variableType != precResult.end_datatype)
+      {
+        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment");
+      }  
+        BSTInsert(treePtr, stringID, precResult.end_datatype);
+      }
+      //v pripade ze priradujeme do '_' tak nebudeme insertovat inak ano      
     }
     else if (token == COMMA)
     {
