@@ -235,7 +235,7 @@ int stat(Node * treePtr)
     if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
         errorMsg(ERR_SYNTAX, "Incorrect token after IF statement");
     //zavolame precedencku na vyraz, posleme tam token a jeho string
-    precResult = prec_parse(token, tokenStr);
+    precResult = prec_parse(treePtr, token, tokenStr);
     token = precResult.end_token;
     //v ife moze byt vyraz iba boolovskeh hodnoty inak nastava chyba 5
     if (precResult.end_datatype != TYPE_BOOL)
@@ -272,7 +272,7 @@ int stat(Node * treePtr)
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
           errorMsg(ERR_SYNTAX, "FOR statement - incorrect var def");
       //zavolame precedencku na vyraz!!!
-      precResult = prec_parse(token, tokenStr);
+      precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
       if (precResult.end_datatype == TYPE_BOOL)
         errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - var def cannot be boolean");
@@ -283,7 +283,7 @@ int stat(Node * treePtr)
     if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
       errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
     //zavolame precedencku na vyraz, posleme tam token a jeho string
-    precResult = prec_parse(token, tokenStr);
+    precResult = prec_parse(treePtr, token, tokenStr);
     token = precResult.end_token;
     //v ife moze byt vyraz iba boolovskeh hodnoty inak nastava chyba 5
     if (precResult.end_datatype != TYPE_BOOL)
@@ -298,7 +298,7 @@ int stat(Node * treePtr)
       token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
       token = get_new_token(&tokenStr);
-      precResult = prec_parse(token, tokenStr);
+      precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
       if (precResult.end_datatype == TYPE_BOOL)
         errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
@@ -319,59 +319,71 @@ int stat(Node * treePtr)
   //<stat>	<fun>											
   else if(token == ID)
   {
-    printf("BST while searching:\n");
-    Print_tree(*treePtr);
+    //pozrieme do stromu ci tam id premennej je
     bool isIDDeclared = isDeclared(*treePtr, tokenStr);
     string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
-    if (isIDDeclared == true)
-    {
-      printf("deklarovane\n");
-    }
-    else
-    {
-      printf("nedeklarovane\n");
-    }
-    
+   
     token = get_new_token(&tokenStr);
     if (token != VAR_DEF && token != COMMA && token != ASSIGN && token != L_PAR) 
       errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after ID");
     //<var_def>	ID	:=	<exp>									
     if (token == VAR_DEF)
     {
+      if (strcmp(stringID.str, "_") == 0){errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'");}
+      //kontrola ak je id uz deklarovane hodime chybu 3
       if (isIDDeclared == true)
       {
         errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
       }
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");       
-      printf("%d\n",token);  
-      printf("%s\n",tokenStr.str);          
+        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");          
       //zavolame precedencku na vyraz!!!
-      precResult = prec_parse(token, tokenStr);
+      precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-      printf("ID je %s\n",stringID.str);
+
+      //deklaracia prebehla a ID a typ premennej ulozime do stromu
       BSTInsert(treePtr, stringID, precResult.end_datatype);
-      printf("BST after inserting:\n");
-      Print_tree(*treePtr);
-      //printf("treeptr num %p\n", &treePtr);
+      //printf("BST after inserting:\n");
 
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
     }
     //<ass_stat>	<ass_ids>	=	<ass_exps> IBA PRE JEDNO PRIRADENIE								
     else if(token == ASSIGN)
     {
+      //ak je ID '_' nemusime kontrolovat ci je v strome
+      if(strcmp(stringID.str, "_") != 0)
+      {
+        //kontrola ci je v strome ID
+        if (isIDDeclared == false)
+        {
+          errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");
+        }
+      }
+
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
       //zavolame precedencku na vyraz!!!
-      token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token
+      precResult = prec_parse(treePtr, token, tokenStr);
+      token = precResult.end_token;
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement assign - missing EOL");
+      //kontrola typov ci priradovany typ odpoveda typu premennej
+      int variableType = getType(*treePtr,stringID);
+      if (strcmp(stringID.str, "_") != 0)
+      {
+      if (variableType != precResult.end_datatype)
+      {
+        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment");
+      }  
+        BSTInsert(treePtr, stringID, precResult.end_datatype);
+      }
+      //v pripade ze priradujeme do '_' tak nebudeme insertovat inak ano      
     }
     else if (token == COMMA)
     {
-      return ass_stat();
+      return ass_stat(treePtr);
     }
     //<fun>	ID	(	<fun_call_param>	)												
     else if(token == L_PAR)
@@ -382,22 +394,22 @@ int stat(Node * treePtr)
   //<stat>	return	<ass_exps>														
   else if(token == KW_RETURN)
   {
-    return ass_exps();
+    return ass_exps(treePtr);
   }
 
   return result;
 }
 
 //<ass_stat>	<ass_ids>	=	<ass_exps>													
-int ass_stat()
+int ass_stat(Node * treePtr)
 {
   int result = 0;
   token = get_new_token(&tokenStr);
   if (token != ID) errorMsg(ERR_SYNTAX, "ASSIGN statement - must be ID");
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != ASSIGN) errorMsg(ERR_SYNTAX, "ASSIGN statement - token must be '=' or ',' for another ID");
-  if (token == COMMA) return ass_stat();
-  return ass_exps();
+  if (token == COMMA) return ass_stat(treePtr);
+  return ass_exps(treePtr);
   return result;
 }
 
@@ -405,7 +417,7 @@ int ass_stat()
 //<ass_exps>	,	<exp>	<ass_exps>
 //<ass_exps>	<ass_ids>		
 //<ass_exps>	<fun>		
-int ass_exps()
+int ass_exps(Node * treePtr)
 // toto sa bude menit ked pride ID opytame sa ci existuje taka funkcia v tabulke symbolov
 //ak existuje spracuvame ako funkciu inak posielame precedencke
 {
@@ -414,7 +426,7 @@ int ass_exps()
   token = get_new_token(&tokenStr);
   //printf("token je %d\n", token);
   if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
-  precResult = prec_parse(token, tokenStr);
+  precResult = prec_parse(treePtr, token, tokenStr);
   token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
 
   //kontrola toho ci spracovavame funkciu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -429,7 +441,7 @@ int ass_exps()
   if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
   //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
   if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
-  if (token == COMMA) return ass_exps();
+  if (token == COMMA) return ass_exps(treePtr);
   return result;
 }
 
