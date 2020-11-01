@@ -300,8 +300,10 @@ int stat(Node * treePtr)
       token = get_new_token(&tokenStr);
       precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
+
       if (precResult.end_datatype == TYPE_BOOL)
         errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
+
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
     }
@@ -343,10 +345,14 @@ int stat(Node * treePtr)
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
 
+      //vysledok precedencky nemoze byt BOOL
+      if (precResult.end_datatype == TYPE_BOOL){errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");}
+      
+
       //deklaracia prebehla a ID a typ premennej ulozime do stromu
       BSTInsert(treePtr, stringID, precResult.end_datatype);
       //printf("BST after inserting:\n");
-
+      //kontrola ci deklaracia konci EOLom
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
     }
     //<ass_stat>	<ass_ids>	=	<ass_exps> IBA PRE JEDNO PRIRADENIE								
