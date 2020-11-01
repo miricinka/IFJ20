@@ -173,12 +173,30 @@ void reduce_parenthesis(struc_prec_stack *stackPtr){
 }
 
 /* reduces expression on stack */
-void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
+void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
+	//print_precStack(stackPtr);
 
 	//E -> id pushs id
 	if(topNT->tokenNum == NT_ID){
-		topNT->tokenNum = RULE_ID;
-		printf("#####INTRUCTION PUSHS ID\n");
+		//printf("before ID:\n");
+		//print_precStack(stackPtr);
+		bool isIDDeclared = isDeclared(*treePtr, topNT->tokenStr);
+		if (!isIDDeclared)
+			errorMsg(ERR_SEMANTIC_DEFINITION, "Variable is not declared when using in expression");
+
+		//printf("'%s' is declared\n", topNT->tokenStr.str);
+		int variableType = getType(*treePtr,topNT->tokenStr);
+		//printf("var '%s' is of type %d\n", topNT->tokenStr.str, variableType);
+		if (variableType == T_INT){
+			topNT->tokenNum = RULE_INT;
+		}else if(variableType == T_FLOAT){
+			topNT->tokenNum = RULE_FLOAT;
+		}else if(variableType == T_STRING){
+			topNT->tokenNum = RULE_STR;
+		}else{
+			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type in variable - in expression");
+		}
+		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> int pushs int
 	}else if(topNT->tokenNum == NT_INT){ 
 		topNT->tokenNum = RULE_INT;
@@ -274,8 +292,8 @@ void reduce(struc_prec_stack *stackPtr, struc_token *topNT){
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse(int new_token, string tokenStr){
-
+prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr){
+	printf("#####INTRUCTION CLEARS\n");
 	string testStr; strInit(&testStr); strClear(&testStr);
 	//string tokenStr; strInit(&tokenStr);
 	int fullstack = 0;
@@ -286,10 +304,6 @@ prec_end_struct prec_parse(int new_token, string tokenStr){
 	if(fullstack){exit(99);}
 
 	struc_token *topNT = peek1_precStack(ptrStack);
-
-	//current token
-	//GET FROM TOM
-	//int new_token = get_new_token(&tokenStr);
 
 	bool prec_analisis_end = false;
 
@@ -313,7 +327,7 @@ prec_end_struct prec_parse(int new_token, string tokenStr){
 				new_token = get_new_token(&tokenStr);
 				break;
 			case '>':
-				reduce(ptrStack, topNT);
+				reduce(treePtr, ptrStack, topNT);
 				break;
 			default:
 				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");

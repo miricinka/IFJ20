@@ -16,7 +16,7 @@
  *  
 */
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #ifndef IFJ_ILIST_H
 #define IFJ_ILIST_H

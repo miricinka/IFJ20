@@ -15,6 +15,9 @@
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
+#ifndef SYMTABLE_H
+#define SYMTABLE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -69,3 +72,7 @@ void funBSTInsert  (funNode *, string, int);
 void funBSTDelete  (funNode *, string);
 void funBSTDispose (funNode *);
 bool funIsDeclared (funNode, string);
+
+#endif //SYMTABLE_H
+
+

@@ -23,6 +23,7 @@
 #include "scanner.h"
 #include "precedence_stack.h"
 #include "error.h"
+#include "symtable.h"
 
 /* structure to return datatype and final token*/
 typedef struct{
@@ -72,7 +73,7 @@ typedef struct{
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse();
+prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr);
 
 /* Converts token to symbol used in precedence table */
 int token_to_NT(int token_num);
@@ -96,7 +97,7 @@ void reduce_boolean(struc_prec_stack *stackPtr);
 void reduce_parenthesis(struc_prec_stack *stackPtr);
 
 /* reduces expression on stack */
-void reduce(struc_prec_stack *stackPtr, struc_token *topNT);
+void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT);
 
 
 #endif //PREC_PARSER_H

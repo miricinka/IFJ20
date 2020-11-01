@@ -37,8 +37,8 @@ int stat_list(Node * treePtr);
 int fun_params();
 int fun_returns();
 int stat(Node * treePtr);
-int ass_exps();
-int ass_stat();
+int ass_exps(Node * treePtr);
+int ass_stat(Node * treePtr);
 int fun_call_param();
 
 #endif /* PARSER_H*/
