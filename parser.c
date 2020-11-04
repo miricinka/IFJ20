@@ -308,7 +308,10 @@ int stat(Node * treePtr)
       token = get_new_token(&tokenStr);
       precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
-      if (precResult.end_datatype == TYPE_BOOL) {errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");}
+
+      if (precResult.end_datatype == TYPE_BOOL)
+        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
+
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
     }
