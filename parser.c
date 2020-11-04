@@ -156,23 +156,28 @@ int fun_def()
   {
     token = get_new_token(&tokenStr);
     if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");  
-    //spracujeme fun_params a ak je v poriadku tak pokracujeme dalej 
-    result = fun_params();
-    if (result != 0) return result;
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' "); 
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
-    //spracujeme fun_returns a ak je v poriadku tak pokracujeme dalej
-    result = fun_returns();
-    if (result != 0) return result;
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
-    token = get_new_token(&tokenStr);
-    if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");   
     //vytvorenie stromu pre funkciu na lokalne premenne
     Node treePtr;
     //printf("treeptr num before init: %p\n", &treePtr);
     BSTInit (&treePtr);
     //printf("treeptr num after init: %p\n", &treePtr);
+    //spracujeme fun_params a ak je v poriadku tak pokracujeme dalej 
+    result = fun_params(&treePtr);
+    if (result != 0) return result;
+    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' "); 
+    token = get_new_token(&tokenStr);
+    //definicia funkcie nemusi obsahovat zatvorku s navratovymi hodnotami
+    if (token != L_PAR && token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' or '{' ");
+    if (token == L_PAR)
+    {
+      //if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
+      //spracujeme fun_returns a ak je v poriadku tak pokracujeme dalej
+      result = fun_returns();
+      if (result != 0) return result;
+      if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
+      token = get_new_token(&tokenStr);
+    }
+    if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");   
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej 
     result = stat_list(&treePtr);
     if (result != 0) return result;
@@ -205,6 +210,9 @@ switch (token)
     case F_CHR:      
     case F_INT2FLOAT:
     case F_FLOAT2INT:
+    case F_INPUTF:
+    case F_INPUTS:
+    case F_INPUTI:
       // nejprve zavolame funkci stat
       result = stat(treePtr);      
       // pokud v ramci teto funkce nastala chyba, vracime jeji kod a nepokracujeme dal
@@ -242,7 +250,7 @@ int stat(Node * treePtr)
         errorMsg(ERR_SEMANTIC_COMPATIBILITY, "IF statement expression must be boolean");
     //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati L_BR token 
     if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
-    stat_list(treePtr);
+    result = stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
@@ -252,7 +260,7 @@ int stat(Node * treePtr)
     if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
     token = get_new_token(&tokenStr);
     if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - no EOL after ELSE");
-        stat_list(treePtr);
+    result = stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing } in ELSE");
@@ -306,7 +314,7 @@ int stat(Node * treePtr)
     }
     token = get_new_token(&tokenStr);
     if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
-    stat_list(treePtr);
+    result = stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "FOR statement - '}' missing");
@@ -399,6 +407,69 @@ int stat(Node * treePtr)
   {
     return ass_exps(treePtr);
   }
+  //sekcia vstavanych funkcii
+
+  //input funkcie myslim nemozu byt ako samostatny prikaz
+  else if (token == F_INPUTF)
+  {
+    token = get_new_token(&tokenStr);
+    if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - '(' missing");
+    token = get_new_token(&tokenStr);
+    if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - ')' missing");
+    token = get_new_token(&tokenStr);
+    if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - EOL missing");
+  }
+  else if (token == F_INPUTI)
+  {
+    token = get_new_token(&tokenStr);
+    if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - '(' missing");
+    token = get_new_token(&tokenStr);
+    if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - ')' missing");
+    token = get_new_token(&tokenStr);
+    if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - EOL missing");
+  }
+  else if (token == F_INPUTS)
+  {
+    token = get_new_token(&tokenStr);
+    if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - '(' missing");
+    token = get_new_token(&tokenStr);
+    if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - ')' missing");
+    token = get_new_token(&tokenStr);
+    if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - EOL missing");
+  }
+  else if (token == F_FLOAT2INT)
+  {
+    
+  }
+  else if (token == F_INT2FLOAT)
+  {
+    
+  }
+  else if (token == F_LEN)
+  {
+    
+  }
+  else if (token == F_ORD)
+  {
+    
+  }
+  else if (token == F_PRINT)
+  {
+    token = get_new_token(&tokenStr);
+    if (token != L_PAR) errorMsg(ERR_SYNTAX, "PRINT statement - '(' missing");    
+    result = print_params(treePtr);
+    if (result != 0) return result;
+    token = get_new_token(&tokenStr);
+    if (token != EOL) errorMsg(ERR_SYNTAX, "PRINT statement - EOL missing");    
+  }
+  else if (token == F_SUBSTR)
+  {
+    
+  }
+  else if (token == F_CHR)
+  {
+
+  }
 
   return result;
 }
@@ -478,7 +549,7 @@ int fun_call_param()
 //<type>	FLOAT64															
 //<type>	INT															
 //<type>	STRING															
-int fun_params()
+int fun_params(Node * treePtr)
 {
   int result = 0;
   int multipleParams = 0;
@@ -488,11 +559,31 @@ int fun_params()
   if (token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
   if (token == R_PAR && multipleParams == 0) return result;
   else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect params");
+
+  //pozrieme do stromu ci tam id premennej je
+  bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+  string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
+  if (strcmp(stringID.str, "_") == 0){errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'");}
+  //kontrola ak je id uz deklarovane hodime chybu 3
+  if (isIDDeclared == true)
+  {
+    errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
+  }
+
   token = get_new_token(&tokenStr);
   if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) errorMsg(ERR_SYNTAX, "Incorrect or missing param type");
+  //kontrola spravnosti typu pri deklaraci premennej
+  int tokenDataType = 0;
+  if (token == KW_FLOAT64){tokenDataType = T_FLOAT;}
+  else if(token == KW_INT){tokenDataType = T_INT;}
+  else if(token == KW_STRING){tokenDataType = T_STRING;}
+  else {errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");}
+  //deklaracia prebehla a ID a typ premennej ulozime do stromu
+  BSTInsert(treePtr, stringID, tokenDataType);
+
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
-  if (token == COMMA) return fun_params();
+  if (token == COMMA) return fun_params(treePtr);
   return result;
 }
 //<fun_returns>	<ret>	<ret_next>														
@@ -513,5 +604,30 @@ int fun_returns()
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect return params");
   if (token == COMMA) return fun_returns();
+  return result;
+}
+
+//fun_params for PRINT function
+int print_params(Node * treePtr)
+{
+
+  int result = 0;
+  int multipleParams = 0;
+  if (token == COMMA) multipleParams = 1;
+
+  token = get_new_token(&tokenStr);
+  if (token != ID && token != T_STRING && token != T_FLOAT && token != T_INT && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
+  if (token == R_PAR && multipleParams == 0) return result;
+  else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
+
+  //pozrieme do stromu ci tam id premennej je
+  bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+  if (isIDDeclared != true  && token == ID)
+  {
+    errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");
+  }
+  token = get_new_token(&tokenStr);
+  if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
+  if (token == COMMA) return print_params(treePtr);
   return result;
 }

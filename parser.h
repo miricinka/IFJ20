@@ -34,12 +34,13 @@ int prolog();
 int fun_def_list();
 int fun_def();
 int stat_list(Node * treePtr);
-int fun_params();
+int fun_params(Node * treePtr);
 int fun_returns();
 int stat(Node * treePtr);
 int ass_exps(Node * treePtr);
 int ass_stat(Node * treePtr);
 int fun_call_param();
+int print_params(Node * treePtr);
 
 #endif /* PARSER_H*/
 
