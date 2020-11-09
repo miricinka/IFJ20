@@ -138,6 +138,15 @@ int fun_def()
     token = get_new_token(&tokenStr);
     if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing ')' ");
     token = get_new_token(&tokenStr);
+    if (token != L_PAR && token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - return params or '{' ");
+    //optional return params in main function
+    if (token == L_PAR)
+    {
+    token = get_new_token(&tokenStr);
+    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing ')' ");
+    token = get_new_token(&tokenStr);
+    }
+    
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
     //vytvorenie stromu pre funkciu na lokalne premenne
     Node treePtr;
@@ -183,6 +192,11 @@ int fun_def()
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
+  }
+  //if we try to redefine functions of language GO => semantic error 3
+  else if (token == F_INPUTS || token == F_INPUTI || token == F_INPUTF || token == F_PRINT || token == F_INT2FLOAT || token == F_FLOAT2INT || token == F_LEN || token == F_SUBSTR || token == F_ORD || token == F_CHR )
+  {
+    errorMsg(ERR_SEMANTIC_DEFINITION, "Redefinition of function");
   }
   else errorMsg(ERR_SYNTAX, "Function is missing ID");
   
@@ -377,6 +391,10 @@ int stat(Node * treePtr)
       }
 
       token = get_new_token(&tokenStr);
+      if (token == F_INPUTS || token == F_INPUTI || token == F_INPUTF || token == F_INT2FLOAT || token == F_FLOAT2INT || token == F_LEN || token == F_SUBSTR || token == F_ORD || token == F_CHR )
+      {
+        
+      }
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
       //zavolame precedencku na vyraz!!!
@@ -415,46 +433,49 @@ int stat(Node * treePtr)
   //input funkcie myslim nemozu byt ako samostatny prikaz
   else if (token == F_INPUTF)
   {
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - '(' missing");
-    token = get_new_token(&tokenStr);
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - ')' missing");
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - EOL missing");
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement inputf can not be lonely on line, it will be sad");
+    // token = get_new_token(&tokenStr);
+    // if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - '(' missing");
+    // token = get_new_token(&tokenStr);
+    // if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - ')' missing");
+    // token = get_new_token(&tokenStr);
+    // if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - EOL missing");
   }
   else if (token == F_INPUTI)
   {
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - '(' missing");
-    token = get_new_token(&tokenStr);
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - ')' missing");
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - EOL missing");
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement inputi can not be lonely on line, it will be sad");
+    // token = get_new_token(&tokenStr);
+    // if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - '(' missing");
+    // token = get_new_token(&tokenStr);
+    // if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - ')' missing");
+    // token = get_new_token(&tokenStr);
+    // if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - EOL missing");
   }
   else if (token == F_INPUTS)
   {
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - '(' missing");
-    token = get_new_token(&tokenStr);
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - ')' missing");
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - EOL missing");
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement inputs can not be lonely on line, it will be sad");
+    // token = get_new_token(&tokenStr);
+    // if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - '(' missing");
+    // token = get_new_token(&tokenStr);
+    // if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - ')' missing");
+    // token = get_new_token(&tokenStr);
+    // if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - EOL missing");
   }
   else if (token == F_FLOAT2INT)
   {
-    
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement float2int can not be lonely on line, it will be sad");
   }
   else if (token == F_INT2FLOAT)
   {
-    
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement int2float can not be lonely on line, it will be sad");
   }
   else if (token == F_LEN)
   {
-    
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement len can not be lonely on line, it will be sad");
   }
   else if (token == F_ORD)
   {
-    
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement ord can not be lonely on line, it will be sad");
   }
   else if (token == F_PRINT)
   {
@@ -467,11 +488,11 @@ int stat(Node * treePtr)
   }
   else if (token == F_SUBSTR)
   {
-    
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement substr can not be lonely on line, it will be sad");
   }
   else if (token == F_CHR)
   {
-
+    errorMsg(ERR_SEMANTIC_OTHER, "Statement chr can not be lonely on line, it will be sad");
   }
 
   return result;
