@@ -12,8 +12,9 @@
  *  List functions
  * 
  * AUTHORS:
- *  Hrúz Tomáš    <xhruzt00@stud.fit.vutbr.cz>
- *  
+ *  Tomáš Hrúz          <xhruzt00@stud.fit.vutbr.cz>
+ *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
+ *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz> 
 */
 #include <stdio.h>
 #include <stdlib.h>
