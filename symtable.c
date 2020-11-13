@@ -17,7 +17,7 @@
 
 #include "symtable.h"
 
-void Print_tree2(Node TempTree, char* sufix, char fromdir){
+void Print_tree2(varNode TempTree, char* sufix, char fromdir){
     if (TempTree != NULL){
 		char* suf2 = (char*) malloc(strlen(sufix) + 4);
 		strcpy(suf2, sufix);
@@ -43,7 +43,7 @@ void Print_tree2(Node TempTree, char* sufix, char fromdir){
     }
 }
 
-void Print_tree(Node TempTree){
+void Print_tree(varNode TempTree){
   	printf("Struktura binarniho stromu:\n");
   	printf("\n");
 
@@ -58,17 +58,17 @@ void Print_tree(Node TempTree){
 
 /*************** Variable tree operations *****************/
 
-void BSTInit (Node *RootPtr) {
+void BSTInit (varNode *RootPtr) {
 	*RootPtr = NULL;
 }
 
-bool isDeclared (Node RootPtr, string Key) {
+bool isDeclared (varNode RootPtr, string Key) {
 	if(BSTSearch(RootPtr, Key) == NULL)
 		return false;
 	return true;
 }
 
-int getType (Node RootPtr, string Key) {
+int getType (varNode RootPtr, string Key) {
 	if(!RootPtr)
 		return 666;
 
@@ -81,7 +81,7 @@ int getType (Node RootPtr, string Key) {
 	return RootPtr->type;
 }
 
-Node BSTSearch (Node RootPtr, string Key)	{
+varNode BSTSearch (varNode RootPtr, string Key)	{
 
 	if(!RootPtr)
 		return NULL;
@@ -95,10 +95,10 @@ Node BSTSearch (Node RootPtr, string Key)	{
 	return RootPtr;
 }
 
-void BSTInsert (Node RootPtr, string Key, int Type)	{
+void BSTInsert (varNode RootPtr, string Key, int Type)	{
 
 	if( !RootPtr ) {
-		RootPtr = (Node)malloc(sizeof(struct Node));
+		RootPtr = (varNode)malloc(sizeof(struct varNode));
 		if(RootPtr == NULL)
 			return;
 
@@ -129,7 +129,7 @@ void BSTInsert (Node RootPtr, string Key, int Type)	{
 		strCopyString(&(RootPtr->name), &Key);
 }
 
-void BSTDispose (Node *RootPtr) {
+void BSTDispose (varNode *RootPtr) {
 
 	if( *RootPtr != NULL){
         BSTDispose((*RootPtr)->LPtr);
