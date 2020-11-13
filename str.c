@@ -96,7 +96,6 @@ int strCopyString(string *s1, string *s2)
  /*
   //char *new_string;
   //new_string = (char*) malloc (sizeof(char) *STR_LEN_INC);
-
   string *str1 = NULL;
   strInit(str1);
   strcpy(s1->str, s2->str);

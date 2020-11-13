@@ -48,4 +48,3 @@ int strGetLength(string *s);
 
 #endif //IFJ_STRING_H
 
-

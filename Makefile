@@ -1,9 +1,9 @@
 PROJ=ifj20
-CFLAGS=-std=gnu99 -Wall -Wextra -Werror -pedantic 
+CFLAGS=-std=gnu99 -Wall -Wextra -g
 CC=gcc
 LIBS=-lm
 RM=rm -f
-FILES=main.c scanner.c str.c error.c
+FILES=symtable_test.c symtable.c str.c
 
 $(PROJ) : $(FILES)
 	$(CC) $(CFLAGS) -o $(PROJ) $(FILES) $(LIBS)
