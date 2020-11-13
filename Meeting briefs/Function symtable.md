@@ -26,9 +26,9 @@ The parser will work with symtable using following functions:
 * funBSTInit(funNode  symtablePointer);
 	* inicializes the pointer to function symtable and its lists
 * addFunCall(funNode  symtablePointer, string functionID);
-	* sets bool (funcNode->isCalled) to true
+	* adds function to the symtable and sets bool (funcNode->isCalled) to true
 * addFunDec(funNode  symtablePointer, string functionID);
-	* sets bool (funcNode->isDeclared) to true
+	* adds function to the symtable and sets bool (funcNode->isDeclared) to true
 
 * funListDelete(funNode  symtablePointer);
 	* frees the whole structure for a happy valgrind
