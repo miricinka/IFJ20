@@ -30,7 +30,7 @@ The parser will work with symtable using following functions:
 * addFunDec(funNode  symtablePointer, string functionID);
 	* adds function to the symtable and sets bool (funcNode->isDeclared) to true
 
-* funListDelete(funNode  symtablePointer);
+* funDisposeTree(funNode  symtablePointer);
 	* frees the whole structure for a happy valgrind
 2. Caring for the tree
 * isFunCallDec(funNode  symtablePointer);
