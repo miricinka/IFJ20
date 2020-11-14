@@ -11,7 +11,7 @@
  * DESCRIPTION:
  *  Header file for symtable.c
  * 
- * AUTHORS:
+ * AUTHOR:
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
@@ -25,6 +25,12 @@
 #define T_INT        30
 #define T_FLOAT      31
 #define T_STRING     32 
+
+#define PointerError 	-1
+#define AllGood 		0
+#define BadType 		1
+#define BadOrder 		2
+#define BadTypeAndOrder 3
 
 /* Binary tree node structure */
 
@@ -42,8 +48,8 @@ typedef struct funNode{
 	bool isDeclared;
 	bool isCalled;
 
-	struct funListElement *params;
-	struct funListElement *retrunCodes;
+	struct funListElement *parameters;
+	struct funListElement *returnCodes;
 
 	struct funNode *LPtr;
 	struct funNode *RPtr;
@@ -51,6 +57,7 @@ typedef struct funNode{
 
 typedef struct funListElement{
 	int type;
+	int order;
 
 	struct funList *NextPtr;
 } *funListElement;
@@ -62,29 +69,35 @@ typedef struct {
 
 /* Prototypes of tree printing functions */
 
-void Print_tree(varNodeTempTree);
-void Print_tree2(varNodeTempTree, char* sufix, char fromdir);
+void Print_tree(varNode);
+void Print_tree2(varNode, char* sufix, char fromdir);
 
 /* Prototypes of variable operations */
 
 void BSTInit   	(varNode*);
-varNodeBSTSearch(varNode, string);
+varNode BSTSearch(varNode, string);
 void BSTInsert 	(varNode, string, int);
-void BSTDelete 	(varNode*, string);
 void BSTDispose	(varNode*);
 bool isDeclared (varNode, string);
 int  getType	(varNode, string);
 
 /* Prototypes of function operations */
 
-void funBSTInit    (funNode *);
-funNode funBSTSearch  (funNode, string);
-void funBSTInsert  (funNode *, string, int);
-void funBSTDelete  (funNode *, string);
-void funBSTDispose (funNode *);
-bool funIsDeclared (funNode, string);
+void funInit    (funNode *);
+funNode funSearch  (funNode, string);
+funNode addFunToTree  (funNode *, string);
+void funDisposeTree (funNode *);
+void addFunCall(funNode , string);
+void addFunDec(funNode, string);
+int addParam(funNode, string, int, int);
+int addReturn(funNode, string, int, int);
+string isFunCallDec(funNode);
 
 /*Prototypes of function list operations*/
-void funListInit (funList *L);
-void funListAdd (funList *L, int val);
-int* funListRead (funList *L);
+
+void funListInit (funList );
+void funListAdd (funList , int);
+funListElement funListSearch (funList, int);
+void funListDelete (funList);
+int processListElement(funNode *, string, int, int);
+int funListElementCheck (funListElement, int, int);

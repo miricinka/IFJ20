@@ -11,9 +11,9 @@
  * DESCRIPTION:
  *  Implementation of symbol table using binary tree
  * 
- * AUTHORS:
+ * AUTHOR:
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
-*/
+ */
 
 #include "symtable.h"
 
@@ -125,8 +125,7 @@ void BSTInsert (varNode RootPtr, string Key, int Type)	{
 		return;
 	}
 
-		RootPtr->type = Type;
-		strCopyString(&(RootPtr->name), &Key);
+	RootPtr->type = Type;
 }
 
 void BSTDispose (varNode *RootPtr) {
@@ -144,33 +143,30 @@ void BSTDispose (varNode *RootPtr) {
 
 /*************** Function tree operations *****************/
 
-void funBSTInit (funNode *RootPtr) {
+void funInit (funNode *RootPtr) {
 	*RootPtr = NULL;
+	funListInit ((*RootPtr)->parameters);
+	funListInit ((*RootPtr)->returnCodes);
 }
 
-bool funIsDeclared (funNode RootPtr, string Key) {
-	if(funBSTSearch(RootPtr, Key) == NULL)
-		return false;
-	return true;
-}
-
-funNode funBSTSearch (funNode RootPtr, string Key)	{
+funNode funSearch (funNode RootPtr, string Key)	{
 
 	if(!RootPtr)
 		return NULL;
 
 	else if (strCmpString(&Key, &(RootPtr->name)) < 0)
-		return funBSTSearch(RootPtr->LPtr, Key);
+		return funSearch(RootPtr->LPtr, Key);
 
 	else if (strCmpString(&Key, &(RootPtr->name)) > 0)
-		return funBSTSearch(RootPtr->RPtr, Key);
+		return funSearch(RootPtr->RPtr, Key);
 
 	return RootPtr;
 }
 
-void funBSTInsert (funNode *RootPtr, string Key, int Type)	{
+funNode addFunToTree(funNode *RootPtr, string Key){
 
-	if( !*RootPtr ) {
+	// function will be inserted into the tree
+	if(!*RootPtr){
 		(*RootPtr) = (funNode)malloc(sizeof(struct funNode));
 		if(RootPtr == NULL)
 			return;
@@ -180,64 +176,169 @@ void funBSTInsert (funNode *RootPtr, string Key, int Type)	{
 		strCopyString(&((*RootPtr)->name),&Key);
 
 		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
+		return RootPtr;
+	}
+
+	if (strCmpString(&Key, &((*RootPtr)->name)) < 0) {
+		addFunToTree ( &((*RootPtr)->LPtr), Key);
 		return;
 	}
 
-
-	if ( strCmpString(&Key, &((*RootPtr)->name)) < 0) {
-		funBSTInsert ( &((*RootPtr)->LPtr), Key, Type);
+	if (strCmpString(&Key, &((*RootPtr)->name)) > 0) {
+		addFunToTree ( &((*RootPtr)->RPtr), Key);
 		return;
 	}
 
-	if ( strCmpString(&Key, &((*RootPtr)->name)) > 0) {
-		funBSTInsert ( &((*RootPtr)->RPtr), Key, Type);
-		return;
-	}
-
-		strCopyString(&((*RootPtr)->name), &Key);
+	// function was already called or declared
 }
 
-void funBSTDispose (funNode *RootPtr) {
+void funDisposeTree (funNode *RootPtr) {
 
 	if( *RootPtr != NULL){
-        funBSTDispose(&(( *RootPtr )->LPtr));
-        funBSTDispose(&(( *RootPtr )->RPtr));
+        funDisposeTree(&(( *RootPtr )->LPtr));
+        funDisposeTree(&(( *RootPtr )->RPtr));
 
 		strFree(&((*RootPtr)->name));
-		
-        free( *RootPtr );
+		funListDelete((*RootPtr)->parameters);
+		funListDelete((*RootPtr)->returnCodes);
+
+        free(*RootPtr);
+
         *RootPtr = NULL;
     }
 }
+
+void addFunCall(funNode RootPtr, string Key){
+	// is it ok to reuse RootPtr?
+	RootPtr = addFunToTree(RootPtr,Key);
+	RootPtr->isCalled = true;
+}
+
+void addFunDec(funNode RootPtr, string Key){
+	// is it ok to reuse RootPtr?
+	RootPtr = addFunToTree(RootPtr,Key);
+	RootPtr->isDeclared = true;
+}
+
+int addParam(funNode RootPtr, string Key, int parameterType, int parameterOrder){
+	return processListElement(RootPtr, Key, parameterType, parameterOrder);
+}
+
+int addReturn(funNode RootPtr, string Key, int returnType, int returnOrder){
+	return processListElement(RootPtr, Key, returnType, returnOrder);
+}
+
+string isFunCallDec(funNode RootPtr){
+
+	if(RootPtr->LPtr)
+		return isFunCallDec(RootPtr->LPtr);
+
+	if(RootPtr->RPtr)
+		return isFunCallDec(RootPtr->RPtr);
+
+	if (RootPtr->isCalled && !RootPtr->isDeclared ){
+		return RootPtr->name;
+	}
+}
+
+/*************** Function list operations *****************/
 
 void funListInit (funList *L) {
     L->First = NULL;
 	L->elementCount = 0;
 }
 
-void funListAdd (funList *L, int val){
+void funListAdd (funList *L, int val, int order){
 	funListElement temp = L->First;
 
-	while (temp->NextPtr != NULL){
-		temp = temp->NextPtr;
+	if (L->First != NULL){
+		while (temp->NextPtr != NULL){
+			temp = temp->NextPtr;
+		}
 	}
-
+	
 	funListElement listElement = (funListElement) malloc(sizeof(struct funListElement) );
 	if( listElement == NULL ){
-		DLError();
 		return;
 	}
 
-	temp->NextPtr = listElement;
 	listElement->type = val;	
+	listElement->order = order;
 	listElement->NextPtr = NULL;
+
 	L->elementCount++;
 
 	if (L->First == NULL){
 		L->First = listElement;
+	} else{
+		temp->NextPtr = listElement;
 	}
 }
 
+funListElement funListSearch (funList *L, int order){
+	funListElement temp = L->First;
+
+	// switch for and if statement
+	for (int elementNum = 1; temp != NULL; elementNum++){
+		temp = temp->NextPtr;
+		if (elementNum = order){
+			return temp;
+		}
+	}
+
+	return NULL;
+}
+
+void funListDelete(funList *L){
+	funListElement temp = L->First;
+	while (temp != NULL){
+		temp = temp->NextPtr;
+		free(L->First);
+		L->First = temp;
+	}
+}
+
+int processListElement(funNode RootPtr, string Key, int type, int order){
+	RootPtr = funSearch (RootPtr, Key);
+
+	funListElement tempListElement = (funListElement) malloc(sizeof(struct funListElement) );
+	if( tempListElement == NULL )
+		return PointerError;
+
+	tempListElement = funListSearch (RootPtr->parameters, order);
+
+	// if element was not found, then we can simply insert it at the end of the list
+	if(tempListElement == NULL){
+		funListAdd(RootPtr->parameters,type,order);
+		// is this free good?
+		free(tempListElement);
+		return AllGood;
+	// if element was found, the we have to check if order and type match
+	} else{
+		return funListElementCheck (tempListElement, type, order);
+	}
+}
+
+int funListElementCheck (funListElement ListElement, int Type, int Order){
+	int returnMe = AllGood;
+
+	if (ListElement->order != Order){
+		
+		if (ListElement->type != Type){
+			returnMe = BadTypeAndOrder;
+		} else{
+			returnMe = BadOrder;
+		}
+
+	} else if (ListElement->type != Type){
+		returnMe = BadType;
+	} 
+
+	free(ListElement);
+	return returnMe;
+}
+
+/*
 int* funListRead (funList *L){
 	funListElement temp = L->First;
 	int *typeArray;
@@ -249,3 +350,4 @@ int* funListRead (funList *L){
 	}
 	return typeArray;
 }
+*/
