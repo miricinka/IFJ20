@@ -16,6 +16,7 @@
  */
 
 #include "symtable.h"
+#include "error.h"
 
 void Print_tree2(varNode TempTree, char* sufix, char fromdir){
     if (TempTree != NULL){
@@ -95,47 +96,46 @@ varNode BSTSearch (varNode RootPtr, string Key)	{
 	return RootPtr;
 }
 
-void BSTInsert (varNode RootPtr, string Key, int Type)	{
+void BSTInsert (varNode *RootPtr, string Key, int Type)	{
 
-	if( !RootPtr ) {
-		RootPtr = (varNode)malloc(sizeof(struct varNode));
+	if( !*RootPtr ) {
+		(*RootPtr) = (varNode)malloc(sizeof(struct varNode));
 		if(RootPtr == NULL)
 			return;
 
 		// DON'T MOVE THIS LINE OR THE TREE DIES !!!
-		/**/RootPtr->type = Type;/**/
+		/**/(*RootPtr)->type = Type;/**/
 		// STAY WHERE YOU ARE FILTHY BUGGY CODE!
 
-		strInit(&RootPtr->name);
+		strInit(&(*RootPtr)->name);
 	
-		strCopyString(&(RootPtr->name),&Key);
+		strCopyString(&((*RootPtr)->name),&Key);
 
-		RootPtr->LPtr = RootPtr->RPtr = NULL;
+		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
 		return;
 	}
 
 
-	if ( strCmpString(&Key, &(RootPtr->name)) < 0) {
-		BSTInsert ( &(RootPtr->LPtr), Key, Type);
+	if ( strCmpString(&Key, &((*RootPtr)->name)) < 0) {
+		BSTInsert ( &((*RootPtr)->LPtr), Key, Type);
 		return;
 	}
 
-	if ( strCmpString(&Key, &(RootPtr->name)) > 0) {
-		BSTInsert ( &(RootPtr->RPtr), Key, Type);
+	if ( strCmpString(&Key, &((*RootPtr)->name)) > 0) {
+		BSTInsert ( &((*RootPtr)->RPtr), Key, Type);
 		return;
 	}
 
-	RootPtr->type = Type;
+	(*RootPtr)->type = Type;
 }
 
 void BSTDispose (varNode *RootPtr) {
 
 	if( *RootPtr != NULL){
-        BSTDispose((*RootPtr)->LPtr);
-        BSTDispose((*RootPtr)->RPtr);
+        BSTDispose(&((*RootPtr)->LPtr));
+        BSTDispose(&((*RootPtr)->RPtr));
 
 		strFree(&((*RootPtr)->name));
-		
         free( *RootPtr );
         *RootPtr = NULL;
     }
@@ -163,48 +163,44 @@ funNode funSearch (funNode RootPtr, string Key)	{
 	return RootPtr;
 }
 
-funNode addFunToTree(funNode *RootPtr, string Key){
+funNode addFunToTree(funNode RootPtr, string Key){
 
 	// function will be inserted into the tree
-	if(!*RootPtr){
-		(*RootPtr) = (funNode)malloc(sizeof(struct funNode));
+	if(!RootPtr){
+		RootPtr = (funNode)malloc(sizeof(struct funNode));
 		if(RootPtr == NULL)
-			return;
+			return NULL;
 
-		strInit(&((*RootPtr)->name));
+		strInit(&(RootPtr)->name);
 	
-		strCopyString(&((*RootPtr)->name),&Key);
+		strCopyString(&(RootPtr->name),&Key);
 
-		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
+		RootPtr->LPtr = RootPtr->RPtr = NULL;
 		return RootPtr;
 	}
 
-	if (strCmpString(&Key, &((*RootPtr)->name)) < 0) {
-		addFunToTree ( &((*RootPtr)->LPtr), Key);
-		return;
+	if (strCmpString(&Key, &(RootPtr->name)) < 0) {
+		addFunToTree ( RootPtr->LPtr, Key);
+	}else if (strCmpString(&Key, &(RootPtr->name)) > 0) {
+		addFunToTree ( RootPtr->RPtr, Key);
 	}
-
-	if (strCmpString(&Key, &((*RootPtr)->name)) > 0) {
-		addFunToTree ( &((*RootPtr)->RPtr), Key);
-		return;
-	}
-
+	return RootPtr;
 	// function was already called or declared
 }
 
-void funDisposeTree (funNode *RootPtr) {
+void funDisposeTree (funNode RootPtr) {
 
-	if( *RootPtr != NULL){
-        funDisposeTree(&(( *RootPtr )->LPtr));
-        funDisposeTree(&(( *RootPtr )->RPtr));
+	if( RootPtr != NULL){
+        funDisposeTree(RootPtr->LPtr);
+        funDisposeTree(RootPtr->RPtr);
 
-		strFree(&((*RootPtr)->name));
-		funListDelete((*RootPtr)->parameters);
-		funListDelete((*RootPtr)->returnCodes);
+		strFree(&(RootPtr->name));
+		funListDelete(RootPtr->parameters);
+		funListDelete(RootPtr->returnCodes);
 
-        free(*RootPtr);
+        free(RootPtr);
 
-        *RootPtr = NULL;
+        RootPtr = NULL;
     }
 }
 
@@ -221,14 +217,14 @@ void addFunDec(funNode RootPtr, string Key){
 }
 
 int addParam(funNode RootPtr, string Key, int parameterType, int parameterOrder){
-	return processListElement(RootPtr, Key, parameterType, parameterOrder);
+	return processListElement(&RootPtr, Key, parameterType, parameterOrder);
 }
 
 int addReturn(funNode RootPtr, string Key, int returnType, int returnOrder){
-	return processListElement(RootPtr, Key, returnType, returnOrder);
+	return processListElement(&RootPtr, Key, returnType, returnOrder);
 }
 
-string isFunCallDec(funNode RootPtr){
+int isFunCallDec(funNode RootPtr){
 
 	if(RootPtr->LPtr)
 		return isFunCallDec(RootPtr->LPtr);
@@ -237,8 +233,10 @@ string isFunCallDec(funNode RootPtr){
 		return isFunCallDec(RootPtr->RPtr);
 
 	if (RootPtr->isCalled && !RootPtr->isDeclared ){
-		return RootPtr->name;
+		printf("Error - the function %s is called but not declared!",RootPtr->name.str);
+		exit(1); // TODO check exit code
 	}
+	return 0;
 }
 
 /*************** Function list operations *****************/
@@ -281,7 +279,7 @@ funListElement funListSearch (funList *L, int order){
 	// switch for and if statement
 	for (int elementNum = 1; temp != NULL; elementNum++){
 		temp = temp->NextPtr;
-		if (elementNum = order){
+		if (elementNum == order){
 			return temp;
 		}
 	}
@@ -298,19 +296,19 @@ void funListDelete(funList *L){
 	}
 }
 
-int processListElement(funNode RootPtr, string Key, int type, int order){
-	RootPtr = funSearch (RootPtr, Key);
+int processListElement(funNode *RootPtr, string Key, int type, int order){
+	*RootPtr = funSearch ((*RootPtr), Key);
 
 	funListElement tempListElement = (funListElement) malloc(sizeof(struct funListElement) );
 	if( tempListElement == NULL )
 		return PointerError;
 
-	tempListElement = funListSearch (RootPtr->parameters, order);
+	tempListElement = funListSearch ((*RootPtr)->parameters, order);
 
 	// if element was not found, then we can simply insert it at the end of the list
 	if(tempListElement == NULL){
-		funListAdd(RootPtr->parameters,type,order);
-		// is this free good?
+		funListAdd((*RootPtr)->parameters,type,order);
+		// TODO is this free good?
 		free(tempListElement);
 		return AllGood;
 	// if element was found, the we have to check if order and type match
@@ -351,3 +349,62 @@ int* funListRead (funList *L){
 	return typeArray;
 }
 */
+
+/*************** Functions for printing datastructures *****************/
+
+void printVarTree2(varNode TempTree, char* sufix, char fromdir){
+    if (TempTree != NULL){
+		char* suf2 = (char*) malloc(strlen(sufix) + 4);
+		strcpy(suf2, sufix);
+
+        if (fromdir == 'L'){
+	   		suf2 = strcat(suf2, "  |");
+	   		printf("%s\n", suf2);
+		}else
+	   		suf2 = strcat(suf2, "   ");
+
+		Print_tree2(TempTree->RPtr, suf2, 'R');
+        printf("%s  +-[%s,%d]\n", sufix,  TempTree->name.str, TempTree->type);
+		strcpy(suf2, sufix);
+
+        if (fromdir == 'R')
+	   		suf2 = strcat(suf2, "  |");	
+		else
+	   		suf2 = strcat(suf2, "   ");
+		Print_tree2(TempTree->LPtr, suf2, 'L');
+
+		if (fromdir == 'R') printf("%s\n", suf2);
+			free(suf2);
+    }
+}
+
+void printVarTree(varNode TempTree){
+  	printf("Struktura binarniho stromu:\n");
+  	printf("\n");
+
+  	if (TempTree != NULL)
+     	Print_tree2(TempTree, "", 'X');
+  	else
+     printf("strom je prazdny\n");
+
+  	printf("\n");
+  	printf("=================================================\n");
+} 
+
+void printFunList(funList TL){
+	
+	funList TempList=TL;
+	int CurrListLength = 0;
+	printf("\t -----------------\n");
+	while ((TempList.First!=NULL) && (CurrListLength<MAX_LIST_LENGHT))	{
+
+		printf("\t |type %d, order %d|\n",TempList.First->type,TempList.First->order);
+		
+		TempList.First=TempList.First->NextPtr;
+		CurrListLength++;
+	}
+    if (CurrListLength>=MAX_LIST_LENGHT){
+        printf("List exceeded maximum length!\n");
+	}
+	printf("\t -----------------\n");     
+}

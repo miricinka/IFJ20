@@ -32,6 +32,8 @@
 #define BadOrder 		2
 #define BadTypeAndOrder 3
 
+#define MAX_LIST_LENGHT 100
+
 /* Binary tree node structure */
 
 typedef struct varNode{
@@ -48,8 +50,8 @@ typedef struct funNode{
 	bool isDeclared;
 	bool isCalled;
 
-	struct funListElement *parameters;
-	struct funListElement *returnCodes;
+	struct funList *parameters;
+	struct funList *returnCodes;
 
 	struct funNode *LPtr;
 	struct funNode *RPtr;
@@ -59,45 +61,46 @@ typedef struct funListElement{
 	int type;
 	int order;
 
-	struct funList *NextPtr;
+	struct funListElement *NextPtr;
 } *funListElement;
 
-typedef struct {
+typedef struct funList{
     funListElement First;
 	int elementCount;
 } funList;
-
-/* Prototypes of tree printing functions */
-
-void Print_tree(varNode);
-void Print_tree2(varNode, char* sufix, char fromdir);
 
 /* Prototypes of variable operations */
 
 void BSTInit   	(varNode*);
 varNode BSTSearch(varNode, string);
-void BSTInsert 	(varNode, string, int);
+void BSTInsert 	(varNode*, string, int);
 void BSTDispose	(varNode*);
 bool isDeclared (varNode, string);
 int  getType	(varNode, string);
 
 /* Prototypes of function operations */
 
-void funInit    (funNode *);
-funNode funSearch  (funNode, string);
-funNode addFunToTree  (funNode *, string);
-void funDisposeTree (funNode *);
-void addFunCall(funNode , string);
-void addFunDec(funNode, string);
-int addParam(funNode, string, int, int);
-int addReturn(funNode, string, int, int);
-string isFunCallDec(funNode);
+void funInit (funNode *RootPtr);
+funNode funSearch (funNode RootPtr, string Key);
+funNode addFunToTree(funNode RootPtr, string Key);
+void funDisposeTree (funNode RootPtr);
+void addFunCall(funNode RootPtr, string Key);
+void addFunDec(funNode RootPtr, string Key);
+int addParam(funNode RootPtr, string Key, int parameterType, int parameterOrder);
+int addReturn(funNode RootPtr, string Key, int returnType, int returnOrder);
+int isFunCallDec(funNode RootPtr);
 
 /*Prototypes of function list operations*/
 
-void funListInit (funList );
-void funListAdd (funList , int);
-funListElement funListSearch (funList, int);
-void funListDelete (funList);
-int processListElement(funNode *, string, int, int);
-int funListElementCheck (funListElement, int, int);
+void funListInit (funList *L);
+void funListAdd (funList *L, int val, int order);
+funListElement funListSearch (funList *L, int order);
+void funListDelete(funList *L);
+int processListElement(funNode *RootPtr, string Key, int type, int order);
+int funListElementCheck (funListElement ListElement, int Type, int Order);
+
+/* Prototypes of datastructure printing functions */
+
+void printVarTree(varNode);
+void printVarTree2(varNode, char* sufix, char fromdir);
+void printFunList(funList TL);
