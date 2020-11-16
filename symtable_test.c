@@ -3,8 +3,8 @@
 #include "str.h"
 
 #define TEST_VAR_TREE  0
-#define TEST_FUN_LIST  1
-#define TEST_FUN_TREE  0
+#define TEST_FUN_LIST  0
+#define TEST_FUN_TREE  1
 
 /* Variable tree testing functions */
 
@@ -61,7 +61,6 @@ int test_BSTDispose(varNode* TempTree)		{
 	BSTDispose(TempTree);
 	printVarTree(*TempTree);
 	return true;
-
 }
 
 /* Function list testing functions */
@@ -74,6 +73,39 @@ void testFunListInit(funList TEMPLIST){
 void testFunListAdd(funList *TEMPLIST, int val, int order){
 	funListAdd(TEMPLIST, val, order);
 	printFunList(*TEMPLIST);
+}
+
+void testFunListSearch(funList *TEMPLIST, int order){
+	funListElement ListElement;
+	ListElement = funListSearch (TEMPLIST, order);
+	if(ListElement){
+		printf("Prvek %d BYL nalezen a ma typ %d\n",order,ListElement->type);
+	}else{
+		printf("Prvek NEBYL nalezen\n");
+	}
+
+}
+
+void testFunListElementCheck(funList *TEMPLIST, int order, int correctType){
+	funListElement ListElement;
+	ListElement = funListSearch(TEMPLIST, order);
+	
+	if (funListElementCheck(ListElement, correctType, order)){
+		printf("Bad element!\n");
+	}else{
+		printf("All Good!\n");
+	}
+}
+
+/* Function Binary tree testing functions */
+
+void testFunctionTreeSearch(funNode testTree, string key){
+	if(funSearch (testTree,  key)){
+		printf("Funkce BYLA nalezena\n");
+	}else{
+		printf("Funkce NEBYLA nalezena\n");
+	}
+	
 }
 /* .......................... sekce volani jednotlivych testu .............................*/ 
 
@@ -232,7 +264,6 @@ if (TEST_VAR_TREE){
 		test_BSTDispose(&TempTree);
 
 		strFree(&K);
-		printf("------------------------------ konec -------------------------------------\n");
 	}
 
 	if (TEST_FUN_LIST){
@@ -246,28 +277,133 @@ if (TEST_VAR_TREE){
 		testFunListInit(TEMPLIST);
 
 		printf("\n[TEST02]\n");
-    	printf("Zavoláme 2x funListAdd\n");
+    	printf("Zavoláme 3x funListAdd\n");
     	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
 		testFunListAdd(&TEMPLIST, T_INT, 1);
 		testFunListAdd(&TEMPLIST, T_FLOAT , 2);
 		testFunListAdd(&TEMPLIST, T_STRING, 3);
-		printf("------------------------------ konec -------------------------------------\n");
+
+		printf("\n[TEST03]\n");
+    	printf("Zkusíme najít všechny prvky\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		testFunListSearch(&TEMPLIST, 1);
+		testFunListSearch(&TEMPLIST, 2);
+		testFunListSearch(&TEMPLIST, 3);
+
+		printf("\n[TEST03]\n");
+    	printf("Zkusíme najít prvek co neexistuje\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		testFunListSearch(&TEMPLIST, 4);
+
+		printf("\n[TEST04]\n");
+    	printf("Test korektniho vyhodnoceni prvku\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		testFunListElementCheck(&TEMPLIST, 2, T_FLOAT);
+		
+		printf("\n[TEST05]\n");
+    	printf("Test NEkorektniho vyhodnoceni prvku\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		testFunListElementCheck(&TEMPLIST, 2, T_STRING);
+
+		printf("\n[TEST06]\n");
+		printf("Smažeme celý list\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		funListDelete(&TEMPLIST);
+		printFunList(TEMPLIST);
 	}
-	
-
-
-
-
-
-
-
 
 	if (TEST_FUN_TREE){
+		funNode funTree;
+		string name; strInit(&name);
+		
 		printf("Binarni vyhledavaci strom pro funkce\n");
 		printf("=========================\n");
 
-		printf("------------------------------ konec -------------------------------------\n");
+		printf("[TEST01]\n");
+		printf("Test inicializace....\n");
+		funInit(&funTree);
+		printFunTree(funTree);
+
+		printf("[TEST02]\n");
+		printf("Test mazání stromu\n");
+		funDisposeTree(&funTree);
+		printFunTree(funTree);
+
+		printf("[TEST03]\n");
+		printf("Test přidání prvku do stromu\n");
+		strAddChars(&name,"main");
+		addFunToTree(&funTree,name);
+		printFunTree(funTree);
+
+		printf("[TEST04]\n");
+		printf("Test přidání více prvků do stromu\n");
+		strClear(&name);
+		strAddChars(&name,"pain");
+		addFunToTree(&funTree,name);
+
+		strClear(&name);
+		strAddChars(&name,"gain");
+		addFunToTree(&funTree,name);
+
+		strClear(&name);
+		strAddChars(&name,"protein");
+		addFunToTree(&funTree,name);
+
+		strClear(&name);
+		strAddChars(&name,"papej");
+		addFunToTree(&funTree,name);
+		
+		strClear(&name);
+		strAddChars(&name,"sane");
+		addFunToTree(&funTree,name);
+
+		strClear(&name);
+		strAddChars(&name,"B");
+		addFunToTree(&funTree,name);
+
+		printFunTree(funTree);
+
+		printf("[TEST05]\n");
+		printf("Test hledání prvků ve stromu\n");
+		
+		strClear(&name);
+		strAddChars(&name,"protein");
+		testFunctionTreeSearch(funTree, name);
+
+		printf("[TEST06]\n");
+		printf("Test hledání prvků, které nejsou ve stromu\n");
+		strClear(&name);
+		strAddChars(&name,"kebab");
+		testFunctionTreeSearch(funTree, name);
+
+		printf("[TEST07]\n");
+		printf("Mazání naplněného stromu\n");
+		funDisposeTree(&funTree);
+		printFunTree(funTree);
+
+		printf("[TEST08]\n");
+		printf("přidání volání funkce\n");
+		addFunCall(&funTree, name);
+		printFunTree(funTree);
+
+		printf("[TEST09]\n");
+		printf("Kontrola volání funkce\n");
+		isFunCallDec(funTree);
+
+		printf("[TEST10]\n");
+		printf("Deklarace funkce\n");
+		addFunDec(&funTree, name);
+		printFunTree(funTree);
+
+		printf("[TEST11]\n");
+		printf("Kontrola volání funkce\n");
+		if(isFunCallDec(funTree) == 0){
+			printf("funkce je volana i deklarovana!\n");
+		}
+
+		strFree(&name);
 	}
 
-	return(0);
+	printf("------------------------------ konec -------------------------------------\n");
+	return 0;
 }
