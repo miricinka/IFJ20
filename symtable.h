@@ -15,6 +15,9 @@
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
+#ifndef SYMTABLE_H
+#define SYMTABLE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -106,3 +109,5 @@ void printVarTree2(varNode, char* sufix, char fromdir);
 void printFunList(funList TL);
 void printFunTree(funNode TempTree);
 void printFunTree2(funNode TempTree, char* sufix, char fromdir);
+
+#endif
