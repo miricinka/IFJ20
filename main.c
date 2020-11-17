@@ -31,7 +31,7 @@ int main() {
 	   if (result != 0) errorMsg(result, "Něco se posralo");
 	if (result == 0)
 	{
-		printf("NOICE\n");
+		//printf("NOICE\n");
 	}
 	listFree(&instrList);   
 	return 0;

@@ -109,6 +109,10 @@ int get_new_token(string *tokenStr) {
                         }else if(isdigit(next_char)){
                             if(strAddChar(tokenStr, next_char)){
                                 errorMsg(ERR_INTERNAL, "str.c allocation error");}
+                            if(next_char == '0'){
+                                return T_INT;
+                                break;
+                            }
                             state = S_INT;
                         }
                         else{

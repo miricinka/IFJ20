@@ -173,7 +173,7 @@ void reduce_parenthesis(struc_prec_stack *stackPtr){
 }
 
 /* reduces expression on stack */
-void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
+void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 	//print_precStack(stackPtr);
 
 	//E -> id pushs id
@@ -196,30 +196,30 @@ void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		}else{
 			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type in variable - in expression");
 		}
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> int pushs int
 	}else if(topNT->tokenNum == NT_INT){ 
 		topNT->tokenNum = RULE_INT;
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> float pushs float
 	}else if(topNT->tokenNum == NT_FLOAT){
 		topNT->tokenNum = RULE_FLOAT;
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> str pushs str
 	}else if(topNT->tokenNum == NT_STR){
 		topNT->tokenNum = RULE_STR;
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//reduce 3 symbols
 	}else if(topNT->tokenNum == NT_ADD){ //E -> E+E TODO str+str CONCAT
-		printf("#####INTRUCTION ADDS\n");
+		//printf("#####INTRUCTION ADDS\n");
 		arithm_semantic_check(stackPtr);
 	//E -> E+E
 	}else if(topNT->tokenNum == NT_MUL){
-		printf("#####INTRUCTION MULS\n");
+		//printf("#####INTRUCTION MULS\n");
 		arithm_semantic_check(stackPtr);
 	//E -> E-E
 	}else if(topNT->tokenNum == NT_SUB){
-		printf("#####INTRUCTION SUBS\n");
+		//printf("#####INTRUCTION SUBS\n");
 		arithm_semantic_check(stackPtr);
 	//E -> E/E
 	}else if(topNT->tokenNum == NT_DIV){
@@ -232,20 +232,20 @@ void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		}
 
 		if(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_INT){
-			printf("#####INTRUCTION DIVS\n");
+			//printf("#####INTRUCTION DIVS\n");
 			arithm_semantic_check(stackPtr);
 			//print_precStack(stackPtr);
 
 		}else if((top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT) || 
 			(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_FLOAT) ||
 			(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_INT)){
-			printf("#####INTRUCTION IDIVS\n");
+			//printf("#####INTRUCTION IDIVS\n");
 			string Str1; strInit(&Str1); strClear(&Str1);
 			pop3(stackPtr);
 			push_precStack(stackPtr, RULE_FLOAT, Str1);
 
 		}else{
-			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
+			errorMsg(ERR_SYNTAX, "Bad syntax in expression");
 		}
 	//E -> (E)
 	}else if(topNT->tokenNum == NT_RPAR){
@@ -253,32 +253,32 @@ void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 
 	//E -> E==E
 	}else if(topNT->tokenNum == NT_EQ){
-		printf("#####INTRUCTION EQS\n");
-		print_precStack(stackPtr);
+		//printf("#####INTRUCTION EQS\n");
+		//print_precStack(stackPtr);
 		reduce_boolean(stackPtr);
-		print_precStack(stackPtr);
+		//print_precStack(stackPtr);
 	//E -> E<E
 	}else if(topNT->tokenNum == NT_LESS){
-		printf("#####INTRUCTION LTS\n");
+		//printf("#####INTRUCTION LTS\n");
 		reduce_boolean(stackPtr);
 	//E -> E>E
 	}else if(topNT->tokenNum == NT_GREAT){
-		printf("#####INTRUCTION GTS\n");
+		//printf("#####INTRUCTION GTS\n");
 		reduce_boolean(stackPtr);
 	//E -> E!=E
 	}else if(topNT->tokenNum == NT_NEQ){
-		printf("#####INTRUCTION EQS\n");
-		printf("#####INTRUCTION NOTS\n");
+		//printf("#####INTRUCTION EQS\n");
+		//printf("#####INTRUCTION NOTS\n");
 		reduce_boolean(stackPtr);
 	//E -> E>=E
 	}else if(topNT->tokenNum == NT_LEQ){
-		printf("#####INTRUCTION LTS\n");
-		printf("#####INTRUCTION NOT\n");
+		//printf("#####INTRUCTION LTS\n");
+		//printf("#####INTRUCTION NOT\n");
 		reduce_boolean(stackPtr);
 	//E -> E<=E
 	}else if(topNT->tokenNum == NT_GEQ){
-		printf("#####INTRUCTION GTS\n");
-		printf("#####INTRUCTION NOT\n");
+		//printf("#####INTRUCTION GTS\n");
+		//printf("#####INTRUCTION NOT\n");
 		reduce_boolean(stackPtr);
 
 	}else{
@@ -292,8 +292,8 @@ void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr){
-	printf("#####INTRUCTION CLEARS\n");
+prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
+	//printf("#####INTRUCTION CLEARS\n");
 	string testStr; strInit(&testStr); strClear(&testStr);
 	//string tokenStr; strInit(&tokenStr);
 	int fullstack = 0;
@@ -330,7 +330,7 @@ prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr){
 				reduce(treePtr, ptrStack, topNT);
 				break;
 			default:
-				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
+				errorMsg(ERR_SYNTAX, "Err syntax in expression");
 		}
 
 	}while(prec_analisis_end != true);

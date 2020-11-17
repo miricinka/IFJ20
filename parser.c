@@ -21,6 +21,8 @@
 
 tListOfInstr *list; // globalni promenna uchovavajici seznam instrukci
 string tokenStr; //globalna premenna pre string instrukcie
+funNode funTree; //globalna premenna pre strom na funkcie
+
 
 
 int token = 0;
@@ -40,6 +42,8 @@ int parse(tListOfInstr *instrList)
 {
   //inicializujem si string, premenne, zoznam
   strInit(&tokenStr);
+  //inicializujeme strom na funkcie
+  funInit(&funTree);
   int result = 0;
   list = instrList;
   //kontrola prveho lexemu ak to je v poriadku zavola sa prvy non terminal <program> a ten spracuje dalej
@@ -113,10 +117,15 @@ switch (token)
       return fun_def_list();
 
     case EOL:
-    //prisiel EOL a rekurzivne zavolame fun_def_list kym nenajdeme funkciu alebo koniec suboru
+      //prisiel EOL a rekurzivne zavolame fun_def_list kym nenajdeme funkciu alebo koniec suboru
       return fun_def_list();
 
     case ENDFILE:
+      //kontrola ci volane funkcie boli deklarovane 
+      printFunTree(funTree);  
+      if(isFunCallDec(funTree) != 0){
+			    errorMsg(ERR_SEMANTIC_DEFINITION, "Function was not defined");
+		  }
       return result;
     break;
   }
@@ -133,6 +142,10 @@ int fun_def()
   token = get_new_token(&tokenStr);
   if (token == MAIN) //<fun_def>	func	main	(	)	{	<stat_list>	}		
   {
+    //pridanie mainu do stromu a vytvorenie pomocneho stringu na main
+    string tempMain; strInit (&tempMain); strAddChars(&tempMain,"main");
+    addFunDec(&funTree, tempMain);
+    strFree(&tempMain);
     token = get_new_token(&tokenStr);
     if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '(' ");
     token = get_new_token(&tokenStr);
@@ -149,7 +162,7 @@ int fun_def()
     
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
     //vytvorenie stromu pre funkciu na lokalne premenne
-    Node treePtr;
+    varNode treePtr;
     //printf("treeptr num before init: %p\n", &treePtr);
     BSTInit (&treePtr);
     //printf("treeptr num after init: %p\n", &treePtr);
@@ -163,10 +176,12 @@ int fun_def()
   }
   else if(token == ID) //<fun_def>	func	ID	(	<fun_params>	)	(	<fun_returns>	)	{	<stat_list>	}
   {
+    //pridanie funkcie do stromu
+    addFunDec(&funTree, tokenStr);
     token = get_new_token(&tokenStr);
     if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");  
     //vytvorenie stromu pre funkciu na lokalne premenne
-    Node treePtr;
+    varNode treePtr;
     //printf("treeptr num before init: %p\n", &treePtr);
     BSTInit (&treePtr);
     //printf("treeptr num after init: %p\n", &treePtr);
@@ -192,6 +207,8 @@ int fun_def()
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
+    //Dispose tree for variables because they are only local for function
+    BSTDispose(&treePtr);
   }
   //if we try to redefine functions of language GO => semantic error 3
   else if (token == F_INPUTS || token == F_INPUTI || token == F_INPUTF || token == F_PRINT || token == F_INT2FLOAT || token == F_FLOAT2INT || token == F_LEN || token == F_SUBSTR || token == F_ORD || token == F_CHR )
@@ -204,7 +221,7 @@ int fun_def()
   return result;
 }
 
-int stat_list(Node * treePtr)
+int stat_list(varNode * treePtr)
 {
   //printf("treeptr num after stat_list call: %p\n", &treePtr);
   int result = 0;
@@ -246,7 +263,7 @@ switch (token)
   return result;
 }
 
-int stat(Node * treePtr)
+int stat(varNode * treePtr)
 {
   int result = 0;
   prec_end_struct precResult;
@@ -420,6 +437,7 @@ int stat(Node * treePtr)
     //<fun>	ID	(	<fun_call_param>	)												
     else if(token == L_PAR)
     {
+      addFunCall(&funTree, stringID);
       return fun_call_param();
     }
   }
@@ -484,7 +502,7 @@ int stat(Node * treePtr)
     result = print_params(treePtr);
     if (result != 0) return result;
     token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "PRINT statement - EOL missing");    
+    if (token != EOL) errorMsg(ERR_SYNTAX, "PRINT statement - EOL missing");   
   }
   else if (token == F_SUBSTR)
   {
@@ -499,7 +517,7 @@ int stat(Node * treePtr)
 }
 
 //<ass_stat>	<ass_ids>	=	<ass_exps>													
-int ass_stat(Node * treePtr)
+int ass_stat(varNode * treePtr)
 {
   int result = 0;
   token = get_new_token(&tokenStr);
@@ -515,7 +533,7 @@ int ass_stat(Node * treePtr)
 //<ass_exps>	,	<exp>	<ass_exps>
 //<ass_exps>	<ass_ids>		
 //<ass_exps>	<fun>		
-int ass_exps(Node * treePtr)
+int ass_exps(varNode * treePtr)
 // toto sa bude menit ked pride ID opytame sa ci existuje taka funkcia v tabulke symbolov
 //ak existuje spracuvame ako funkciu inak posielame precedencke
 {
@@ -573,7 +591,7 @@ int fun_call_param()
 //<type>	FLOAT64															
 //<type>	INT															
 //<type>	STRING															
-int fun_params(Node * treePtr)
+int fun_params(varNode * treePtr)
 {
   int result = 0;
   int multipleParams = 0;
@@ -604,7 +622,6 @@ int fun_params(Node * treePtr)
   else {errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");}
   //deklaracia prebehla a ID a typ premennej ulozime do stromu
   BSTInsert(treePtr, stringID, tokenDataType);
-
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
   if (token == COMMA) return fun_params(treePtr);
@@ -632,7 +649,7 @@ int fun_returns()
 }
 
 //fun_params for PRINT function
-int print_params(Node * treePtr)
+int print_params(varNode * treePtr)
 {
 
   int result = 0;
