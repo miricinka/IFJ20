@@ -109,8 +109,13 @@ int get_new_token(string *tokenStr) {
                         }else if(isdigit(next_char)){
                             if(strAddChar(tokenStr, next_char)){
                                 errorMsg(ERR_INTERNAL, "str.c allocation error");}
+                            //check char after zero - numbers cannot start with 0
                             if(next_char == '0'){
-                                return T_INT;
+                            	next_char = getc(stdin);
+                            	if(isdigit(next_char)){
+                            		errorMsg(ERR_LEXICAL, "number cannot start with 0");}
+                            	ungetc(next_char, stdin);
+                            	state = S_INT;
                                 break;
                             }
                             state = S_INT;
