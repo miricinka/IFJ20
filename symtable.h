@@ -82,7 +82,7 @@ int  getType	(varNode, string);
 
 void funInit (funNode *RootPtr);
 funNode funSearch (funNode RootPtr, string Key);
-funNode addFunToTree(funNode *RootPtr, string Key);
+void addFunToTree(funNode *RootPtr, string Key, bool Declaration, bool Call);
 void funDisposeTree (funNode *RootPtr);
 void addFunCall(funNode *RootPtr, string Key);
 void addFunDec(funNode *RootPtr, string Key);

@@ -332,34 +332,34 @@ if (TEST_VAR_TREE){
 		printf("[TEST03]\n");
 		printf("Test přidání prvku do stromu\n");
 		strAddChars(&name,"main");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 		printFunTree(funTree);
 
 		printf("[TEST04]\n");
 		printf("Test přidání více prvků do stromu\n");
 		strClear(&name);
 		strAddChars(&name,"pain");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 
 		strClear(&name);
 		strAddChars(&name,"gain");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 
 		strClear(&name);
 		strAddChars(&name,"protein");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 
 		strClear(&name);
 		strAddChars(&name,"papej");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 		
 		strClear(&name);
 		strAddChars(&name,"sane");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 
 		strClear(&name);
 		strAddChars(&name,"B");
-		addFunToTree(&funTree,name);
+		addFunToTree(&funTree,name, false, false);
 
 		printFunTree(funTree);
 
@@ -384,23 +384,45 @@ if (TEST_VAR_TREE){
 		printf("[TEST08]\n");
 		printf("přidání volání funkce\n");
 		addFunCall(&funTree, name);
+
+		strClear(&name);
+		strAddChars(&name,"TeePee");
+		addFunCall(&funTree, name);
+
 		printFunTree(funTree);
 
 		printf("[TEST09]\n");
 		printf("Kontrola volání funkce\n");
 		isFunCallDec(funTree);
 
+
 		printf("[TEST10]\n");
 		printf("Deklarace funkce\n");
+
+		strClear(&name);
+		strAddChars(&name,"pizza");
 		addFunDec(&funTree, name);
+
+		strClear(&name);
+		strAddChars(&name,"micka");
+		addFunDec(&funTree, name);
+
+		strClear(&name);
+		strAddChars(&name,"PP");
+		addFunDec(&funTree, name);
+
+		strClear(&name);
+		strAddChars(&name,"TeePee");
+		addFunDec(&funTree, name);
+
 		printFunTree(funTree);
 
 		printf("[TEST11]\n");
 		printf("Kontrola volání funkce\n");
 		if(isFunCallDec(funTree) == 0){
-			printf("funkce je volana i deklarovana!\n");
+			printf("Funkce jsou volane i deklarovane!\n");
 		}
-
+		
 		strFree(&name);
 	}
 

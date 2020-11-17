@@ -121,14 +121,14 @@ funNode funSearch (funNode RootPtr, string Key)	{
 	return RootPtr;
 }
 
-funNode addFunToTree(funNode *RootPtr, string Key){
+void addFunToTree(funNode *RootPtr, string Key, bool Declaration, bool Call){
 
 
 	// function will be inserted into the tree
 	if(!*RootPtr){
 		(*RootPtr) = (funNode)malloc(sizeof(struct funNode));
 		if(RootPtr == NULL)
-			return NULL;
+			return;
 
 		(*RootPtr)->parameters = NULL;
 		(*RootPtr)->returnCodes = NULL;
@@ -136,17 +136,34 @@ funNode addFunToTree(funNode *RootPtr, string Key){
 		strInit(&((*RootPtr))->name);
 		strCopyString(&((*RootPtr)->name),&Key);
 
+		if( Declaration == true){
+			(*RootPtr)->isDeclared = true;
+			//printf("%s is set to Dec %d\n",(*RootPtr)->name.str, (*RootPtr)->isDeclared );
+		}
+		if (Call == true) {
+			(*RootPtr)->isCalled = true;
+			//printf("%s is set to Call %d\n",(*RootPtr)->name.str, (*RootPtr)->isCalled );
+		}
+
 		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
-		return (*RootPtr);
+		return;
 	}
 
 	if (strCmpString(&Key, &((*RootPtr)->name)) < 0) {
-		addFunToTree ( &((*RootPtr)->LPtr), Key);
+		addFunToTree ( &((*RootPtr)->LPtr), Key, Declaration, Call);
 	}else if (strCmpString(&Key, &((*RootPtr)->name)) > 0) {
-		addFunToTree ( &((*RootPtr)->RPtr), Key);
+		addFunToTree ( &((*RootPtr)->RPtr), Key, Declaration, Call);
 	}
-	return (*RootPtr);
 	// function was already called or declared
+
+	if(Declaration == true && !((*RootPtr)->isDeclared == true)){
+		(*RootPtr)->isDeclared = true;
+		//printf("%s dec is actualized to %d\n",(*RootPtr)->name.str, (*RootPtr)->isCalled );
+	}
+	if (Call == true && !((*RootPtr)->isCalled ==true)) {
+		(*RootPtr)->isCalled = true;
+		//printf("%s call is actualized to %d\n",(*RootPtr)->name.str, (*RootPtr)->isCalled );
+	}
 }
 
 void funDisposeTree (funNode *RootPtr) {
@@ -167,15 +184,11 @@ void funDisposeTree (funNode *RootPtr) {
 
 
 void addFunCall(funNode *RootPtr, string Key){
-	// is it ok to reuse RootPtr?
-	(*RootPtr) = addFunToTree(RootPtr,Key);
-	(*RootPtr)->isCalled = true;
+	addFunToTree(RootPtr, Key, false, true);
 }
 
 void addFunDec(funNode *RootPtr, string Key){
-	// is it ok to reuse RootPtr?
-	(*RootPtr) = addFunToTree(RootPtr,Key);
-	(*RootPtr)->isDeclared = true;
+	addFunToTree(RootPtr, Key, true, false);
 }
 
 int addParam(funNode RootPtr, string Key, int parameterType, int parameterOrder){
@@ -189,10 +202,10 @@ int addReturn(funNode RootPtr, string Key, int returnType, int returnOrder){
 int isFunCallDec(funNode RootPtr){
 
 	if(RootPtr->LPtr)
-		return isFunCallDec(RootPtr->LPtr);
+		isFunCallDec(RootPtr->LPtr);
 
 	if(RootPtr->RPtr)
-		return isFunCallDec(RootPtr->RPtr);
+		isFunCallDec(RootPtr->RPtr);
 
 	if (RootPtr->isCalled && !RootPtr->isDeclared ){
 		printf("Error - the function %s is called but not declared!\n",RootPtr->name.str);
@@ -400,7 +413,7 @@ void printFunTree2(funNode TempTree, char* sufix, char fromdir){
 	   		suf2 = strcat(suf2, "   ");
 
 		printFunTree2(TempTree->RPtr, suf2, 'R');
-        printf("%s  +-[%s]\n", sufix,  TempTree->name.str);
+        printf("%s  +-[%s,D%d,C%d]\n", sufix,  TempTree->name.str,TempTree->isDeclared,TempTree->isCalled);
 		strcpy(suf2, sufix);
 
         if (fromdir == 'R')
