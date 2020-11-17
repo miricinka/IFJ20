@@ -227,7 +227,10 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		struc_token *top3 = top3 = peek3_precStack(stackPtr);
 
 		//E -> E/0 division by zero constant error
-		if(strcmp(top1->tokenStr.str,"0") == 0){
+		char *ptr; //for strtol
+		long ret;  //for strtol
+		ret = strtol(top1->tokenStr.str, &ptr, 10);
+		if (ret == 0){
 			errorMsg(ERR_RUNTIME, "division by zero constant");
 		}
 
@@ -329,8 +332,10 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 			case '>':
 				reduce(treePtr, ptrStack, topNT);
 				break;
+			case 'X':
+				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - X in prec table");
 			default:
-				errorMsg(ERR_SYNTAX, "Err syntax in expression");
+				errorMsg(ERR_SYNTAX, "Err syntax in expression - not in precence table");
 		}
 
 	}while(prec_analisis_end != true);
