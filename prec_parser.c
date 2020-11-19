@@ -196,6 +196,8 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		}else{
 			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type in variable - in expression");
 		}
+		//only type is important
+		strcpy(topNT->tokenStr.str, "");
 		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> int pushs int
 	}else if(topNT->tokenNum == NT_INT){ 
@@ -226,27 +228,32 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		struc_token *top1 = peek1_precStack(stackPtr);
 		struc_token *top3 = top3 = peek3_precStack(stackPtr);
 
-		//E -> E/0 division by zero constant error
-		if(strcmp(top1->tokenStr.str,"0") == 0){
-			errorMsg(ERR_RUNTIME, "division by zero constant");
-		}
 
 		if(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_INT){
 			//printf("#####INTRUCTION DIVS\n");
+			//E -> E/0 division by zero constant error
+			if(strcmp(top1->tokenStr.str,"0") == 0){
+				errorMsg(ERR_RUNTIME, "division by zero constant");
+			}
 			arithm_semantic_check(stackPtr);
-			//print_precStack(stackPtr);
 
-		}else if((top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT) || 
-			(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_FLOAT) ||
-			(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_INT)){
+
+		}else if(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT){
 			//printf("#####INTRUCTION IDIVS\n");
-			string Str1; strInit(&Str1); strClear(&Str1);
-			pop3(stackPtr);
-			push_precStack(stackPtr, RULE_FLOAT, Str1);
+			
+			//E -> E/0 division by zero constant error
+			if (strcmp(top1->tokenStr.str,"") != 0){
+				double check_zero = atof(top1->tokenStr.str);
+				if (check_zero == 0){
+					errorMsg(ERR_RUNTIME, "division by zero constant");
+				}
+			}
+			arithm_semantic_check(stackPtr);
 
 		}else{
-			errorMsg(ERR_SYNTAX, "Bad syntax in expression");
+			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type compability in division");
 		}
+
 	//E -> (E)
 	}else if(topNT->tokenNum == NT_RPAR){
 		reduce_parenthesis(stackPtr);
@@ -329,8 +336,10 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 			case '>':
 				reduce(treePtr, ptrStack, topNT);
 				break;
+			case 'X':
+				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - X in prec table");
 			default:
-				errorMsg(ERR_SYNTAX, "Err syntax in expression");
+				errorMsg(ERR_SYNTAX, "Err syntax in expression - not in precence table");
 		}
 
 	}while(prec_analisis_end != true);
