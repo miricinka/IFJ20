@@ -271,7 +271,7 @@ int stat(varNode * treePtr)
   if (token == KW_IF)
   {
     token = get_new_token(&tokenStr);
-    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
+    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
         errorMsg(ERR_SYNTAX, "Incorrect token after IF statement");
     //zavolame precedencku na vyraz, posleme tam token a jeho string
     precResult = prec_parse(treePtr, token, tokenStr);
@@ -308,7 +308,7 @@ int stat(varNode * treePtr)
       token = get_new_token(&tokenStr);
       if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
       token = get_new_token(&tokenStr);
-      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
+      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
           errorMsg(ERR_SYNTAX, "FOR statement - incorrect var def");
       //zavolame precedencku na vyraz!!!
       precResult = prec_parse(treePtr, token, tokenStr);
@@ -319,7 +319,7 @@ int stat(varNode * treePtr)
       if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
     }
     token = get_new_token(&tokenStr);
-    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
+    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
       errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
     //zavolame precedencku na vyraz, posleme tam token a jeho string
     precResult = prec_parse(treePtr, token, tokenStr);
@@ -337,6 +337,8 @@ int stat(varNode * treePtr)
       token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
       token = get_new_token(&tokenStr);
+      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
+      errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
       precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
 
@@ -377,7 +379,7 @@ int stat(varNode * treePtr)
         errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
       }
       token = get_new_token(&tokenStr);
-      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
+      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");          
       //zavolame precedencku na vyraz!!!
       precResult = prec_parse(treePtr, token, tokenStr);
@@ -412,7 +414,7 @@ int stat(varNode * treePtr)
       {
         
       }
-      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
+      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
       //zavolame precedencku na vyraz!!!
       precResult = prec_parse(treePtr, token, tokenStr);
@@ -541,7 +543,7 @@ int ass_exps(varNode * treePtr)
   prec_end_struct precResult;
   token = get_new_token(&tokenStr);
   //printf("token je %d\n", token);
-  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
+  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
   precResult = prec_parse(treePtr, token, tokenStr);
   token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
 
