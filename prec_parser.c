@@ -338,6 +338,7 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 				break;
 			case 'X':
 				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - X in prec table");
+				break;
 			default:
 				errorMsg(ERR_SYNTAX, "Err syntax in expression - not in precence table");
 		}

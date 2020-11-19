@@ -52,7 +52,6 @@ int parse(tListOfInstr *instrList)
   if (token == ENDFILE)  errorMsg(ERR_SYNTAX, "Empty file");
   else
   {
-  //generateInstruction(token);
   result = program();
   }
   
@@ -121,8 +120,12 @@ switch (token)
       return fun_def_list();
 
     case ENDFILE:
-      //kontrola ci volane funkcie boli deklarovane 
+      
       printFunTree(funTree);  
+      //kontrola ci program obsahuje main
+      string tempMain; strInit (&tempMain); strAddChars(&tempMain,"main");
+      if(!funSearch(&funTree, tempMain)) {errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");}
+      //kontrola ci volane funkcie boli deklarovane 
       if(isFunCallDec(funTree) != 0){
 			    errorMsg(ERR_SEMANTIC_DEFINITION, "Function was not defined");
 		  }
@@ -439,7 +442,7 @@ int stat(varNode * treePtr)
     //<fun>	ID	(	<fun_call_param>	)												
     else if(token == L_PAR)
     {
-      addFunCall(&funTree, stringID);
+      addFunCall(&funTree, stringID, *treePtr);
       return fun_call_param();
     }
   }

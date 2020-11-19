@@ -15,6 +15,9 @@
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
+#ifndef SYMTABLE_H
+#define SYMTABLE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -33,10 +36,10 @@
 #define BadOrder 		2
 #define BadTypeAndOrder 3
 
-#define MAX_LIST_LENGHT 100
+#define ParamList 1
+#define ReturnList 2
 
-#ifndef SYMTABLE_H
-#define SYMTABLE_H
+#define MAX_LIST_LENGHT 100
 
 /* Binary tree node structure */
 
@@ -85,13 +88,13 @@ int  getType	(varNode, string);
 /* Prototypes of function operations */
 
 void funInit (funNode *RootPtr);
-funNode funSearch (funNode RootPtr, string Key);
+funNode *funSearch (funNode *RootPtr, string Key);
 void addFunToTree(funNode *RootPtr, string Key, bool Declaration, bool Call);
 void funDisposeTree (funNode *RootPtr);
-void addFunCall(funNode *RootPtr, string Key);
+void addFunCall(funNode *RootPtr, string Key,varNode varTree);
 void addFunDec(funNode *RootPtr, string Key);
-int addParam(funNode RootPtr, string Key, int parameterType, int parameterOrder);
-int addReturn(funNode RootPtr, string Key, int returnType, int returnOrder);
+int addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
+int addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 int isFunCallDec(funNode RootPtr);
 
 /*Prototypes of function list operations*/
@@ -100,8 +103,7 @@ void funListInit (funList *L);
 void funListAdd (funList *L, int val, int order);
 funListElement funListSearch (funList *L, int order);
 void funListDelete(funList *L);
-int processListElement(funNode *RootPtr, string Key, int type, int order);
-int funListElementCheck (funListElement ListElement, int Type, int Order);
+int processListElement(funList *list, int type, int order);
 
 /* Prototypes of datastructure printing functions */
 
@@ -111,4 +113,4 @@ void printFunList(funList TL);
 void printFunTree(funNode TempTree);
 void printFunTree2(funNode TempTree, char* sufix, char fromdir);
 
-#endif /*SYMTABLE_H*/
+#endif
