@@ -113,6 +113,8 @@ void addFunDec(funNode *RootPtr, string Key);
 int addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
 int addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 int isFunCallDec(funNode RootPtr);
+int parCount(funNode RootPtr);
+int retCount(funNode RootPtr);
 
 /*Prototypes of function list operations*/
 
