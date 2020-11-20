@@ -24,7 +24,6 @@
 #include <stdbool.h>
 #include "str.h"
 
-#define KW_FUNC       1
 #define T_INT        30
 #define T_FLOAT      31
 #define T_STRING     32 
@@ -40,15 +39,30 @@
 
 #define MAX_LIST_LENGHT 100
 
-/* Binary tree node structure */
+/* Variable binary tree structure */
 
 typedef struct varNode{
     int type;
+	int scope;
 	string name;
 
 	struct varNode*LPtr;
 	struct varNode*RPtr;
 } *varNode;
+
+typedef struct varStack{
+	struct varStackElement *lastElement;
+
+}varStack;
+
+typedef struct varStackElement{
+	int type;
+	int scope;
+
+	struct varStackElement *previousElement;
+} *varStackElement;
+
+/* Function binary tree structures */
 
 typedef struct funNode{
 	string name;
@@ -75,14 +89,18 @@ typedef struct funList{
 	int elementCount;
 } funList;
 
+
+
 /* Prototypes of variable operations */
 
 void BSTInit   	(varNode*);
 varNode BSTSearch(varNode, string);
-void BSTInsert 	(varNode*, string, int);
+void BSTInsert 	(varNode*, string, int, int);
 void BSTDispose	(varNode*);
 bool isDeclared (varNode, string);
 int  getType	(varNode, string);
+void ReplaceByRightmost (varNode PtrReplaced, varNode *RootPtr);
+void BSTDelete (varNode *RootPtr, string Key);
 
 /* Prototypes of function operations */
 
