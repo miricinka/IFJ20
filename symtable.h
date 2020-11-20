@@ -23,9 +23,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include "str.h"
-#include "error.h"
 
-#define KW_FUNC       1
 #define T_INT        30
 #define T_FLOAT      31
 #define T_STRING     32 
@@ -41,7 +39,7 @@
 
 #define MAX_LIST_LENGHT 100
 
-/* Binary tree node structure */
+/* Variable binary tree structure */
 
 typedef struct varNode{
     int type;
@@ -50,6 +48,8 @@ typedef struct varNode{
 	struct varNode*LPtr;
 	struct varNode*RPtr;
 } *varNode;
+
+/* Function binary tree structures */
 
 typedef struct funNode{
 	string name;
@@ -84,6 +84,8 @@ void BSTInsert 	(varNode*, string, int);
 void BSTDispose	(varNode*);
 bool isDeclared (varNode, string);
 int  getType	(varNode, string);
+void ReplaceByRightmost (varNode PtrReplaced, varNode *RootPtr);
+void BSTDelete (varNode *RootPtr, string Key);
 
 /* Prototypes of function operations */
 
@@ -96,6 +98,8 @@ void addFunDec(funNode *RootPtr, string Key);
 int addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
 int addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 int isFunCallDec(funNode RootPtr);
+int parCount(funNode RootPtr,string name);
+int retCount(funNode RootPtr,string name);
 
 /*Prototypes of function list operations*/
 

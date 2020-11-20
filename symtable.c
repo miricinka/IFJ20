@@ -16,6 +16,7 @@
  */
 
 #include "symtable.h"
+#include "error.h"
 
 /*************** Variable tree operations *****************/
 
@@ -66,7 +67,7 @@ void BSTInsert (varNode *RootPtr, string Key, int Type)	{
 		// DON'T MOVE THIS LINE OR THE TREE DIES !!!
 		/**/(*RootPtr)->type = Type;/**/
 		// STAY WHERE YOU ARE FILTHY BUGGY CODE!
-
+		//(*RootPtr)->scope = scope;
 		strInit(&(*RootPtr)->name);
 	
 		strCopyString(&((*RootPtr)->name),&Key);
@@ -96,16 +97,59 @@ void BSTDispose (varNode *RootPtr) {
         BSTDispose(&((*RootPtr)->RPtr));
 
 		strFree(&((*RootPtr)->name));
-        free( *RootPtr );
+        free(*RootPtr);
         *RootPtr = NULL;
     }
+}
+
+void ReplaceByRightmost (varNode PtrReplaced, varNode *RootPtr){
+
+	if(!*RootPtr)
+		return;
+
+	if(( *RootPtr)->RPtr)
+		ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr ));
+	else{
+		varNode delete_me = (*RootPtr);
+		
+		PtrReplaced->name = delete_me->name;
+		PtrReplaced->type = delete_me->type;
+		
+		(*RootPtr) = (*RootPtr)->LPtr;
+
+		free(delete_me);
+	}
+}
+
+void BSTDelete (varNode *RootPtr, string Key){
+	if(!*RootPtr){
+		return;
+	}
+	if (strCmpString(&Key, &((*RootPtr)->name)) < 0){
+			BSTDelete( &((*RootPtr)->LPtr), Key);
+
+	}else if (strCmpString(&Key, &((*RootPtr)->name)) > 0){
+		BSTDelete( &((*RootPtr)->RPtr), Key);
+
+	}else if ((*RootPtr)->LPtr && (*RootPtr)->RPtr)
+		ReplaceByRightmost((*RootPtr), &((*RootPtr )->LPtr));
+
+	else{
+		varNode delete_me = (*RootPtr);
+
+		if((*RootPtr)->LPtr)
+			 *RootPtr = (*RootPtr)->LPtr;
+		else
+			 *RootPtr = (*RootPtr)->RPtr;
+		strFree(&(delete_me->name));
+		free(delete_me);
+	}
 }
 
 /*************** Function tree operations *****************/
 
 void funInit (funNode *RootPtr) {
 	*RootPtr = NULL;
-	
 }
 
 funNode *funSearch (funNode *RootPtr, string Key)	{
@@ -123,8 +167,6 @@ funNode *funSearch (funNode *RootPtr, string Key)	{
 }
 
 void addFunToTree(funNode *RootPtr, string Key, bool Declaration, bool Call){
-
-
 	// function will be inserted into the tree
 	if(!*RootPtr){
 		(*RootPtr) = (funNode)malloc(sizeof(struct funNode));
@@ -166,9 +208,9 @@ void addFunToTree(funNode *RootPtr, string Key, bool Declaration, bool Call){
 	// function was already called or declared
 
 	if(Declaration == true && ((*RootPtr)->isDeclared == true)){
-        //printf("pokus o redeklaraci funkce %s\n",Key.str);	
-		fprintf(stderr,"ERROR (%i): Redefinition of function [%s]\n", ERR_SEMANTIC_DEFINITION, Key.str);
-        exit(ERR_SEMANTIC_DEFINITION);	
+        //printf("pokus o redeklaraci funkce %s\n",Key.str);
+		fprintf(stderr,"ERROR 3: Redefinition of function [%s]\n", Key.str);
+		exit(3);
     }
 
 	if(Declaration == true && !((*RootPtr)->isDeclared == true)){
@@ -247,12 +289,20 @@ int isFunCallDec(funNode RootPtr){
 	}
 	return 0;
 }
+int parCount(funNode RootPtr,string name){
+    funNode *temp;
+    temp = funSearch ( &RootPtr,  name);
+    return (*temp)->parameters->elementCount;
+}
 
+int retCount(funNode RootPtr, string name){
+    funNode *temp;
+    temp = funSearch ( &RootPtr,  name);
+    return (*temp)->returnCodes->elementCount;
+}
 /*************** Function list operations *****************/
 
 void funListInit (funList *L) {
-	L = malloc(sizeof(struct funList));
-	
 	L->First = NULL;
 	L->elementCount = 0;
 }
@@ -345,6 +395,18 @@ int* funListRead (funList *L){
 
 /*************** Functions for printing datastructures *****************/
 
+char* printType(int typeNum){
+	if (typeNum == T_INT){
+		return "int";
+	}else if (typeNum == T_FLOAT){
+		return "float";
+	}else if (typeNum == T_STRING){
+		return "string";
+	}else{
+		return "Unknown type";
+	}
+}
+
 void printVarTree2(varNode TempTree, char* sufix, char fromdir){
     if (TempTree != NULL){
 		char* suf2 = (char*) malloc(strlen(sufix) + 4);
@@ -357,7 +419,7 @@ void printVarTree2(varNode TempTree, char* sufix, char fromdir){
 	   		suf2 = strcat(suf2, "   ");
 
 		printVarTree2(TempTree->RPtr, suf2, 'R');
-        printf("%s  +-[%s,%d]\n", sufix,  TempTree->name.str, TempTree->type);
+        printf("%s  +-[%s,%s]\n", sufix,  TempTree->name.str, printType(TempTree->type));
 		strcpy(suf2, sufix);
 
         if (fromdir == 'R')
@@ -394,7 +456,7 @@ void printFunList(funList TL){
 	}
 	while ((TempList.First!=NULL) && (CurrListLength<MAX_LIST_LENGHT))	{
 		
-		printf("\t |type %d, order %d|\n",TempList.First->type,TempList.First->order);
+		printf("\t |%s, order %d|\n", printType(TempList.First->type),TempList.First->order);
 		
 		TempList.First=TempList.First->NextPtr;
 		CurrListLength++;
@@ -433,10 +495,10 @@ void printFunTree2(funNode TempTree, char* sufix, char fromdir){
 		printFunTree2(TempTree->RPtr, suf2, 'R');
         printf("%s  +-[%s,D%d,C%d", sufix,  TempTree->name.str,TempTree->isDeclared,TempTree->isCalled);
 		for ( int i = 1; (tempElement = funListSearch(TempTree->parameters, i)) != NULL; i++){
-			printf(",PT%d",tempElement->type);
+			printf(",P %s",printType(tempElement->type));
 		}
 		for ( int i = 1; (tempElement = funListSearch(TempTree->returnCodes, i)) != NULL; i++){
-			printf(",RT%d",tempElement->type);
+			printf(",R %s",printType(tempElement->type));
 		}
 		printf("]\n");
 

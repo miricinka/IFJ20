@@ -22,6 +22,9 @@
 tListOfInstr *list; // globalni promenna uchovavajici seznam instrukci
 string tokenStr; //globalna premenna pre string instrukcie
 funNode funTree; //globalna premenna pre strom na funkcie
+int funParamCounter; //globalna premenna pre pocet paramterov //TODO
+int funReturnCounter; //globalna premenna pre pocet navratovych hodnot //TODO
+string funName; //globalna premenna pre predavanie nazvu funkcie //TODO
 
 
 
@@ -40,6 +43,8 @@ void generateInstruction(int instType)
 
 int parse(tListOfInstr *instrList)
 {
+  //inicializujeme string na mena funkcii
+  strInit(&funName); //TODO
   //inicializujem si string, premenne, zoznam
   strInit(&tokenStr);
   //inicializujeme strom na funkcie
@@ -179,6 +184,9 @@ int fun_def()
   }
   else if(token == ID) //<fun_def>	func	ID	(	<fun_params>	)	(	<fun_returns>	)	{	<stat_list>	}
   {
+    //ulozenie nazvu funkcie do premennej 
+    strClear(&funName); //TODO
+    strCopyString(&funName, &tokenStr); //TODO
     //pridanie funkcie do stromu
     addFunDec(&funTree, tokenStr);
     token = get_new_token(&tokenStr);
@@ -189,6 +197,8 @@ int fun_def()
     BSTInit (&treePtr);
     //printf("treeptr num after init: %p\n", &treePtr);
     //spracujeme fun_params a ak je v poriadku tak pokracujeme dalej 
+    //counter nastavime na 0
+    funParamCounter = 0;
     result = fun_params(&treePtr);
     if (result != 0) return result;
     if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' "); 
@@ -199,6 +209,8 @@ int fun_def()
     {
       //if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
       //spracujeme fun_returns a ak je v poriadku tak pokracujeme dalej
+      //counter nastavime na 0
+      funReturnCounter = 0;
       result = fun_returns();
       if (result != 0) return result;
       if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
@@ -442,8 +454,13 @@ int stat(varNode * treePtr)
     //<fun>	ID	(	<fun_call_param>	)												
     else if(token == L_PAR)
     {
+      //ulozenie nazvu funkcie do premennej
+      strClear(&funName); //TODO
+      strCopyString(&funName, &stringID); //TODO
+      funReturnCounter = 0; //TODO
+      funParamCounter = 0; //TODO
       addFunCall(&funTree, stringID, *treePtr);
-      return fun_call_param();
+      return fun_call_param(treePtr);
     }
   }
   //<stat>	return	<ass_exps>														
@@ -570,7 +587,7 @@ int ass_exps(varNode * treePtr)
 //<fun_call_param>	ID	<fun_call_param>														
 //<fun_call_param>	,	ID	<fun_call_param>													
 //<fun_call_param>	e															
-int fun_call_param()
+int fun_call_param(varNode *treePtr)
 {
   int result = 0;
   int multipleParams = 0;
@@ -579,13 +596,29 @@ int fun_call_param()
   token = get_new_token(&tokenStr);
   if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != R_PAR) 
     errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
-  if (token == R_PAR && multipleParams == 0) return result;
-  else if (token == R_PAR && multipleParams == 1) 
-    errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
+    //koniec spracovania parametrov
+  if (token == R_PAR && multipleParams == 0)
+  {
+    if (funParamCounter != parCount(funTree, funName)) {errorMsg(ERR_SEMANTIC_PARAM, "Incorrect parameter count");} //TODO
+    return result;
+  } 
+  
+  else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
+  //pocitame pocet parametrov
+  funParamCounter++; //TODO
+  if (token == ID)  //TODO
+  { 
+    addParam(&funTree, funName, getType(*treePtr, tokenStr), funParamCounter);
+  }
+  else
+  {
+    addParam(&funTree, funName, token, funParamCounter);
+  }
+
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != R_PAR) 
     errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
-  if (token == COMMA) return fun_call_param();
+  if (token == COMMA) return fun_call_param(treePtr);
   return result;
 }
 //<fun_params>	<par>	<par_next>														
@@ -604,7 +637,12 @@ int fun_params(varNode * treePtr)
 
   token = get_new_token(&tokenStr);
   if (token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
-  if (token == R_PAR && multipleParams == 0) return result;
+  //vyskocime z funkcie ak vsetko prebehlo spravne
+  if (token == R_PAR && multipleParams == 0)
+  {
+    //TODO
+    return result;
+  } 
   else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect params");
 
   //pozrieme do stromu ci tam id premennej je
@@ -625,6 +663,9 @@ int fun_params(varNode * treePtr)
   else if(token == KW_INT){tokenDataType = T_INT;}
   else if(token == KW_STRING){tokenDataType = T_STRING;}
   else {errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");}
+  //pridanie parametrov do stromu
+  funParamCounter++; //TODO
+  addParam(&funTree, funName, tokenDataType, funParamCounter); //TODO
   //deklaracia prebehla a ID a typ premennej ulozime do stromu
   BSTInsert(treePtr, stringID, tokenDataType);
   token = get_new_token(&tokenStr);
