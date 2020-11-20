@@ -319,6 +319,14 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 		errorMsg(ERR_SYNTAX, "Incorrect first expression token");
 	}
 
+    //variable to check that operators and operands are switching 
+    // 8**2 -> syntax
+	bool last_token_operand = false;
+	if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING){
+		last_token_operand = true;
+	}
+
+
 	//main parse loop
 	do{
 		//top symbol - nonterminal
@@ -332,6 +340,19 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 			case '<':
 				if(push_precStack(ptrStack, token_to_NT(new_token), tokenStr)){exit(99);}
 				new_token = get_new_token(&tokenStr);
+				//operand cannot go after operand
+				if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING){
+					if(last_token_operand == true){
+						errorMsg(ERR_SYNTAX, "Err syntax in expression - operand cannot go after operand");
+					}else{
+						last_token_operand = true;}
+				//operator cannot go after operator
+				}else if(new_token >= ADD && new_token <= GEQ){
+					if(last_token_operand == false){
+						errorMsg(ERR_SYNTAX, "Err syntax in expression - operator cannot go after operator");
+					}else{
+						last_token_operand = false;}
+				}else{}
 				break;
 			case '>':
 				reduce(treePtr, ptrStack, topNT);
