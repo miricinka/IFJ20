@@ -146,38 +146,12 @@ void BSTDelete (varNode *RootPtr, string Key){
 	}
 }
 
-/* Var tree stack */
-
-void stackInit(varStack* s){
-	s->lastElement=NULL;	
+int parCount(funNode RootPtr){
+	return RootPtr->parameters->elementCount;
 }
 
-int stackEmpty(const varStack* s){
-	return !(s->lastElement);
-}
-
-varStackElement stackTop(const varStack* s){
-	if (stackEmpty(s))
-		return NULL;
-	else
-		return s->lastElement;
-}
-
-void stackPop(varStack* s){
-	if (!stackEmpty(s)){
-		varStackElement temp = s->lastElement;
-		s->lastElement = s->lastElement->previousElement;
-		free(temp);
-	}
-}
-
-void stackPush(varStack* s, int type, int scope){
-	varStackElement newElement = (varStackElement) malloc(sizeof(struct varStackElement));
-	newElement->type = type;
-	newElement->scope = scope;
-	newElement->previousElement = s->lastElement;
-
-	s->lastElement = newElement;
+int retCount(funNode RootPtr){
+	return RootPtr->returnCodes->elementCount;
 }
 
 /*************** Function tree operations *****************/
