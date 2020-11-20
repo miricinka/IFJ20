@@ -57,7 +57,7 @@ varNode BSTSearch (varNode RootPtr, string Key)	{
 	return RootPtr;
 }
 
-void BSTInsert (varNode *RootPtr, string Key, int Type, int scope)	{
+void BSTInsert (varNode *RootPtr, string Key, int Type)	{
 
 	if( !*RootPtr ) {
 		(*RootPtr) = (varNode)malloc(sizeof(struct varNode));
