@@ -19,9 +19,9 @@
 #include "error.h"
 
 // TODO returnTypes in functions
-// TODO comments
 
-/*************** Variable tree operations *****************/
+/********************************************************/
+/*************** Variable tree operations ***************/
 
 /**
  * @brief Initializes the variable BST by setting its pointer to NULL.
@@ -235,7 +235,8 @@ void BSTScopeDelete(varNode *RootPtr, int newScope){
 	}
 }
 
-/* Var tree stack operation*/
+/*********************************************************/
+/*************** Var tree stack operations ***************/
 
 /**
  * @brief Pops the top values on the stack, so it now has the previous values on top.
@@ -278,7 +279,8 @@ void stackDelete(varNode *varTree){
 	}
 }
 
-/*************** Function tree operations *****************/
+/********************************************************/
+/*************** Function tree operations ***************/
 
 /**
  * @brief Initializes the function BST by setting its pointer to NULL.
@@ -347,6 +349,7 @@ void addFunToTree(funNode *RootPtr, string Key){
 		return;
 	}
 }
+
 /**
  * @brief Finds the function with given name in the function BST then checks for errors and changes its contents. 
  * 
@@ -516,7 +519,7 @@ int isFunCallDec(funNode RootPtr){
 
 /********************************************************/
 /*************** Function list operations ***************/
-/********************************************************/
+
 
 /**
  * @brief Initializes the parameter/return list.
@@ -648,7 +651,7 @@ char* printType(int typeNum){
 }
 
 /**
- * @brief Magical function for printing binary trees. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * @brief Magical function for printing binary trees. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Slightly modified.
  * 
  */
 void printVarTree2(varNode TempTree, char* sufix, char fromdir){
@@ -678,7 +681,7 @@ void printVarTree2(varNode TempTree, char* sufix, char fromdir){
 }
 
 /**
- * @brief Magical function for printing binary trees. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * @brief Magical function for printing binary trees. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Slightly modified.
  * 
  * @param TempTree variable BST which is to be printed
  */
@@ -696,7 +699,7 @@ void printVarTree(varNode TempTree){
 } 
 
 /**
- * @brief Magical function for printing lists. Taken from IAL testing file c206-test.c . Used only for debugging purposes. Lightly modified.
+ * @brief Magical function for printing lists. Taken from IAL testing file c206-test.c . Used only for debugging purposes. Slightly modified.
  * 
  * @param TL list which is to be printed
  */
@@ -722,7 +725,7 @@ void printFunList(funList TL){
 }
 
 /**
- * @brief Magical function for printing function BST. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * @brief Magical function for printing function BST. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Slightly modified.
  * 
  * @param TempTree function BST which is to be printed
  */
