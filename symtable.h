@@ -41,9 +41,16 @@
 
 /* Variable binary tree structure */
 
+typedef struct varStackElement{
+	int type;
+	int scope;
+
+	struct varStackElement *previousElement;
+} *varStackElement;
+
 typedef struct varNode{
-    int type;
 	string name;
+	struct varStackElement *varStack;
 
 	struct varNode*LPtr;
 	struct varNode*RPtr;
@@ -80,23 +87,32 @@ typedef struct funList{
 
 void BSTInit   	(varNode*);
 varNode BSTSearch(varNode, string);
-void BSTInsert 	(varNode*, string, int);
+void BSTInsert 	(varNode*, string, int, int);
 void BSTDispose	(varNode*);
 bool isDeclared (varNode, string);
 int  getType	(varNode, string);
 void ReplaceByRightmost (varNode PtrReplaced, varNode *RootPtr);
 void BSTDelete (varNode *RootPtr, string Key);
+void BSTScopeDelete(varNode *RootPtr, int newScope);
+
+/* Prototypes of variable stack operations */
+
+varStackElement stackTop(varNode s);
+void stackPop(varNode* s);
+void stackPush(varNode* s, int type, int scope);
+void stackDelete(varNode *s);
 
 /* Prototypes of function operations */
 
 void funInit (funNode *RootPtr);
 funNode *funSearch (funNode *RootPtr, string Key);
-void addFunToTree(funNode *RootPtr, string Key, bool Declaration, bool Call);
+void addFunToTree(funNode *RootPtr, string Key);
+void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount, int returnCount);
 void funDisposeTree (funNode *RootPtr);
-void addFunCall(funNode *RootPtr, string Key,varNode varTree);
-void addFunDec(funNode *RootPtr, string Key);
-int addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
-int addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
+void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, int returnCount);
+void addFunDec(funNode *RootPtr, string Key, int paramCount, int returnCount);
+void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
+void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 int isFunCallDec(funNode RootPtr);
 int parCount(funNode RootPtr,string name);
 int retCount(funNode RootPtr,string name);
@@ -107,10 +123,11 @@ void funListInit (funList *L);
 void funListAdd (funList *L, int val, int order);
 funListElement funListSearch (funList *L, int order);
 void funListDelete(funList *L);
-int processListElement(funList *list, int type, int order);
+void checkListElement(funList *list, int type, int order);
 
 /* Prototypes of datastructure printing functions */
 
+char* printType(int typeNum);
 void printVarTree(varNode);
 void printVarTree2(varNode, char* sufix, char fromdir);
 void printFunList(funList TL);

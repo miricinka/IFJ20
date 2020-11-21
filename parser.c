@@ -25,10 +25,8 @@ funNode funTree; //globalna premenna pre strom na funkcie
 int funParamCounter; //globalna premenna pre pocet paramterov //TODO
 int funReturnCounter; //globalna premenna pre pocet navratovych hodnot //TODO
 string funName; //globalna premenna pre predavanie nazvu funkcie //TODO
-
-
-
-int token = 0;
+int globalScope = 1; //globalna premenna pre globalny scope
+int token = 0; //globalna premenna na ukladanie tokenov
 
 void generateInstruction(int instType)
 // vlozi novou instrukci do seznamu instrukci
@@ -152,7 +150,8 @@ int fun_def()
   {
     //pridanie mainu do stromu a vytvorenie pomocneho stringu na main
     string tempMain; strInit (&tempMain); strAddChars(&tempMain,"main");
-    addFunDec(&funTree, tempMain);
+    addFunToTree(&funTree, tempMain);
+    addFunDec(&funTree, tempMain,  funParamCounter, funReturnCounter);
     strFree(&tempMain);
     token = get_new_token(&tokenStr);
     if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '(' ");
@@ -188,7 +187,7 @@ int fun_def()
     strClear(&funName); //TODO
     strCopyString(&funName, &tokenStr); //TODO
     //pridanie funkcie do stromu
-    addFunDec(&funTree, tokenStr);
+    addFunToTree(&funTree, funName);
     token = get_new_token(&tokenStr);
     if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");  
     //vytvorenie stromu pre funkciu na lokalne premenne
@@ -214,8 +213,10 @@ int fun_def()
       result = fun_returns();
       if (result != 0) return result;
       if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
+      //pridane paratemetre a returny do funkcie
       token = get_new_token(&tokenStr);
     }
+    addFunDec(&funTree, funName, funParamCounter, funReturnCounter);
     if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");   
     //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej 
     result = stat_list(&treePtr);
@@ -285,6 +286,8 @@ int stat(varNode * treePtr)
   //<stat>	if	<exp>	{	<stat_list>	}	else	{	<stat_list>	}			
   if (token == KW_IF)
   {
+    //scope pre if
+    globalScope++;
     token = get_new_token(&tokenStr);
     if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
         errorMsg(ERR_SYNTAX, "Incorrect token after IF statement");
@@ -298,10 +301,15 @@ int stat(varNode * treePtr)
     if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
     result = stat_list(treePtr);
     if (result != 0) return result;
+    //koniec if scope
+    globalScope--;
+    BSTScopeDelete(treePtr,globalScope);
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
     token = get_new_token(&tokenStr);
     if (token != KW_ELSE) errorMsg(ERR_SYNTAX, "IF statement - missing 'ELSE'");
+    //scope pre else
+    globalScope++;
     token = get_new_token(&tokenStr);
     if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
     token = get_new_token(&tokenStr);
@@ -309,7 +317,10 @@ int stat(varNode * treePtr)
     result = stat_list(treePtr);
     if (result != 0) return result;
     //pravy bracket sme nacitali uz v stat_list
-    if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing } in ELSE");
+    if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
+    //koniec else scope
+    globalScope--;
+    BSTScopeDelete(treePtr,globalScope);
     token = get_new_token(&tokenStr);
     if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - missing EOL");
   }
@@ -317,9 +328,13 @@ int stat(varNode * treePtr)
   else if (token == KW_FOR)
   {
     token = get_new_token(&tokenStr);
+    //scope pre for hlavicku
+    globalScope++;
     if (token != SEMICOL && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after FOR kw");
     if (token == ID) //moze byt aj premenna bez priradenia??????
     {
+      //ulozime id premennej do stringID
+      string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
       token = get_new_token(&tokenStr);
       if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
       token = get_new_token(&tokenStr);
@@ -332,6 +347,9 @@ int stat(varNode * treePtr)
         errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - var def cannot be boolean");
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
+      // vlozime premennu do stromu
+      BSTInsert(treePtr, stringID, precResult.end_datatype, globalScope);
+      strFree(&stringID);
     }
     token = get_new_token(&tokenStr);
     if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
@@ -357,12 +375,13 @@ int stat(varNode * treePtr)
       precResult = prec_parse(treePtr, token, tokenStr);
       token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
 
-      if (precResult.end_datatype == TYPE_BOOL)
-        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
+      if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
 
       //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
       if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
     }
+    //scope pre telo foru
+    globalScope++;
     token = get_new_token(&tokenStr);
     if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
     result = stat_list(treePtr);
@@ -370,7 +389,11 @@ int stat(varNode * treePtr)
     //pravy bracket sme nacitali uz v stat_list
     if (token != R_BR) errorMsg(ERR_SYNTAX, "FOR statement - '}' missing");
     token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");    
+    if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
+    //koniec oboch for scopeov
+    globalScope = globalScope - 2;
+
+    BSTScopeDelete(treePtr,globalScope);
   }
   //<stat>	<var_def>											
   //<stat>	<ass_stat>											
@@ -389,10 +412,10 @@ int stat(varNode * treePtr)
     {
       if (strcmp(stringID.str, "_") == 0){errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'");}
       //kontrola ak je id uz deklarovane hodime chybu 3
-      if (isIDDeclared == true)
+      /*if (isIDDeclared == true)
       {
         errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
-      }
+      }*/
       token = get_new_token(&tokenStr);
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");          
@@ -406,7 +429,7 @@ int stat(varNode * treePtr)
       
 
       //deklaracia prebehla a ID a typ premennej ulozime do stromu
-      BSTInsert(treePtr, stringID, precResult.end_datatype);
+      BSTInsert(treePtr, stringID, precResult.end_datatype, globalScope);
       //printf("BST after inserting:\n");
       //kontrola ci deklaracia konci EOLom
       if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
@@ -427,7 +450,7 @@ int stat(varNode * treePtr)
       token = get_new_token(&tokenStr);
       if (token == F_INPUTS || token == F_INPUTI || token == F_INPUTF || token == F_INT2FLOAT || token == F_FLOAT2INT || token == F_LEN || token == F_SUBSTR || token == F_ORD || token == F_CHR )
       {
-        
+       //TODO 
       }
       if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) 
         errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
@@ -439,11 +462,11 @@ int stat(varNode * treePtr)
       int variableType = getType(*treePtr,stringID);
       if (strcmp(stringID.str, "_") != 0)
       {
-      if (variableType != precResult.end_datatype)
-      {
-        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment");
-      }  
-        BSTInsert(treePtr, stringID, precResult.end_datatype);
+        if (variableType != precResult.end_datatype)
+        {
+          errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment");
+        }
+        //BSTInsert(treePtr, stringID, precResult.end_datatype, globalScope);
       }
       //v pripade ze priradujeme do '_' tak nebudeme insertovat inak ano      
     }
@@ -454,12 +477,13 @@ int stat(varNode * treePtr)
     //<fun>	ID	(	<fun_call_param>	)												
     else if(token == L_PAR)
     {
+
       //ulozenie nazvu funkcie do premennej
       strClear(&funName); //TODO
       strCopyString(&funName, &stringID); //TODO
       funReturnCounter = 0; //TODO
       funParamCounter = 0; //TODO
-      addFunCall(&funTree, stringID, *treePtr);
+      addFunToTree(&funTree, stringID);
       return fun_call_param(treePtr);
     }
   }
@@ -590,20 +614,30 @@ int ass_exps(varNode * treePtr)
 int fun_call_param(varNode *treePtr)
 {
   int result = 0;
-  int multipleParams = 0;
-  if (token == COMMA) multipleParams = 1;
-
+  //int multipleParams = 0;
+  //if (token == COMMA) multipleParams = 1;
   token = get_new_token(&tokenStr);
-  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != R_PAR) 
-    errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
-    //koniec spracovania parametrov
-  if (token == R_PAR && multipleParams == 0)
+  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != R_PAR) {errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");}
+  //funkcia je bez parametrov
+  if (token == R_PAR) { return result; }
+  if (token == ID) 
   {
+  bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+  if (isIDDeclared == false)
+  {
+    errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+  }
+  }
+    //koniec spracovania parametrov
+  /*if (token == R_PAR && multipleParams == 0)
+  {
+    printf("hello friend\n");
+    printf("%d /\\ %d \n",funParamCounter, parCount(funTree, funName));
     if (funParamCounter != parCount(funTree, funName)) {errorMsg(ERR_SEMANTIC_PARAM, "Incorrect parameter count");} //TODO
     return result;
-  } 
+  } */
   
-  else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
+  //else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
   //pocitame pocet parametrov
   funParamCounter++; //TODO
   if (token == ID)  //TODO
@@ -618,7 +652,8 @@ int fun_call_param(varNode *treePtr)
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != R_PAR) 
     errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
-  if (token == COMMA) return fun_call_param(treePtr);
+  if (token == COMMA) {return fun_call_param(treePtr);}
+  addFunCall(&funTree, funName, *treePtr, funParamCounter, funReturnCounter);   
   return result;
 }
 //<fun_params>	<par>	<par_next>														
@@ -667,7 +702,7 @@ int fun_params(varNode * treePtr)
   funParamCounter++; //TODO
   addParam(&funTree, funName, tokenDataType, funParamCounter); //TODO
   //deklaracia prebehla a ID a typ premennej ulozime do stromu
-  BSTInsert(treePtr, stringID, tokenDataType);
+  BSTInsert(treePtr, stringID, tokenDataType, globalScope);
   token = get_new_token(&tokenStr);
   if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
   if (token == COMMA) return fun_params(treePtr);
