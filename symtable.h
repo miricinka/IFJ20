@@ -97,10 +97,9 @@ void BSTScopeDelete(varNode *RootPtr, int newScope);
 
 /* Prototypes of variable stack operations */
 
-varStackElement stackTop(varNode s);
-void stackPop(varNode* s);
-void stackPush(varNode* s, int type, int scope);
-void stackDelete(varNode *s);
+void stackPop(varNode* varTree);
+void stackPush(varNode* varTree, int type, int scope);
+void stackDelete(varNode *varTree);
 
 /* Prototypes of function operations */
 

@@ -10,9 +10,9 @@
 #define TEST_VAR_TREE  0
 #define VAR_TREE_STACK 0
 
-#define TEST_FUN_LIST  0
+#define TEST_FUN_LIST  1
 #define TEST_FUN_TREE  0
-#define TEST_TREE_LIST 1
+#define TEST_TREE_LIST 0
 
 
 /* Variable tree testing functions */
@@ -691,7 +691,7 @@ if (TEST_VAR_TREE){
 
 		addFunToTree(&funTree, name);
 
-		addParam(&funTree, name, T_STRING, ++parameterOrder);
+		addParam(&funTree, name, T_INT, ++parameterOrder);
 		addParam(&funTree, name, T_STRING, ++parameterOrder);
 		addParam(&funTree, name, T_STRING, ++parameterOrder);
 

@@ -96,7 +96,6 @@ varNode BSTSearch (varNode RootPtr, string Key)	{
  * @param Key name of the new variable
  * @param Type type of the new variable
  * @param Scope current scope in the parser
- * 
  */
 void BSTInsert (varNode *RootPtr, string Key, int Type, int scope)	{
 
@@ -138,7 +137,6 @@ void BSTInsert (varNode *RootPtr, string Key, int Type, int scope)	{
  * @brief Frees the whole variable BST
  * 
  * @param RootPtr pointer to the variable BST
- * 
  */
 void BSTDispose (varNode *RootPtr) {
 
@@ -153,15 +151,21 @@ void BSTDispose (varNode *RootPtr) {
     }
 }
 
-void ReplaceByRightmost (varNode PtrReplaced, varNode *RootPtr){
+/**
+ * @brief Copies and frees the rightmost node from the left branch, then with the copied content overwrites the contents of the node we want to delete.
+ * 
+ * @param PtrReplaced node we want to replace
+ * @param leftBranch left branch node where we will search for the rightmost node to replace PtrReplaced with
+ */
+void ReplaceByRightmost (varNode PtrReplaced, varNode *leftBranch){
 
-	if(!*RootPtr)
+	if(!*leftBranch)
 		return;
 
-	if(( *RootPtr)->RPtr)
-		ReplaceByRightmost(PtrReplaced, &((*RootPtr)->RPtr ));
+	if(( *leftBranch)->RPtr)
+		ReplaceByRightmost(PtrReplaced, &((*leftBranch)->RPtr ));
 	else{
-		varNode delete_me = (*RootPtr);
+		varNode delete_me = (*leftBranch);
 		
 		strClear(&(PtrReplaced->name));
 		stackDelete(&PtrReplaced);
@@ -169,13 +173,19 @@ void ReplaceByRightmost (varNode PtrReplaced, varNode *RootPtr){
 		strCopyString(&(PtrReplaced->name),&(delete_me->name));
 		PtrReplaced->varStack = delete_me ->varStack;
 		
-		(*RootPtr) = (*RootPtr)->LPtr;
+		(*leftBranch) = (*leftBranch)->LPtr;
 		
 		strFree(&(delete_me->name));
 		free(delete_me);
 	}
 }
 
+/**
+ * @brief Deletes the variable Key from the BSTD.
+ * 
+ * @param RootPtr pointer to the variable BST
+ * @param Key name of the variable we want to delete
+ */
 void BSTDelete (varNode *RootPtr, string Key){
 	if(!*RootPtr){
 		return;
@@ -203,6 +213,12 @@ void BSTDelete (varNode *RootPtr, string Key){
 	}
 }
 
+/**
+ * @brief Searches the whole tree, pops any node Stacks which have scope value higher than newScope, if there is no value left, then it deletes the node.
+ * 
+ * @param RootPtr pointer to the variable BST
+ * @param newScope new lower scope which we compare with the old scope
+ */
 void BSTScopeDelete(varNode *RootPtr, int newScope){
 	if(!*RootPtr)
 		return;
@@ -219,38 +235,68 @@ void BSTScopeDelete(varNode *RootPtr, int newScope){
 	}
 }
 
-/* Var tree stack */
+/* Var tree stack operation*/
 
-void stackPop(varNode* s){
-	if ((*s)->varStack != NULL){
-		varStackElement temp = (*s)->varStack;
-		(*s)->varStack = (*s)->varStack->previousElement;
+/**
+ * @brief Pops the top values on the stack, so it now has the previous values on top.
+ * 
+ * @param varTree pointer to the variable BST
+ */
+void stackPop(varNode* varTree){
+	if ((*varTree)->varStack != NULL){
+		varStackElement temp = (*varTree)->varStack;
+		(*varTree)->varStack = (*varTree)->varStack->previousElement;
 		free(temp);
 	}
 }
 
-void stackPush(varNode* s, int type, int scope){
+/**
+ * @brief Pushes the variable stack so the top now has new values and points to the previous element.
+ * 
+ * @param varTree pointer to the variable BST
+ * @param type type of the variable
+ * @param scope scope of the variable
+ */
+void stackPush(varNode* varTree, int type, int scope){
 	varStackElement newElement = (varStackElement) malloc(sizeof(struct varStackElement));
 	newElement->type = type;
 	newElement->scope = scope;
 
-	newElement->previousElement = (*s)->varStack;
+	newElement->previousElement = (*varTree)->varStack;
 
-	(*s)->varStack = newElement;
+	(*varTree)->varStack = newElement;
 }
 
-void stackDelete(varNode *s){
-	while ((*s)->varStack != NULL){
-		stackPop(s);
+/**
+ * @brief Frees the whole stack.
+ * 
+ * @param varTree pointer to the variable BST
+ */
+void stackDelete(varNode *varTree){
+	while ((*varTree)->varStack != NULL){
+		stackPop(varTree);
 	}
 }
 
 /*************** Function tree operations *****************/
 
+/**
+ * @brief Initializes the function BST by setting its pointer to NULL.
+ * 
+ * @param RootPtr pointer to the function BST
+ */
 void funInit (funNode *RootPtr) {
 	*RootPtr = NULL;
 }
 
+/**
+ * @brief Searches the function BST for function for key.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param name name of the function we are looking for
+ * 
+ * @return funNode with searched name or NULL if it is not in the BST
+ */
 funNode *funSearch (funNode *RootPtr, string Key)	{
 
 	if(!*RootPtr)
@@ -265,6 +311,12 @@ funNode *funSearch (funNode *RootPtr, string Key)	{
 	return RootPtr;
 }
 
+/**
+ * @brief Adds the function to the function BST and inicializes all of its elements.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param name name of the function we are looking for
+ */
 void addFunToTree(funNode *RootPtr, string Key){
 	// function will be inserted into the tree
 	if(!*RootPtr){
@@ -295,7 +347,16 @@ void addFunToTree(funNode *RootPtr, string Key){
 		return;
 	}
 }
-
+/**
+ * @brief Finds the function with given name in the function BST then checks for errors and changes its contents. 
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param name name of the function we are looking for
+ * @param Declaration true if the function was declared, used for checking if the function isn't declared twice
+ * @param Call true if the fuction was called, used in isFunCallDec() to check if the function wasn't called without being declared
+ * @param paramCount number of function parameters, used for checking if the function isn't called or declared with different amount of parameters in other instances
+ * @param returnCount number of function return types, used for checking if the function isn't called or declared with different amount of return types in other instances
+ */
 void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount, int returnCount){
 	if(!*RootPtr){
 		//printf("Function %s was not found!\n",Key.str);
@@ -336,6 +397,11 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 	}
 }
 
+/**
+ * @brief Frees the whole function BST and the elements of each node.
+ * 
+ * @param RootPtr pointer to the function BST
+ */
 void funDisposeTree (funNode *RootPtr) {
 
 	if( *RootPtr != NULL){
@@ -352,6 +418,15 @@ void funDisposeTree (funNode *RootPtr) {
     }
 }
 
+/**
+ * @brief Changes the bool value Call of the function to true, checks the variable tree if there is no variable with the same name as the functions.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the searched function
+ * @param varTree variable tree for error checking
+ * @param paramCount number of function parameters, used by funActualize() for error chcecking
+ * @param returnCount number of function return types, used by funActualize() for error chcecking
+ */
 void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, int returnCount){
 	if(BSTSearch (varTree, Key)){
 		fprintf(stderr,"Error 3: Function is also a variable in the same scope! [%s]\n", Key.str);
@@ -360,10 +435,26 @@ void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, i
 	funActualize(RootPtr, Key, false, true, paramCount, returnCount);
 }
 
+/**
+ * @brief Changes the bool value Declaration of the function to true.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the searched function
+ * @param paramCount number of function parameters, used by funActualize() for error chcecking
+ * @param returnCount number of function return types, used by funActualize() for error chcecking
+ */
 void addFunDec(funNode *RootPtr, string Key, int paramCount, int returnCount){
 	funActualize(RootPtr, Key, true, false, paramCount, returnCount);
 }
 
+/**
+ * @brief Adds a parameter to the function Key in the BST. If the function was already declared or called, checks the parameter for errors instead.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the searched function
+ * @param parameterType type of the parameter
+ * @param parameterOrder order of the parameter, used for error checking
+ */
 void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder){
 	funNode *tempTree;
 	tempTree = funSearch(RootPtr, Key);
@@ -374,6 +465,14 @@ void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrde
 	}
 }
 
+/**
+ * @brief Adds a return type to the function Key in the BST. If the function was already declared or called, checks the return type for errors instead.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the searched function
+ * @param returnType type of the return
+ * @param returnOrder order of the return, used for error checking
+ */
 void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder){
 	funNode *tempTree;
 	tempTree = funSearch(RootPtr, Key);
@@ -384,6 +483,11 @@ void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder){
 	}
 }
 
+/**
+ * @brief Recursively goes through the whole function BST and checks if each function was not Called without declaration.
+ * 
+ * @param RootPtr pointer to the function BST
+ */
 int isFunCallDec(funNode RootPtr){
 	if(RootPtr != NULL){
 		isFunCallDec(RootPtr->LPtr);
@@ -398,29 +502,43 @@ int isFunCallDec(funNode RootPtr){
 	return 0;
 }
 
-int parCount(funNode RootPtr,string name){
-	funNode *temp;
-	temp = funSearch ( &RootPtr,  name);	
-	return (*temp)->parameters->elementCount;
+// int parCount(funNode RootPtr,string name){
+// 	funNode *temp;
+// 	temp = funSearch ( &RootPtr,  name);	
+// 	return (*temp)->parameters->elementCount;
+// }
+
+// int retCount(funNode RootPtr, string name){
+// 	funNode *temp;
+// 	temp = funSearch ( &RootPtr,  name);	
+// 	return (*temp)->returnCodes->elementCount;
+// }
+
+/********************************************************/
+/*************** Function list operations ***************/
+/********************************************************/
+
+/**
+ * @brief Initializes the parameter/return list.
+ * 
+ * @param list pointer to the function list
+ */
+void funListInit (funList *list) {
+	list->First = NULL;
+	list->elementCount = 0;
 }
 
-int retCount(funNode RootPtr, string name){
-	funNode *temp;
-	temp = funSearch ( &RootPtr,  name);	
-	return (*temp)->returnCodes->elementCount;
-}
+/**
+ * @brief Appends a new funListElement at the end of the list.
+ * 
+ * @param list pointer to the function list
+ * @param type type of the element
+ * @param order order of the element
+ */
+void funListAdd (funList *list, int type, int order){	
+	funListElement temp = list->First;
 
-/*************** Function list operations *****************/
-
-void funListInit (funList *L) {
-	L->First = NULL;
-	L->elementCount = 0;
-}
-
-void funListAdd (funList *L, int val, int order){	
-	funListElement temp = L->First;
-
-	if (L->First != NULL){
+	if (list->First != NULL){
 		while (temp->NextPtr != NULL){
 			temp = temp->NextPtr;
 		}
@@ -431,26 +549,34 @@ void funListAdd (funList *L, int val, int order){
 		return;
 	}
 
-	listElement->type = val;	
+	listElement->type = type;	
 	listElement->order = order;
 	listElement->NextPtr = NULL;
 
-	L->elementCount++;
+	list->elementCount++;
 
-	if (L->First == NULL){
-		L->First = listElement;
+	if (list->First == NULL){
+		list->First = listElement;
 	} else{
 		temp->NextPtr = listElement;
 	}
 }
 
-funListElement funListSearch (funList *L, int order){
+/**
+ * @brief Searches the list structure until it finds the element at the position order.
+ * 
+ * @param list pointer to the function list
+ * @param order order of the element
+ * 
+ * @return found element of the list or NULL if it is not found
+ */
+funListElement funListSearch (funList *list, int order){
 	
-	if( L->First == NULL){
+	if( list->First == NULL){
 		return NULL;
 	}
 	
-	funListElement temp = L->First;
+	funListElement temp = list->First;
 
 	for (int elementNum = 1; temp != NULL; elementNum++){
 		
@@ -463,23 +589,33 @@ funListElement funListSearch (funList *L, int order){
 	return NULL;
 }
 
-void funListDelete(funList *L){
-	funListElement temp = L->First;
+/**
+ * @brief Frees the whole function list structure.
+ * 
+ * @param list pointer to the function list
+ */
+void funListDelete(funList *list){
+	funListElement temp = list->First;
 	while (temp != NULL){
 		temp = temp->NextPtr;
-		free(L->First);
-		L->First = temp;
+		free(list->First);
+		list->First = temp;
 	}
 }
 
+/**
+ * @brief Checks if the given element has a given type.
+ * 
+ * @param list pointer to the function list
+ * @param type type to compare with elements type
+ * @param order position of the element we want to check in the list
+ */
 void checkListElement(funList *list, int type, int order){
 	funListElement tempListElement;
 	tempListElement = funListSearch (list, order);
 	
 	if (tempListElement == NULL){
-		//fprintf(stderr,"ERROR 6: Function has wrong amount of parameters/returns\n");
-		//exit(6);	// TODO check type
-		return; // delete me if exit above is uncommented
+		return;
 	}
 	
 	if (tempListElement->type != type){
@@ -488,8 +624,17 @@ void checkListElement(funList *list, int type, int order){
 	}
 }
 
-/*************** Functions for printing datastructures *****************/
+/*********************************************************************/
+/*************** Functions for printing datastructures ***************/
 
+
+/**
+ * @brief Debugging function which transfers type constants to strings for printing.
+ * 
+ * @param typeNum type to convert
+ * 
+ * @return converted type as a string
+ */
 char* printType(int typeNum){
 	if (typeNum == T_INT){
 		return "int";
@@ -502,6 +647,10 @@ char* printType(int typeNum){
 	}
 }
 
+/**
+ * @brief Magical function for printing binary trees. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * 
+ */
 void printVarTree2(varNode TempTree, char* sufix, char fromdir){
     if (TempTree != NULL){
 		char* suf2 = (char*) malloc(strlen(sufix) + 4);
@@ -528,6 +677,11 @@ void printVarTree2(varNode TempTree, char* sufix, char fromdir){
     }
 }
 
+/**
+ * @brief Magical function for printing binary trees. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * 
+ * @param TempTree variable BST which is to be printed
+ */
 void printVarTree(varNode TempTree){
   	printf("Struktura binarniho stromu:\n");
   	printf("\n");
@@ -541,6 +695,11 @@ void printVarTree(varNode TempTree){
   	printf("=================================================\n");
 } 
 
+/**
+ * @brief Magical function for printing lists. Taken from IAL testing file c206-test.c . Used only for debugging purposes. Lightly modified.
+ * 
+ * @param TL list which is to be printed
+ */
 void printFunList(funList TL){
 	
 	funList TempList=TL;
@@ -562,6 +721,11 @@ void printFunList(funList TL){
 	printf("\t -----------------\n");     
 }
 
+/**
+ * @brief Magical function for printing function BST. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * 
+ * @param TempTree function BST which is to be printed
+ */
 void printFunTree(funNode TempTree){
   	printf("Struktura binarniho stromu:\n");
   	printf("\n");
@@ -575,6 +739,9 @@ void printFunTree(funNode TempTree){
   	printf("=================================================\n");
 } 
 
+/**
+ * @brief Magical function for printing function BST. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ */
 void printFunTree2(funNode TempTree, char* sufix, char fromdir){
 	funListElement tempElement;
     if (TempTree != NULL){
