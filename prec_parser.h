@@ -31,6 +31,7 @@ typedef struct{
 	int end_datatype;
 }prec_end_struct;
 
+
 //precedence table symbol 
 #define NT_ADD         0
 #define NT_SUB         1
