@@ -10,9 +10,9 @@
 #define TEST_VAR_TREE  0
 #define VAR_TREE_STACK 0
 
-#define TEST_FUN_LIST  1
+#define TEST_FUN_LIST  0
 #define TEST_FUN_TREE  0
-#define TEST_TREE_LIST 0
+#define TEST_TREE_LIST 1
 
 
 /* Variable tree testing functions */
@@ -55,7 +55,7 @@ bool test_getType (varNode TempTree, string Key)	{
 	if(FOUND == 666)
 		printf("Promena %s NENI deklarovana.\n", Key.str);
 	else {
-		printf("Promena %s ma typ %d\n", Key.str, FOUND);
+		printf("Promena %s ma typ %s\n", Key.str, printType(FOUND)); 
 	}
 	return true;			
 }
@@ -553,9 +553,7 @@ if (TEST_VAR_TREE){
 
 		printf("[TEST11]\n");
 		printf("Kontrola volání funkce\n");
-		if(isFunCallDec(funTree) == 0){
-			printf("Funkce jsou volane i deklarovane!\n");
-		}
+		isFunCallDec(funTree);
 
 		printf("[TEST12]\n");
 		printf("Zmenime hledany prvek micka na prcka\n");
@@ -684,18 +682,44 @@ if (TEST_VAR_TREE){
 
 		addFunCall(&funTree, name, varTree, parameterOrder, returnOrder);
 
-		printf("[TEST05]\n");
+		printf("[TEST06]\n");
 		printf("Volani funkce rain se spatnym parametrem a parametrem navic\n");
 
 		parameterOrder = 0;
 
 		addFunToTree(&funTree, name);
 
-		addParam(&funTree, name, T_INT, ++parameterOrder);
 		addParam(&funTree, name, T_STRING, ++parameterOrder);
 		addParam(&funTree, name, T_STRING, ++parameterOrder);
 
+
 		addFunCall(&funTree, name, varTree, parameterOrder, returnOrder);
+
+		printf("[TEST07]\n");
+		printf("Pridani return typu funkci kekein\n");
+		parameterOrder = 0;
+
+		strClear(&name);
+		strAddChars(&name,"kekein");
+		addFunToTree(&funTree, name);
+
+		addReturn(&funTree, name, T_STRING, ++returnOrder);
+		addReturn(&funTree, name, T_INT, ++returnOrder);
+		addReturn(&funTree, name, T_FLOAT, ++returnOrder);
+
+		addFunDec(&funTree, name, parameterOrder, returnOrder);
+
+			printFunTree(funTree);
+
+		printf("[TEST08]\n");
+		printf("Test kontroly spatnych parametru returnu ve funkci\n");
+		returnOrder = 0;
+
+		addReturn(&funTree, name, T_STRING, ++returnOrder);
+		addReturn(&funTree, name, T_INT, ++returnOrder);
+		addReturn(&funTree, name, T_INT, ++returnOrder);
+		
+		funReturnCheck(&funTree,name, returnOrder);
 
 		/*Test end - be free my little string!*/
 		strFree(&name);

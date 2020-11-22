@@ -54,15 +54,12 @@ bool isDeclared (varNode RootPtr, string Key) {
  * 
  * @return int value of the variables type
  */
-int getType (varNode RootPtr, string Key) {
-	if(!RootPtr)
-		return 666;
-
-	else if ( strCmpString(&Key, &(RootPtr->name)) < 0)
-		return getType (RootPtr->LPtr, Key);
-
-	else if ( strCmpString(&Key, &(RootPtr->name)) > 0)
-		return getType (RootPtr->RPtr, Key);
+int getType(varNode RootPtr, string Key){
+	RootPtr = BSTSearch (RootPtr, Key);
+	if(!RootPtr){
+		fprintf(stderr,"ERROR 666: Trying to get type of a non-existent function [%s]\n", Key.str);
+		exit(666);
+	}
 
 	return RootPtr->varStack->type;
 }
@@ -75,17 +72,18 @@ int getType (varNode RootPtr, string Key) {
  * 
  * @return structure varNode of the searched variable
  */
-varNode BSTSearch (varNode RootPtr, string Key)	{
-
+varNode BSTSearch(varNode RootPtr, string Key){
+	// the variable was not found, returns pointer to where it should have been
 	if(!RootPtr)
 		return NULL;
 
 	else if ( strCmpString(&Key, &(RootPtr->name)) < 0)
-		return BSTSearch (RootPtr->LPtr, Key);
+		return BSTSearch (RootPtr->LPtr, Key); // the variable is in the left branch
 
 	else if ( strCmpString(&Key, &(RootPtr->name)) > 0)
-		return BSTSearch (RootPtr->RPtr, Key);
+		return BSTSearch (RootPtr->RPtr, Key); // the variable is in the right branch
 
+	// the variable was found, returns pointer to it
 	return RootPtr;
 }
 
@@ -98,7 +96,7 @@ varNode BSTSearch (varNode RootPtr, string Key)	{
  * @param Scope current scope in the parser
  */
 void BSTInsert (varNode *RootPtr, string Key, int Type, int scope)	{
-
+	// if the RootPtr is NULL then we have found the place where the new Node should be inserted
 	if( !*RootPtr ) {
 		(*RootPtr) = (varNode)malloc(sizeof(struct varNode));
 		if(RootPtr == NULL)
@@ -114,12 +112,15 @@ void BSTInsert (varNode *RootPtr, string Key, int Type, int scope)	{
 		return;
 	}
 
+	
 	if ( strCmpString(&Key, &((*RootPtr)->name)) < 0) {
+		// the variable is in the left subtree
 		BSTInsert ( &((*RootPtr)->LPtr), Key, Type, scope);
 		return;
 	}
 
 	if ( strCmpString(&Key, &((*RootPtr)->name)) > 0) {
+		// the variable is in the right subtree
 		BSTInsert ( &((*RootPtr)->RPtr), Key, Type, scope);
 		return;
 	}
@@ -139,7 +140,6 @@ void BSTInsert (varNode *RootPtr, string Key, int Type, int scope)	{
  * @param RootPtr pointer to the variable BST
  */
 void BSTDispose (varNode *RootPtr) {
-
 	if( *RootPtr != NULL){
         BSTDispose(&((*RootPtr)->LPtr));
         BSTDispose(&((*RootPtr)->RPtr));
@@ -158,7 +158,6 @@ void BSTDispose (varNode *RootPtr) {
  * @param leftBranch left branch node where we will search for the rightmost node to replace PtrReplaced with
  */
 void ReplaceByRightmost (varNode PtrReplaced, varNode *leftBranch){
-
 	if(!*leftBranch)
 		return;
 
@@ -300,9 +299,8 @@ void funInit (funNode *RootPtr) {
  * @return funNode with searched name or NULL if it is not in the BST
  */
 funNode *funSearch (funNode *RootPtr, string Key)	{
-
 	if(!*RootPtr)
-		return NULL;
+		return RootPtr;
 
 	else if (strCmpString(&Key, &((*RootPtr)->name)) < 0)
 		return funSearch(&((*RootPtr)->LPtr), Key);
@@ -320,7 +318,8 @@ funNode *funSearch (funNode *RootPtr, string Key)	{
  * @param name name of the function we are looking for
  */
 void addFunToTree(funNode *RootPtr, string Key){
-	// function will be inserted into the tree
+	RootPtr = funSearch(RootPtr, Key);
+	
 	if(!*RootPtr){
 		(*RootPtr) = (funNode)malloc(sizeof(struct funNode));
 		if(RootPtr == NULL)
@@ -340,50 +339,34 @@ void addFunToTree(funNode *RootPtr, string Key){
 		(*RootPtr)->LPtr = (*RootPtr)->RPtr = NULL;
 		return;
 	}
-
-	if (strCmpString(&Key, &((*RootPtr)->name)) < 0) {
-		addFunToTree ( &((*RootPtr)->LPtr), Key);
-		return;
-	}else if (strCmpString(&Key, &((*RootPtr)->name)) > 0) {
-		addFunToTree ( &((*RootPtr)->RPtr), Key);
-		return;
-	}
 }
 
 /**
- * @brief Finds the function with given name in the function BST then checks for errors and changes its contents. 
+ * @brief Checks function for errors and then changes its Declaration or Call bool values. 
  * 
  * @param RootPtr pointer to the function BST
- * @param name name of the function we are looking for
+ * @param name name of the function to actualize
  * @param Declaration true if the function was declared, used for checking if the function isn't declared twice
  * @param Call true if the fuction was called, used in isFunCallDec() to check if the function wasn't called without being declared
  * @param paramCount number of function parameters, used for checking if the function isn't called or declared with different amount of parameters in other instances
  * @param returnCount number of function return types, used for checking if the function isn't called or declared with different amount of return types in other instances
  */
 void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount, int returnCount){
+	RootPtr = funSearch(RootPtr, Key);
+	
 	if(!*RootPtr){
-		//printf("Function %s was not found!\n",Key.str);
-		return;
+		fprintf(stderr,"ERROR 666: Function was not found for actualization purposes [%s]\n", Key.str);
+		exit(666);
 	}
-
-	if (strCmpString(&Key, &((*RootPtr)->name)) < 0) {
-		funActualize( &((*RootPtr)->LPtr), Key, Declaration, Call, paramCount, returnCount);
-		return;
-	}else if (strCmpString(&Key, &((*RootPtr)->name)) > 0) {
-		funActualize( &((*RootPtr)->RPtr), Key, Declaration, Call, paramCount, returnCount);
-		return;
-	}
-
-	// function was found
 
 	if((*RootPtr)->parameters->elementCount != paramCount){
 		fprintf(stderr,"ERROR 6: Function has wrong amount of parameters [%s]\n", Key.str);
-		//exit(6);	// TODO check type
+		exit(6);
 	}
 
 	if((*RootPtr)->returnCodes->elementCount != returnCount){
 		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
-		//exit(3);	// TODO check type
+		exit(6);
 	}
 
 	if(Declaration == true && ((*RootPtr)->isDeclared == true)){
@@ -406,7 +389,6 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
  * @param RootPtr pointer to the function BST
  */
 void funDisposeTree (funNode *RootPtr) {
-
 	if( *RootPtr != NULL){
         funDisposeTree(&((*RootPtr)->LPtr));
         funDisposeTree(&((*RootPtr)->RPtr));
@@ -435,6 +417,7 @@ void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, i
 		fprintf(stderr,"Error 3: Function is also a variable in the same scope! [%s]\n", Key.str);
 		exit(3);
 	}
+
 	funActualize(RootPtr, Key, false, true, paramCount, returnCount);
 }
 
@@ -459,12 +442,12 @@ void addFunDec(funNode *RootPtr, string Key, int paramCount, int returnCount){
  * @param parameterOrder order of the parameter, used for error checking
  */
 void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder){
-	funNode *tempTree;
-	tempTree = funSearch(RootPtr, Key);
-	if((*tempTree)->isCalled == false && (*tempTree)->isDeclared == false ){
-		funListAdd((*tempTree)->parameters, parameterType, parameterOrder);
+	RootPtr = funSearch(RootPtr, Key);
+
+	if((*RootPtr)->isCalled == false && (*RootPtr)->isDeclared == false ){
+		funListAdd((*RootPtr)->parameters, parameterType, parameterOrder);
 	}else{
-		checkListElement((*tempTree)->parameters,parameterType,parameterOrder);
+		checkListElement((*RootPtr)->parameters,parameterType,parameterOrder);
 	}
 }
 
@@ -477,12 +460,28 @@ void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrde
  * @param returnOrder order of the return, used for error checking
  */
 void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder){
-	funNode *tempTree;
-	tempTree = funSearch(RootPtr, Key);
-	if((*tempTree)->isCalled == false && (*tempTree)->isDeclared == false ){
-		funListAdd((*tempTree)->parameters, returnType, returnOrder);
+	RootPtr = funSearch(RootPtr, Key);
+
+	if((*RootPtr)->isCalled == false && (*RootPtr)->isDeclared == false ){
+		funListAdd((*RootPtr)->returnCodes, returnType, returnOrder);
 	}else{
-		checkListElement((*tempTree)->parameters, returnType, returnOrder);
+		checkListElement((*RootPtr)->returnCodes, returnType, returnOrder);
+	}
+}
+
+/**
+ * @brief Checks if parser had loaded correct amount of return types in a return. 
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param name name of the function to actualize
+ * @param returnCount number of function return types
+ */
+void funReturnCheck(funNode *RootPtr, string Key, int returnCount){
+	RootPtr = funSearch(RootPtr, Key);
+
+	if((*RootPtr)->returnCodes->elementCount != returnCount){
+		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
+		exit(6);
 	}
 }
 
@@ -491,7 +490,7 @@ void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder){
  * 
  * @param RootPtr pointer to the function BST
  */
-int isFunCallDec(funNode RootPtr){
+void isFunCallDec(funNode RootPtr){
 	if(RootPtr != NULL){
 		isFunCallDec(RootPtr->LPtr);
 		isFunCallDec(RootPtr->RPtr);
@@ -500,10 +499,9 @@ int isFunCallDec(funNode RootPtr){
 			fprintf(stderr,"Error - the function %s is called but not declared!\n", RootPtr->name.str);
 			exit(3); 
 		}
-		return 0;
 	}
-	return 0;
 }
+
 
 // int parCount(funNode RootPtr,string name){
 // 	funNode *temp;
@@ -574,7 +572,6 @@ void funListAdd (funList *list, int type, int order){
  * @return found element of the list or NULL if it is not found
  */
 funListElement funListSearch (funList *list, int order){
-	
 	if( list->First == NULL){
 		return NULL;
 	}
@@ -623,7 +620,7 @@ void checkListElement(funList *list, int type, int order){
 	
 	if (tempListElement->type != type){
 		fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
-		// TODO add exit(6); for testing purposes is not here now
+		exit(6);
 	}
 }
 
@@ -673,6 +670,7 @@ void printVarTree2(varNode TempTree, char* sufix, char fromdir){
 	   		suf2 = strcat(suf2, "  |");	
 		else
 	   		suf2 = strcat(suf2, "   ");
+
 		printVarTree2(TempTree->LPtr, suf2, 'L');
 
 		if (fromdir == 'R') printf("%s\n", suf2);
@@ -704,13 +702,14 @@ void printVarTree(varNode TempTree){
  * @param TL list which is to be printed
  */
 void printFunList(funList TL){
-	
 	funList TempList=TL;
 	int CurrListLength = 0;
+
 	printf("\t -----------------\n");
 	if(TempList.First == NULL ){
 		printf("\t  list je prazdny\n");
 	}
+
 	while ((TempList.First!=NULL) && (CurrListLength<MAX_LIST_LENGHT))	{
 		
 		printf("\t |%s, order %d|\n", printType(TempList.First->type),TempList.First->order);
@@ -743,10 +742,11 @@ void printFunTree(funNode TempTree){
 } 
 
 /**
- * @brief Magical function for printing function BST. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Lightly modified.
+ * @brief Magical function for printing function BST. Taken from IAL testing file c401-test.c . Used only for debugging purposes. Slightly modified.
  */
 void printFunTree2(funNode TempTree, char* sufix, char fromdir){
 	funListElement tempElement;
+
     if (TempTree != NULL){
 		char* suf2 = (char*) malloc(strlen(sufix) + 4);
 		strcpy(suf2, sufix);
@@ -759,9 +759,11 @@ void printFunTree2(funNode TempTree, char* sufix, char fromdir){
 
 		printFunTree2(TempTree->RPtr, suf2, 'R');
         printf("%s  +-[%s,D%d,C%d", sufix,  TempTree->name.str,TempTree->isDeclared,TempTree->isCalled);
+		
 		for ( int i = 1; (tempElement = funListSearch(TempTree->parameters, i)) != NULL; i++){
 			printf(",P %s",printType(tempElement->type));
 		}
+
 		for ( int i = 1; (tempElement = funListSearch(TempTree->returnCodes, i)) != NULL; i++){
 			printf(",R %s",printType(tempElement->type));
 		}

@@ -112,9 +112,10 @@ void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, i
 void addFunDec(funNode *RootPtr, string Key, int paramCount, int returnCount);
 void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
 void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
-int isFunCallDec(funNode RootPtr);
-int parCount(funNode RootPtr,string name);
-int retCount(funNode RootPtr,string name);
+void isFunCallDec(funNode RootPtr);
+void funReturnCheck(funNode *RootPtr, string Key, int returnCount);
+// int parCount(funNode RootPtr,string name);
+// int retCount(funNode RootPtr,string name);
 
 /*Prototypes of function list operations*/
 
