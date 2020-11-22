@@ -364,6 +364,11 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 		exit(666);
 	}
 
+	if(Declaration == true && ((*RootPtr)->isDeclared == true)){
+		fprintf(stderr,"ERROR 3: Redefinition of function [%s]\n", Key.str);
+		exit(3);
+    }
+
 	if((*RootPtr)->parameters->elementCount != paramCount){
 		fprintf(stderr,"ERROR 6: Function has wrong amount of parameters [%s]\n", Key.str);
 		exit(6);
@@ -373,11 +378,6 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
 		exit(6);
 	}
-
-	if(Declaration == true && ((*RootPtr)->isDeclared == true)){
-		fprintf(stderr,"ERROR 3: Redefinition of function [%s]\n", Key.str);
-		exit(3);
-    }
 
 	if(Declaration == true && !((*RootPtr)->isDeclared == true)){
 		(*RootPtr)->isDeclared = true;
