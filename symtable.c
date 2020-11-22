@@ -354,6 +354,11 @@ void addFunToTree(funNode *RootPtr, string Key){
 void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount, int returnCount){
 	RootPtr = funSearch(RootPtr, Key);
 	
+	if (!strCmpConstStr(&Key, "main") && ((paramCount != 0) || (returnCount != 0) )){
+		fprintf(stderr,"ERROR 6: Function main can't have any parameters or return codes.\n");
+		exit(6);
+	}
+
 	if(!*RootPtr){
 		fprintf(stderr,"ERROR 666: Function was not found for actualization purposes [%s]\n", Key.str);
 		exit(666);

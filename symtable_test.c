@@ -616,6 +616,9 @@ if (TEST_VAR_TREE){
 		printf("[TEST03]\n");
 		printf("Vlozime volani funkce s spatnym parametrem n.1 typu STRING a spatnym poctem parametru\n");
 
+		parameterOrder = 0;
+
+		addParam(&funTree, name, T_INT, ++parameterOrder);
 		addParam(&funTree, name, T_STRING, ++parameterOrder);
 
 		addFunCall(&funTree, name, varTree, parameterOrder, returnOrder);
@@ -670,7 +673,7 @@ if (TEST_VAR_TREE){
 
 		printf("[TEST05]\n");
 		printf("Volani funkce rain s korektnimi parametry (nemel by byt error)\n");
-
+		
 		strClear(&name);
 		strAddChars(&name,"rain");
 		parameterOrder = 0;
@@ -683,43 +686,48 @@ if (TEST_VAR_TREE){
 		addFunCall(&funTree, name, varTree, parameterOrder, returnOrder);
 
 		printf("[TEST06]\n");
-		printf("Volani funkce rain se spatnym parametrem a parametrem navic\n");
-
-		parameterOrder = 0;
-
-		addFunToTree(&funTree, name);
-
-		addParam(&funTree, name, T_STRING, ++parameterOrder);
-		addParam(&funTree, name, T_STRING, ++parameterOrder);
+		printf("Main nesmí mít parametry ani returny\n");
 
 
-		addFunCall(&funTree, name, varTree, parameterOrder, returnOrder);
 
-		printf("[TEST07]\n");
-		printf("Pridani return typu funkci kekein\n");
-		parameterOrder = 0;
+		// printf("[TEST06]\n");
+		// printf("Volani funkce rain se spatnym parametrem a parametrem navic\n");
 
-		strClear(&name);
-		strAddChars(&name,"kekein");
-		addFunToTree(&funTree, name);
+		// parameterOrder = 0;
 
-		addReturn(&funTree, name, T_STRING, ++returnOrder);
-		addReturn(&funTree, name, T_INT, ++returnOrder);
-		addReturn(&funTree, name, T_FLOAT, ++returnOrder);
+		// addFunToTree(&funTree, name);
 
-		addFunDec(&funTree, name, parameterOrder, returnOrder);
+		// addParam(&funTree, name, T_STRING, ++parameterOrder);
+		// addParam(&funTree, name, T_STRING, ++parameterOrder);
 
-			printFunTree(funTree);
 
-		printf("[TEST08]\n");
-		printf("Test kontroly spatnych parametru returnu ve funkci\n");
-		returnOrder = 0;
+		// addFunCall(&funTree, name, varTree, parameterOrder, returnOrder);
 
-		addReturn(&funTree, name, T_STRING, ++returnOrder);
-		addReturn(&funTree, name, T_INT, ++returnOrder);
-		addReturn(&funTree, name, T_INT, ++returnOrder);
+		// printf("[TEST07]\n");
+		// printf("Pridani return typu funkci kekein\n");
+		// parameterOrder = 0;
+
+		// strClear(&name);
+		// strAddChars(&name,"kekein");
+		// addFunToTree(&funTree, name);
+
+		// addReturn(&funTree, name, T_STRING, ++returnOrder);
+		// addReturn(&funTree, name, T_INT, ++returnOrder);
+		// addReturn(&funTree, name, T_FLOAT, ++returnOrder);
+
+		// addFunDec(&funTree, name, parameterOrder, returnOrder);
+
+		// 	printFunTree(funTree);
+
+		// printf("[TEST08]\n");
+		// printf("Test kontroly spatnych parametru returnu ve funkci\n");
+		// returnOrder = 0;
+
+		// addReturn(&funTree, name, T_STRING, ++returnOrder);
+		// addReturn(&funTree, name, T_INT, ++returnOrder);
+		// addReturn(&funTree, name, T_INT, ++returnOrder);
 		
-		funReturnCheck(&funTree,name, returnOrder);
+		// funReturnCheck(&funTree,name, returnOrder);
 
 		/*Test end - be free my little string!*/
 		strFree(&name);
