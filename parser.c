@@ -23,6 +23,7 @@ funNode funTree;      //variable for tree of functions
 int funParamCounter;  //variable for number of parameters
 int funReturnCounter; //variable for number of returns
 string funName;       //variable for name of function in tree
+string funDeclaredName; //variable for name of currently defined function
 int levelOfScope = 1; //variabel for scope, it is incremented
 //generation
 tListOfInstr *list; //variable for list of instructions
@@ -52,8 +53,10 @@ void generateInstruction(int instType)
  */
 int parse(tListOfInstr *instrList)
 {
-        //initialization of string far names of functions
+        //initialization of string for names of functions
         strInit(&funName);
+        //initialization of string for already declared function
+        strInit(&funDeclaredName);
         //initialization of string for current token
         strInit(&tokenStr);
         //initialization of function tree
@@ -72,6 +75,7 @@ int parse(tListOfInstr *instrList)
         //free of strings
         strFree(&tokenStr);
         strFree(&funName);
+        strFree(&funDeclaredName);
         //bubble zero(success) to upper rule of LL grammar
         return result;
 }
@@ -147,13 +151,13 @@ int fun_def_list()
         case EOL: //recursively chceck for optional EOLs
                 return fun_def_list();
         case ENDFILE: //end of program
-                //printFunTree(funTree);               
+                printFunTree(funTree);               
                 strInit(&tempMain);
                 strAddChars(&tempMain, "main");
                 //funSearch finds function in tree of functions, if main is not there it is error 3
                 if (!funSearch(&funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
                 //check in tree if called functions were declared
-                if (isFunCallDec(funTree) != 0) errorMsg(ERR_SEMANTIC_DEFINITION, "Function was not defined");
+                isFunCallDec(funTree);
                 return result;
                 break;
         }
@@ -179,7 +183,10 @@ int fun_def()
                 strInit(&tempMain);
                 strAddChars(&tempMain, "main");
                 addFunToTree(&funTree, tempMain);
-                addFunDec(&funTree, tempMain, funParamCounter, funReturnCounter);
+                //set counters to zero
+                funParamCounter = 0;
+                funReturnCounter = 0;
+                addFunDec(&funTree, tempMain, funParamCounter/*, funReturnCounter*/);
                 strFree(&tempMain);
 
                 //left param token
@@ -222,6 +229,10 @@ int fun_def()
                 //add function to tree
                 addFunToTree(&funTree, funName);
 
+                //save function name for returns
+                strClear(&funDeclaredName);
+                strCopyString(&funDeclaredName, &tokenStr); 
+
                 //left param token
                 token = get_new_token(&tokenStr);
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
@@ -231,6 +242,7 @@ int fun_def()
                 BSTInit(&treePtr);
                 //counter for number of parameters in function
                 funParamCounter = 0;
+                funReturnCounter = 0;
                 //handle fun_params rule
                 result = fun_params(&treePtr);
                 if (result != 0) return result;
@@ -254,7 +266,7 @@ int fun_def()
                         token = get_new_token(&tokenStr);
                 }
                 //number of parameters and returns added to function in tree
-                addFunDec(&funTree, funName, funParamCounter, funReturnCounter);
+                addFunDec(&funTree, funName, funParamCounter/*, funReturnCounter*/);
                 
                 //left bracket token
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");
@@ -596,7 +608,8 @@ int stat(varNode *treePtr)
         }
         else if (token == KW_RETURN) //<stat> return <ass_exps>
         {
-                return ass_exps(treePtr);
+                funReturnCounter = 0;
+                return return_values(treePtr);
         }
 
         /**
@@ -737,13 +750,10 @@ int ass_exps(varNode *treePtr)
         }*/
 
         //
-        if (precResult.end_datatype == TYPE_BOOL)
-                errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
+        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
         //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token
-        if (token != COMMA && token != EOL)
-                errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
-        if (token == COMMA)
-                return ass_exps(treePtr);
+        if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
+        if (token == COMMA) return ass_exps(treePtr);
         return result;
 }
 
@@ -761,8 +771,6 @@ int fun_call_param(varNode *treePtr)
         token = get_new_token(&tokenStr);
         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
 
-        //function without parameters
-        if (token == R_PAR) return result; 
         //if it is ID check if it is declared
         if (token == ID)
         {
@@ -770,6 +778,12 @@ int fun_call_param(varNode *treePtr)
                 if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
         }
 
+        //function without parameters
+        if (token == R_PAR) 
+        {
+           addFunCall(&funTree, funName, *treePtr, funParamCounter/*, funReturnCounter*/);    
+           return result;  
+        }
         //koniec spracovania parametrov
         /*if (token == R_PAR && multipleParams == 0)
         {
@@ -797,7 +811,7 @@ int fun_call_param(varNode *treePtr)
                 return fun_call_param(treePtr);
         }
         //TODO Comment
-        addFunCall(&funTree, funName, *treePtr, funParamCounter, funReturnCounter);
+        addFunCall(&funTree, funName, *treePtr, funParamCounter/*, funReturnCounter*/);
         return result;
 }
 
@@ -889,6 +903,18 @@ int fun_returns()
         //handling of more parameters
         else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect return params");
 
+        //save type of token to variable
+        int tokenDataType = 0;
+        if (token == KW_FLOAT64) tokenDataType = T_FLOAT;
+        else if (token == KW_INT) tokenDataType = T_INT;
+        else if (token == KW_STRING) tokenDataType = T_STRING;
+        else errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");
+
+        //counter for returns increment
+        funReturnCounter++;         
+        // add return to function                                  
+        addReturn(&funTree, funName, tokenDataType, funReturnCounter); 
+
         //end of parameters or multiple parameters
         token = get_new_token(&tokenStr);
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect return params");
@@ -929,5 +955,51 @@ int print_params(varNode *treePtr)
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
         if (token == COMMA) return print_params(treePtr);
         //print parameters handled correctly
+        return result;
+}
+
+
+int return_values(varNode *treePtr)
+{
+        int result = 0;
+        
+        prec_end_struct precResult;
+        //variable for multiple parameters
+        int multipleParams = 0;
+        //multiple parameters are present
+        if (token == COMMA) multipleParams = 1;
+
+        //token viable for return function
+        token = get_new_token(&tokenStr);
+        if (token != ID && token != T_STRING && token != T_FLOAT && token != T_INT && token != EOL) errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
+
+        //end of function or wrong token inside, checking types of returns
+        if (token == EOL && multipleParams == 0) 
+        { 
+                funReturnCheck(&funTree,funDeclaredName,funReturnCounter);
+                return result; 
+        }
+        else if (token == EOL && multipleParams == 1)  errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
+
+        //check if variable is declared
+        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+        if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
+
+        //call precedence parser with tree of variables, current token, and string of token
+        precResult = prec_parse(treePtr, token, tokenStr);
+        //token loaded last first token after expression
+        token = precResult.end_token;
+
+        //check return types
+        funReturnCounter++;
+        addReturn(&funTree,funDeclaredName,precResult.end_datatype,funReturnCounter);
+        
+        //token was already loaded in precedence parser
+        //recursively calling values if comma or end handling if EOL
+        if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
+        if (token == COMMA) return return_values(treePtr);
+
+        //sanity check
+        funReturnCheck(&funTree,funDeclaredName,funReturnCounter);
         return result;
 }

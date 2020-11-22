@@ -97,25 +97,25 @@ void BSTScopeDelete(varNode *RootPtr, int newScope);
 
 /* Prototypes of variable stack operations */
 
-varStackElement stackTop(varNode s);
-void stackPop(varNode* s);
-void stackPush(varNode* s, int type, int scope);
-void stackDelete(varNode *s);
+void stackPop(varNode* varTree);
+void stackPush(varNode* varTree, int type, int scope);
+void stackDelete(varNode *varTree);
 
 /* Prototypes of function operations */
 
 void funInit (funNode *RootPtr);
 funNode *funSearch (funNode *RootPtr, string Key);
 void addFunToTree(funNode *RootPtr, string Key);
-void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount, int returnCount);
+void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount/*, int returnCount*/);
 void funDisposeTree (funNode *RootPtr);
-void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, int returnCount);
-void addFunDec(funNode *RootPtr, string Key, int paramCount, int returnCount);
+void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount/*, int returnCount*/);
+void addFunDec(funNode *RootPtr, string Key, int paramCount/*, int returnCount*/);
 void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
 void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
-int isFunCallDec(funNode RootPtr);
-int parCount(funNode RootPtr,string name);
-int retCount(funNode RootPtr,string name);
+void isFunCallDec(funNode RootPtr);
+void funReturnCheck(funNode *RootPtr, string Key, int returnCount);
+// int parCount(funNode RootPtr,string name);
+// int retCount(funNode RootPtr,string name);
 
 /*Prototypes of function list operations*/
 

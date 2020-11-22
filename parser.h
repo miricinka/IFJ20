@@ -41,6 +41,7 @@ int ass_exps(varNode * treePtr);
 int ass_stat(varNode * treePtr);
 int fun_call_param(varNode * treePtr);
 int print_params(varNode * treePtr);
+int return_values(varNode * treePtr);
 
 #endif /* PARSER_H*/
 

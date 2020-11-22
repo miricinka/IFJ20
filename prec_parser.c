@@ -322,7 +322,7 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
     //variable to check that operators and operands are switching 
     // 8**2 -> syntax
 	bool last_token_operand = false;
-	if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING){
+	if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING || new_token == ID){
 		last_token_operand = true;
 	}
 
