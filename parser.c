@@ -606,7 +606,7 @@ int stat(varNode *treePtr)
                         return fun_call_param(treePtr);
                 }
         }
-        else if (token == KW_RETURN) //<stat> return <ass_exps>
+        else if (token == KW_RETURN) //<stat> return <return_values>
         {
                 funReturnCounter = 0;
                 return return_values(treePtr);
@@ -703,6 +703,9 @@ int ass_stat(varNode *treePtr)
         //ID token
         token = get_new_token(&tokenStr);
         if (token != ID) errorMsg(ERR_SYNTAX, "ASSIGN statement - must be ID");
+        //is ID declared?
+        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
 
         //comma or assign token
         token = get_new_token(&tokenStr);
@@ -736,22 +739,48 @@ int ass_exps(varNode *treePtr)
         token = get_new_token(&tokenStr);
         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
 
+        //if it is ID check if it is declared
+        if (token == ID)
+        {
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                if (isIDDeclared == false)
+                {
+                        if (funSearch(&funTree, tokenStr))
+                        {
+                                //add function to tree
+                                strClear(&funName);                 
+                                strCopyString(&funName, &tokenStr); 
+                                funReturnCounter = 0;               
+                                funParamCounter = 0;  
+
+                                //token must be left param
+                                token = get_new_token(&tokenStr);
+
+                                addFunToTree(&funTree, funName);
+                                //handle parameters of called function
+                                result = fun_call_param(treePtr);
+                                if (result != 0) return result;
+
+                                //token must be comma or EOL
+                                token = get_new_token(&tokenStr);
+
+                                //if comma recursively call ass_exps
+                                if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
+                                if (token == COMMA) return ass_exps(treePtr);
+                                return result;
+                        }
+                        else errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing declaration of function");
+                }
+        }
+
         //precedence parser called
         precResult = prec_parse(treePtr, token, tokenStr);
         token = precResult.end_token;
 
-        //check if it is function
-        /*if (token == L_PAR)
-        {
-                result = fun_call_param(); 
-                if (result != 0) return result;
-                if (token != R_PAR) errorMsg(ERR_SYNTAX, "FUNCTION CALL statement - ')' missing");
-                token = get_new_token(&tokenStr);
-        }*/
-
-        //
+        //value from precedence parser can not be bool type
         if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
-        //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token
+
+        //if comma recursively call ass_exps
         if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
         if (token == COMMA) return ass_exps(treePtr);
         return result;
@@ -959,6 +988,11 @@ int print_params(varNode *treePtr)
 }
 
 
+/**
+ * @brief Values in return function, this is <ass_exps> but with return checks
+ * 
+ * @param treePtr tree for variables
+ */
 int return_values(varNode *treePtr)
 {
         int result = 0;
