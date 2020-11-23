@@ -30,23 +30,6 @@ tListOfInstr *list; //variable for list of instructions
 
 
 /**
- * @brief Adds new instruction to list of instructions
- * 
- * @param instType type of generated instruction
- */
-void generateInstruction(int instType)
-// vlozi novou instrukci do seznamu instrukci
-{
-        tInstr I;
-        I.instType = instType;
-        //I.addr1 = addr1;
-        //I.addr2 = addr2;
-        //I.addr3 = addr3;
-        listInsertLast(list, I);
-}
-
-
-/**
  * @brief Start of parsing, initialization of structures
  * 
  * @param instrList list of instructions for generation
@@ -65,6 +48,13 @@ int parse(tListOfInstr *instrList)
         //this applies to whole parser
         int result = 0;
         list = instrList;
+
+
+        /*listInit(list);
+	genMainFunc();
+    	listFirst(list);
+    	printf("%s\n", list->active->Instruction.instType);*/
+
         //loads next token
         token = get_new_token(&tokenStr);
         //if token is end of file => error Empty File

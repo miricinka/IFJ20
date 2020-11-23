@@ -26,8 +26,8 @@
 #include "main.h"
 #include "prec_parser.h"
 #include "symtable.h"
+#include "generator.h"
 
-void generateInstruction(int instType);
 int parse(tListOfInstr *instrList);
 int program();
 int prolog();
