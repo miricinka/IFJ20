@@ -13,645 +13,1322 @@
  * 
  * AUTHORS:
  *  Tomáš Hrúz          <xhruzt00@stud.fit.vutbr.cz>
- *  Kolaříková Mirka    <xkolar76@stud.fit.vutbr.cz>
- *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
- *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 #include "parser.h"
-
-tListOfInstr *list; // globalni promenna uchovavajici seznam instrukci
-string tokenStr; //globalna premenna pre string instrukcie
-
-
-int token = 0;
-
-void generateInstruction(int instType)
-// vlozi novou instrukci do seznamu instrukci
-{
-   tInstr I;
-   I.instType = instType;
-   //I.addr1 = addr1;
-   //I.addr2 = addr2;
-   //I.addr3 = addr3;
-   listInsertLast(list, I);
-}
-
+//tokens
+string tokenStr; //variable for string of token
+int token = 0;   //variable for tokens
+//trees
+funNode funTree;      //variable for tree of functions
+int funParamCounter;  //variable for number of parameters
+int funReturnCounter; //variable for number of returns
+string funName;       //variable for name of function in tree
+string funDeclaredName; //variable for name of currently defined function
+int levelOfScope = 1; //variabel for scope, it is incremented
+//generation
+tListOfInstr *list; //variable for list of instructions
+/**
+ * @brief Start of parsing, initialization of structures
+ * 
+ * @param instrList list of instructions for generation
+ */
 int parse(tListOfInstr *instrList)
 {
-  //inicializujem si string, premenne, zoznam
-  strInit(&tokenStr);
-  int result = 0;
-  list = instrList;
-  //kontrola prveho lexemu ak to je v poriadku zavola sa prvy non terminal <program> a ten spracuje dalej
-  token = get_new_token(&tokenStr);
-  //ak bude prazdny subor hodi chybu
-  if (token == ENDFILE)  errorMsg(ERR_SYNTAX, "Empty file");
-  else
-  {
-  //generateInstruction(token);
-  result = program();
-  }
-  
-     
-  strFree(&tokenStr);
-  return result;	
+        //initialization of string for names of functions
+        strInit(&funName);
+        //initialization of string for already declared function
+        strInit(&funDeclaredName);
+        //initialization of string for current token
+        strInit(&tokenStr);
+        //initialization of function tree
+        funInit(&funTree);
+        //after result is zero after this function it bubbles to main as sucesfull analysis of code
+        //this applies to whole parser
+        int result = 0;
+        list = instrList;
+
+        listInit(list);
+        genFileHead();
+        genFileHead(); 
+        genMainFunc();
+        char promenna[12] = "hablablabla";
+        genDefvar(promenna);
+        genMainEnd();
+
+        //loads next token
+        token = get_new_token(&tokenStr);
+        //if token is end of file => error Empty File
+        if (token == ENDFILE) errorMsg(ERR_SYNTAX, "Empty file");
+        //starting analysis with first non-term
+        else result = program();
+
+        //free of strings
+        strFree(&tokenStr);
+        strFree(&funName);
+        strFree(&funDeclaredName);
+        //bubble zero(success) to upper rule of LL grammar
+        return result;
 }
-//<prog>	<opt_eol>	<prolog>  <fun_def_list>  <EOF>								
+
+
+/**
+ * @brief <prog> <opt_eol> <prolog> <fun_def_list> <EOF>.
+ * First rule of LL grammar it will continuously dive deeper in LL grammar and than bubble back to main
+ */ 
 int program()
 {
-  int result = 0;
-  switch (token)
-  {
-    case KW_PACKAGE:
-      // nejprve zavolame funkci prolog
-      result = prolog();      
-      // pokud v ramci teto funkce nastala chyba, vracime jeji kod a nepokracujeme dal
-      if (result != 0) return result;
-      // pokud probehlo vse v poradku, hlasime vysledek, ktery dostaneme od funkce fun_def_list
-      return fun_def_list();
-      return 0;
+        int result = 0;
+        switch (token)
+        {
+        case KW_PACKAGE: //token must be package
+                //handling prolog non-term, return is assigned to result because analysis continues
+                //further in program if it is handling last non-term it goes straight to return which bubbles in main
+                result = prolog();
+                //if error occured in analysis program will bubble to main with right error code and exit
+                if (result != 0) return result;
+                //prolog analysis passed correctly and continues to fun_def_list analysis
+                return fun_def_list();
+                //bubble zero(success) to upper rule of LL grammar
+                return result;
 
-    case EOL:
-    //prisiel EOL pytame si dalsi token a musi to byt EOL alebo package a rekurzivne
-    //zavolame program a ak bol dalsi token package vybavi sa to v druhom case ak eol opakujeme
-      token = get_new_token(&tokenStr);
-      if (token != EOL && token != KW_PACKAGE) errorMsg(ERR_SYNTAX, "Wrong header");
-      return program();
-    break;
-  }
-  // pokud aktualni token je jiny nez vyse uvedene, jedna se o syntaktickou chybu
-  errorMsg(ERR_SYNTAX, "Wrong header");
-  return ERR_SYNTAX;
+        case EOL: //before package there can be EOLs so recursivly check if package token already arrived
+                token = get_new_token(&tokenStr);
+                if (token != EOL && token != KW_PACKAGE) errorMsg(ERR_SYNTAX, "Wrong header");
+                return program();
+                break;
+        }
+        // pokud aktualni token je jiny nez vyse uvedene, jedna se o syntaktickou chybu
+        errorMsg(ERR_SYNTAX, "Wrong header");
+        return ERR_SYNTAX;
 }
 
-//<prolog>	package	main EOL									
+
+/**
+ * @brief package main EOL.
+ * First line of program must be like this rule of LL-grammar
+ */
 int prolog()
 {
-  int result = 0;
-  //kontrola ci je za package token main
-  token = get_new_token(&tokenStr);
-  if (token != MAIN) errorMsg(ERR_SYNTAX, "Wrong header - missing main");
-  //kontrola ci je za main eol 
-  token = get_new_token(&tokenStr);
-  if (token != EOL) errorMsg(ERR_SYNTAX, "Wrong header - missing EOL");
-  return result;
+        int result = 0;
+        //main token
+        token = get_new_token(&tokenStr);
+        if (token != MAIN) errorMsg(ERR_SYNTAX, "Wrong header - missing main");
+        //EOL token
+        token = get_new_token(&tokenStr);
+        if (token != EOL) errorMsg(ERR_SYNTAX, "Wrong header - missing EOL");
+        //first line of program successful
+        return result;
 }
 
-//<fun_def_list>	<opt_eol>	<fun_def>	<fun_def_list>
+
+/**
+ * @brief <fun_def_list> <opt_eol> <fun_def> <fun_def_list>.
+ * Rule for list of function definitions
+ */
 int fun_def_list()
 {
-int result = 0;
-token = get_new_token(&tokenStr);
-switch (token)
-  {
-    case KW_FUNC:
-      // nejprve zavolame funkci fun_def
-      result = fun_def();      
-      // pokud v ramci teto funkce nastala chyba, vracime jeji kod a nepokracujeme dal
-      if (result != 0) return result;
-      // pokud probehlo vse v poradku, hlasime vysledek, ktery dostaneme od funkce fun_def_list
-      return fun_def_list();
+        int result = 0;
+        //because in case it's apperantly wrong
+        string tempMain;
 
-    case EOL:
-    //prisiel EOL a rekurzivne zavolame fun_def_list kym nenajdeme funkciu alebo koniec suboru
-      return fun_def_list();
-
-    case ENDFILE:
-      return result;
-    break;
-  }
-  // pokud aktualni token je jiny nez vyse uvedene, jedna se o syntaktickou chybu
-  errorMsg(ERR_SYNTAX, "fun_def_list error - not a function");
-  return ERR_SYNTAX;
+        token = get_new_token(&tokenStr);       
+        switch (token)
+        {
+        case KW_FUNC: //starts <fun_def> non-term analysis
+                result = fun_def();
+                if (result != 0) return result;
+                return fun_def_list();
+        case EOL: //recursively chceck for optional EOLs
+                return fun_def_list();
+        case ENDFILE: //end of program
+                printFunTree(funTree);               
+                strInit(&tempMain);
+                strAddChars(&tempMain, "main");
+                //funSearch finds function in tree of functions, if main is not there it is error 3
+                if (!funSearch(&funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
+                //check in tree if called functions were declared
+                isFunCallDec(funTree);
+                //TOINSERT Printlist
+                printList(list);
+                return result;
+                break;
+        }
+        //other than tokens in switch causes syntax error
+        errorMsg(ERR_SYNTAX, "Functions error - not a function");
+        return ERR_SYNTAX;
 }
 
-		
+
+/**
+ * @brief <fun_def> func ID ( <fun_params> ) ( <fun_returns> ) { <stat_list> }					
+ * Rule for function definition
+ */
 int fun_def()
 {
-  int result = 0;
-  //rozhodneme ci je to main alebo ina funkcia
-  token = get_new_token(&tokenStr);
-  if (token == MAIN) //<fun_def>	func	main	(	)	{	<stat_list>	}		
-  {
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '(' ");
-    token = get_new_token(&tokenStr);
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing ')' ");
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR && token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - return params or '{' ");
-    //optional return params in main function
-    if (token == L_PAR)
-    {
-    token = get_new_token(&tokenStr);
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing ')' ");
-    token = get_new_token(&tokenStr);
-    }
-    
-    if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
-    //vytvorenie stromu pre funkciu na lokalne premenne
-    Node treePtr;
-    //printf("treeptr num before init: %p\n", &treePtr);
-    BSTInit (&treePtr);
-    //printf("treeptr num after init: %p\n", &treePtr);
-    //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej
-    //printf("treeptr num before stat_list call: %p\n", &treePtr);
-    result = stat_list(&treePtr);
-    if (result != 0) return result;
-    //pravy bracket sme nacitali uz v stat_list
-    if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '}' ");
-    return result;
-  }
-  else if(token == ID) //<fun_def>	func	ID	(	<fun_params>	)	(	<fun_returns>	)	{	<stat_list>	}
-  {
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");  
-    //vytvorenie stromu pre funkciu na lokalne premenne
-    Node treePtr;
-    //printf("treeptr num before init: %p\n", &treePtr);
-    BSTInit (&treePtr);
-    //printf("treeptr num after init: %p\n", &treePtr);
-    //spracujeme fun_params a ak je v poriadku tak pokracujeme dalej 
-    result = fun_params(&treePtr);
-    if (result != 0) return result;
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' "); 
-    token = get_new_token(&tokenStr);
-    //definicia funkcie nemusi obsahovat zatvorku s navratovymi hodnotami
-    if (token != L_PAR && token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' or '{' ");
-    if (token == L_PAR)
-    {
-      //if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
-      //spracujeme fun_returns a ak je v poriadku tak pokracujeme dalej
-      result = fun_returns();
-      if (result != 0) return result;
-      if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
-      token = get_new_token(&tokenStr);
-    }
-    if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");   
-    //spracujeme stat_list a ak je v poriadku tak pokracujeme dalej 
-    result = stat_list(&treePtr);
-    if (result != 0) return result;
-    //pravy bracket sme nacitali uz v stat_list
-    if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
-  }
-  //if we try to redefine functions of language GO => semantic error 3
-  else if (token == F_INPUTS || token == F_INPUTI || token == F_INPUTF || token == F_PRINT || token == F_INT2FLOAT || token == F_FLOAT2INT || token == F_LEN || token == F_SUBSTR || token == F_ORD || token == F_CHR )
-  {
-    errorMsg(ERR_SEMANTIC_DEFINITION, "Redefinition of function");
-  }
-  else errorMsg(ERR_SYNTAX, "Function is missing ID");
-  
-  
-  return result;
-}
-
-int stat_list(Node * treePtr)
-{
-  //printf("treeptr num after stat_list call: %p\n", &treePtr);
-  int result = 0;
-  token = get_new_token(&tokenStr);
-switch (token)
-  {
-    //doplnit vstavane funkcie
-    //ak je daky prikaz tak idem do funkcie stat a tam ich spracujem
-    case ID:
-    case KW_IF:    
-    case KW_FOR:
-    case KW_RETURN:    
-    case F_PRINT:    
-    case F_LEN:      
-    case F_SUBSTR:   
-    case F_ORD:      
-    case F_CHR:      
-    case F_INT2FLOAT:
-    case F_FLOAT2INT:
-    case F_INPUTF:
-    case F_INPUTS:
-    case F_INPUTI:
-      // nejprve zavolame funkci stat
-      result = stat(treePtr);      
-      // pokud v ramci teto funkce nastala chyba, vracime jeji kod a nepokracujeme dal
-      if (result != 0) return result;
-      // pokud probehlo vse v poradku, hlasime vysledek, ktery dostaneme od funkce stat_list
-      return stat_list(treePtr);
-
-    case EOL:
-    //prisiel EOL a rekurzivne zavolame stat_list kym nenajdeme funkciu alebo koniec suboru
-      return stat_list(treePtr);
-    case R_BR:
-      return result;
-    break;
-  }
-  // pokud aktualni token je jiny nez vyse uvedene, jedna se o syntaktickou chybu
-  errorMsg(ERR_SYNTAX, "Incorrect stat - neither id, if, for nor function");
-  return result;
-}
-
-int stat(Node * treePtr)
-{
-  int result = 0;
-  prec_end_struct precResult;
-  //<stat>	if	<exp>	{	<stat_list>	}	else	{	<stat_list>	}			
-  if (token == KW_IF)
-  {
-    token = get_new_token(&tokenStr);
-    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-        errorMsg(ERR_SYNTAX, "Incorrect token after IF statement");
-    //zavolame precedencku na vyraz, posleme tam token a jeho string
-    precResult = prec_parse(treePtr, token, tokenStr);
-    token = precResult.end_token;
-    //v ife moze byt vyraz iba boolovskeh hodnoty inak nastava chyba 5
-    if (precResult.end_datatype != TYPE_BOOL)
-        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "IF statement expression must be boolean");
-    //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati L_BR token 
-    if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
-    result = stat_list(treePtr);
-    if (result != 0) return result;
-    //pravy bracket sme nacitali uz v stat_list
-    if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
-    token = get_new_token(&tokenStr);
-    if (token != KW_ELSE) errorMsg(ERR_SYNTAX, "IF statement - missing 'ELSE'");
-    token = get_new_token(&tokenStr);
-    if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - no EOL after ELSE");
-    result = stat_list(treePtr);
-    if (result != 0) return result;
-    //pravy bracket sme nacitali uz v stat_list
-    if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing } in ELSE");
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - missing EOL");
-  }
-  //<stat>	for	<var_def>	;	<exp>	;	<ass_stat>	<opt_eol>	{	<stat_list>	}		
-  else if (token == KW_FOR)
-  {
-    token = get_new_token(&tokenStr);
-    if (token != SEMICOL && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after FOR kw");
-    if (token == ID) //moze byt aj premenna bez priradenia??????
-    {
-      token = get_new_token(&tokenStr);
-      if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
-      token = get_new_token(&tokenStr);
-      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-          errorMsg(ERR_SYNTAX, "FOR statement - incorrect var def");
-      //zavolame precedencku na vyraz!!!
-      precResult = prec_parse(treePtr, token, tokenStr);
-      token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
-      if (precResult.end_datatype == TYPE_BOOL)
-        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - var def cannot be boolean");
-      //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-      if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
-    }
-    token = get_new_token(&tokenStr);
-    if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-      errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
-    //zavolame precedencku na vyraz, posleme tam token a jeho string
-    precResult = prec_parse(treePtr, token, tokenStr);
-    token = precResult.end_token;
-    //v ife moze byt vyraz iba boolovskeh hodnoty inak nastava chyba 5
-    if (precResult.end_datatype != TYPE_BOOL)
-      errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - expression must be boolean");
-    //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-    if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
-    token = get_new_token(&tokenStr);
-    if (token != ID && token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
-    if (token == ID)
-    {
-      //zavolame precedencku na vyraz!!!
-      token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-      if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
-      token = get_new_token(&tokenStr);
-      precResult = prec_parse(treePtr, token, tokenStr);
-      token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
-
-      if (precResult.end_datatype == TYPE_BOOL)
-        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
-
-      //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-      if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
-    }
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
-    result = stat_list(treePtr);
-    if (result != 0) return result;
-    //pravy bracket sme nacitali uz v stat_list
-    if (token != R_BR) errorMsg(ERR_SYNTAX, "FOR statement - '}' missing");
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");    
-  }
-  //<stat>	<var_def>											
-  //<stat>	<ass_stat>											
-  //<stat>	<fun>											
-  else if(token == ID)
-  {
-    //pozrieme do stromu ci tam id premennej je
-    bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-    string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
-   
-    token = get_new_token(&tokenStr);
-    if (token != VAR_DEF && token != COMMA && token != ASSIGN && token != L_PAR) 
-      errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after ID");
-    //<var_def>	ID	:=	<exp>									
-    if (token == VAR_DEF)
-    {
-      if (strcmp(stringID.str, "_") == 0){errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'");}
-      //kontrola ak je id uz deklarovane hodime chybu 3
-      if (isIDDeclared == true)
-      {
-        errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
-      }
-      token = get_new_token(&tokenStr);
-      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");          
-      //zavolame precedencku na vyraz!!!
-      precResult = prec_parse(treePtr, token, tokenStr);
-      token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
-      //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-
-      //vysledok precedencky nemoze byt BOOL
-      if (precResult.end_datatype == TYPE_BOOL){errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");}
-      
-
-      //deklaracia prebehla a ID a typ premennej ulozime do stromu
-      BSTInsert(treePtr, stringID, precResult.end_datatype);
-      //printf("BST after inserting:\n");
-      //kontrola ci deklaracia konci EOLom
-      if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
-    }
-    //<ass_stat>	<ass_ids>	=	<ass_exps> IBA PRE JEDNO PRIRADENIE								
-    else if(token == ASSIGN)
-    {
-      //ak je ID '_' nemusime kontrolovat ci je v strome
-      if(strcmp(stringID.str, "_") != 0)
-      {
-        //kontrola ci je v strome ID
-        if (isIDDeclared == false)
+        int result = 0;
+        //main handles separately
+        token = get_new_token(&tokenStr);
+        if (token == MAIN) //<fun_def> func main ( ) { <stat_list> }
         {
-          errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");
+                //add main function to tree and create main string
+                string tempMain;
+                strInit(&tempMain);
+                strAddChars(&tempMain, "main");
+                addFunToTree(&funTree, tempMain);
+                //set counters to zero
+                funParamCounter = 0;
+                funReturnCounter = 0;
+                addFunDec(&funTree, tempMain, funParamCounter/*, funReturnCounter*/);
+                strFree(&tempMain);
+
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '(' ");
+                //right param token if it is something else it is error 6 because main can not contain parameter
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SEMANTIC_PARAM, "Main functions can not contain parameter");
+                //left param for returns is optional, token could be left bracket
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR && token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - return params or '{' ");
+                //optional right return params in main function
+                if (token == L_PAR)
+                {
+                        token = get_new_token(&tokenStr);
+                        if (token != R_PAR) errorMsg(ERR_SEMANTIC_PARAM, "Main functions can not contain return value");
+                        //load token for left bracket
+                        token = get_new_token(&tokenStr);
+                }
+                //left bracket token
+                if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
+
+                //create variable tree for main functions
+                varNode treePtr;
+                BSTInit(&treePtr);
+                //handle stat_list rule
+                result = stat_list(&treePtr);
+                if (result != 0) return result;
+
+                //right bracket token, this is end of main function
+                if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '}' ");
+                //main function successful
+                return result;
         }
-      }
+        else if (token == ID) //<fun_def> func ID ( <fun_params> ) ( <fun_returns> ) { <stat_list> }
+        {
+                //save function name
+                strClear(&funName);
+                strCopyString(&funName, &tokenStr); 
+                //add function to tree
+                addFunToTree(&funTree, funName);
 
-      token = get_new_token(&tokenStr);
-      if (token == F_INPUTS || token == F_INPUTI || token == F_INPUTF || token == F_INT2FLOAT || token == F_FLOAT2INT || token == F_LEN || token == F_SUBSTR || token == F_ORD || token == F_CHR )
-      {
+                //save function name for returns
+                strClear(&funDeclaredName);
+                strCopyString(&funDeclaredName, &tokenStr); 
+
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
+
+                //create tree for variables in function
+                varNode treePtr;
+                BSTInit(&treePtr);
+                //counter for number of parameters in function
+                funParamCounter = 0;
+                funReturnCounter = 0;
+                //handle fun_params rule
+                result = fun_params(&treePtr);
+                if (result != 0) return result;
+
+                //right param token
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
+                token = get_new_token(&tokenStr);
+                //definition of function does not need return value params
+                if (token != L_PAR && token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' or '{' ");
+                if (token == L_PAR)
+                {
+                        //counter for number of returns in function
+                        funReturnCounter = 0;
+                        //hande fun_returns rule
+                        result = fun_returns();
+                        if (result != 0) return result;
+
+                        //right param token, it was already loaded in fun returns
+                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
+                        //parameters and returns were added to functions in fun_params and fun_returns rules
+                        token = get_new_token(&tokenStr);
+                }
+                //number of parameters and returns added to function in tree
+                addFunDec(&funTree, funName, funParamCounter/*, funReturnCounter*/);
+                
+                //left bracket token
+                if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");
+
+                //handle stat_list rule
+                result = stat_list(&treePtr);
+                if (result != 0) return result;
+
+                //right bracket token, already loaded in stat_list
+                if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
+
+                //Dispose tree for variables because they are only local for function
+                BSTDispose(&treePtr);
+        }
+        //if we try to redefine functions of language GO => semantic error 3
+        else if (  token == F_INPUTS 
+                || token == F_INPUTI 
+                || token == F_INPUTF 
+                || token == F_PRINT 
+                || token == F_INT2FLOAT 
+                || token == F_FLOAT2INT 
+                || token == F_LEN 
+                || token == F_SUBSTR 
+                || token == F_ORD 
+                || token == F_CHR)
+        { errorMsg(ERR_SEMANTIC_DEFINITION, "Redefinition of function"); }
+        else errorMsg(ERR_SYNTAX, "Function is missing ID");
+
+        //successfuly handled definition of function
+        return result;
+}
+
+
+/**
+ * @brief <stat_list> <opt_eol> <stat> EOL <stat_list>. 
+ * Rule for list of statements in function
+ *
+ * @param treePtr tree for variables 
+ */
+int stat_list(varNode *treePtr)
+{
+        int result = 0;
+
+        //token must be statement
+        token = get_new_token(&tokenStr);
+        switch (token)
+        {
+        //if token is statement handle stat rule
+        case ID:
+        case KW_IF:
+        case KW_FOR:
+        case KW_RETURN:
+        case F_PRINT:
+        case F_LEN:
+        case F_SUBSTR:
+        case F_ORD:
+        case F_CHR:
+        case F_INT2FLOAT:
+        case F_FLOAT2INT:
+        case F_INPUTF:
+        case F_INPUTS:
+        case F_INPUTI:
+        //if statement was handled successfuly recursively call stat_list to handle another statement
+                result = stat(treePtr);
+                if (result != 0) return result;
+
+                return stat_list(treePtr);
+
+        case EOL: //recursivly call stat_list because of optional EOLs
+                return stat_list(treePtr);
+        case R_BR: //end of function
+                return result;
+                break;
+        }
+        //if something else it is not statement
+        errorMsg(ERR_SYNTAX, "Incorrect stat - neither id, if, for nor function");
+        //successfuly handled all statements in function
+        return result;
+}
+
+
+/**
+ * @brief Statement rules
+ *
+ * @param treePtr tree for variables
+ */
+int stat(varNode *treePtr)
+{
+        int result = 0;
+        prec_end_struct precResult;
+
+        if (token == KW_IF) //<stat> if <exp> { <stat_list> } else { <stat_list> }
+        {
+                //increment level of scope
+                levelOfScope++;
+
+                //only tokens accepted in if condition
+                token = get_new_token(&tokenStr);
+                if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after IF statement");
+
+                //call precedence parser with tree of variables, current token, and string of token
+                precResult = prec_parse(treePtr, token, tokenStr);
+                //token loaded last first token after expression
+                token = precResult.end_token;
+                //if can have only bool value in condition
+                if (precResult.end_datatype != TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "IF statement expression must be boolean");
+                //left bracket was loaded in precedence parser
+                if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
+
+                //handle stat_list rule
+                result = stat_list(treePtr);
+                if (result != 0) return result;
+
+                //end of scope
+                levelOfScope--;
+                BSTScopeDelete(treePtr, levelOfScope);
+
+                //right bracket token after all statements in if
+                if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
+                //else token
+                token = get_new_token(&tokenStr);
+                if (token != KW_ELSE)errorMsg(ERR_SYNTAX, "IF statement - missing 'ELSE'");
+
+                //scope for else
+                levelOfScope++;
+                //left bracket token
+                token = get_new_token(&tokenStr);
+                if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
+                token = get_new_token(&tokenStr);
+                //EOL token
+                if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - no EOL after ELSE");
+
+                //handle stat_list in else
+                result = stat_list(treePtr);
+                if (result != 0) return result;
+                //right bracket loaded in stat_list
+                if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
+
+                //end of else scope
+                levelOfScope--;
+                BSTScopeDelete(treePtr, levelOfScope);
+                //end of If Else statement
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - missing EOL");
+        }
+        else if (token == KW_FOR) //<stat> for <var_def> ; <exp> ; <ass_stat> <opt_eol> { <stat_list> }
+        {
+                //scope in for header
+                levelOfScope++;
+
+                //semicol if first part of for header is missing or id which will go to precedence parser if not missing
+                token = get_new_token(&tokenStr);
+                if (token != SEMICOL && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after FOR kw");
+
+                if (token == ID) //first part of header is present
+                {
+                        //save id of variable to stringID
+                        string stringID;
+                        strInit(&stringID);
+                        strCopyString(&stringID, &tokenStr);
+
+                        //token for variable definition
+                        token = get_new_token(&tokenStr);
+                        if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
+                        //token for precedence parser
+                        token = get_new_token(&tokenStr);
+                        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "FOR statement - incorrect var def");
+
+                        //call precedence parser
+                        precResult = prec_parse(treePtr, token, tokenStr);
+                        token = precResult.end_token;
+                        //this is not conditional expression
+                        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - var def cannot be boolean");
+                        //token loaded in precedence parser
+                        if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
+
+                        //add variable to tree
+                        BSTInsert(treePtr, stringID, precResult.end_datatype, levelOfScope);
+                        strFree(&stringID);
+                }
+                //second part of for header is condition and it is not optional
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
+
+                //call precedence parser
+                precResult = prec_parse(treePtr, token, tokenStr);
+                token = precResult.end_token;
+                //conditional expression, must be bool
+                if (precResult.end_datatype != TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - expression must be boolean");
+
+                //token loaded in precedence parser
+                if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
+
+                //token for third part of for header or left bracket to star for body
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
+
+                if (token == ID) //third part of for header
+                {
+                        //assign token
+                        token = get_new_token(&tokenStr);
+                        if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
+                        //token for precedence parser
+                        token = get_new_token(&tokenStr);
+                        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
+
+                        //call precedence parser
+                        precResult = prec_parse(treePtr, token, tokenStr);
+                        token = precResult.end_token;
+                        //expression is not conditional so it can not be bool
+                        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - assign can not be boolean");
+
+                        //left bracket token loaded in precedence parser
+                        if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
+                }
+                //scope in for body
+                levelOfScope++;
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
+
+                //handle stat_list
+                result = stat_list(treePtr);
+                if (result != 0) return result;
+
+                //right bracket loaded in prec parser
+                if (token != R_BR) errorMsg(ERR_SYNTAX, "FOR statement - '}' missing");
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
+
+                //end of both scopes: for header, for body
+                levelOfScope = levelOfScope - 2;
+                BSTScopeDelete(treePtr, levelOfScope);
+        }
+        // these stats could be present if token is ID
+        //<stat>	<var_def>
+        //<stat>	<ass_stat>
+        //<stat>	<fun>
+        else if (token == ID)
+        {
+                //check in tree if variable is declared and store in for further use
+                //save string of id for further use
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                string stringID;
+                strInit(&stringID);
+                strCopyString(&stringID, &tokenStr);
+
+                //var_def token for definition of variable
+                //comma token for more ids
+                //assign token for assign value to already decfined variable
+                //left param token for function
+                token = get_new_token(&tokenStr);
+                if (token != VAR_DEF && token != COMMA && token != ASSIGN && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after ID");
+
+
+                if (token == VAR_DEF) //<var_def> ID := <exp>
+                {
+                        //if id on left side of definition was "_" it cannot be defined
+                        if (strcmp(stringID.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
+
+                        //token for precedence parser
+                        token = get_new_token(&tokenStr);
+                        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");
+                        
+                        //call precedence parser
+                        precResult = prec_parse(treePtr, token, tokenStr);
+                        token = precResult.end_token;
+                        //expression is no conditional so it can not be bool
+                        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");
+
+                        //definition was successful and variable is inserted to tree
+                        BSTInsert(treePtr, stringID, precResult.end_datatype, levelOfScope);
+
+                        //EOL token 
+                        if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
+                }
+                
+                else if (token == ASSIGN) // <ass_stat> <ass_ids> = <ass_exps> ONLY FOR ONE VARIABLE!!!
+                {
+                        //if token on left side of assigning was '_' we do not need to check if it was declared
+                        if (strcmp(stringID.str, "_") != 0)
+                        {
+                                //check if variable is in tree
+                                if (isIDDeclared == false) { errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared"); }
+                        }
+
+                        //right side of assign can be function
+                        token = get_new_token(&tokenStr);
+
+                        //build in functions
+                        if (token == F_INPUTS 
+                        || token == F_INPUTI 
+                        || token == F_INPUTF 
+                        || token == F_INT2FLOAT 
+                        || token == F_FLOAT2INT 
+                        || token == F_LEN 
+                        || token == F_SUBSTR 
+                        || token == F_ORD 
+                        || token == F_CHR)
+                        {
+                                if (token == F_INT2FLOAT) //int2float function
+                                {
+                                        string stringI2F;                                     
+
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing '(' ");
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - token must be ID");
+
+                                        //check if ID is declared
+                                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                        strInit(&stringI2F);
+                                        strCopyString(&stringI2F, &tokenStr);
+
+                                        //check if type of input is integer
+                                        int variableType = getType(*treePtr, stringI2F);
+                                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "INT2FLOAT statement - ID must be integer"); }
+ 
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect INT2FLOAT statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing EOL ");
+
+                                        strFree(&stringI2F);
+                                        return result;
+                                }
+                                else if (token == F_FLOAT2INT) // float2int function
+                                {
+                                       string stringF2I;                                     
+
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing '(' ");
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - token must be ID");
+                                        
+                                        //check if ID is declared
+                                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                        strInit(&stringF2I);
+                                        strCopyString(&stringF2I, &tokenStr);
+
+                                        //check if type of input is float
+                                        int variableType = getType(*treePtr, stringF2I);
+                                        if (variableType != T_FLOAT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "INT2FLOAT statement - ID must be float"); }
+ 
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect INT2FLOAT statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing EOL ");
+
+                                        strFree(&stringF2I);
+                                        return result;
+                                }
+                                else if (token == F_INPUTI) // inputi function
+                                {                                    
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - missing '(' ");
+                                        
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - missing EOL ");
+
+                                        return result;
+                                }
+                                else if (token == F_INPUTS) // inputs function
+                                {                                    
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - missing '(' ");
+                                        
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - missing EOL ");
+
+                                        return result;
+                                }
+                                else if (token == F_INPUTF) //inputf function
+                                {                                    
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - missing '(' ");
+                                        
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - missing EOL ");
+
+                                        return result;
+                                }
+                                else if (token == F_LEN) // len function
+                                {
+                                       string stringLEN;                                     
+
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "LEN statement - missing '(' ");
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "LEN statement - token must be ID or string");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                                strInit(&stringLEN);
+                                                strCopyString(&stringLEN, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringLEN);
+                                                if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "LEN statement - ID must be string"); }
+                                                strFree(&stringLEN);
+                                        }
+ 
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect LEN statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "LEN statement - missing EOL ");
+                                     
+                                        return result;
+                                }
+                                else if (token == F_CHR) // chr function
+                                {
+                                       string stringCHR;                                     
+
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "CHR statement - missing '(' ");
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "CHR statement - token must be ID or integer");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                                strInit(&stringCHR);
+                                                strCopyString(&stringCHR, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringCHR);
+                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be integer"); }
+                                                strFree(&stringCHR);
+                                        }
+ 
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "CHR statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "CHR statement - missing EOL ");
+
+                                        return result;
+                                }
+                                else if (token == F_ORD) // ord function
+                                {
+                                       string stringORD;                                     
+
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "ORD statement - missing '(' ");
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or string");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                                strInit(&stringORD);
+                                                strCopyString(&stringORD, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringORD);
+                                                if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be string"); }
+                                                strFree(&stringORD);
+                                        }
+
+                                        //comma token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != COMMA) errorMsg(ERR_SYNTAX, "ORD statement - comma missing between parameters");
+
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or integer");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                                strInit(&stringORD);
+                                                strCopyString(&stringORD, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringORD);
+                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "ORD statement - ID must be integer"); }
+                                                strFree(&stringORD);
+                                        }
+ 
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "ORD statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "ORD statement - missing EOL ");
+
+                                        return result;
+                                }
+                                else if (token == F_SUBSTR) // ord function
+                                {
+                                       string stringSUBSTR;                                     
+
+                                        //left param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing '(' ");
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or string");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                                                strInit(&stringSUBSTR);
+                                                strCopyString(&stringSUBSTR, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringSUBSTR);
+                                                if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be string"); }
+                                                strFree(&stringSUBSTR);
+                                        }
+
+                                        //comma token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != COMMA) errorMsg(ERR_SYNTAX, "SUBSTR statement - comma missing between parameters");
+
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
+
+                                                strInit(&stringSUBSTR);
+                                                strCopyString(&stringSUBSTR, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringSUBSTR);
+                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
+                                                strFree(&stringSUBSTR);
+                                        }
+
+                                        //comma token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != COMMA) errorMsg(ERR_SYNTAX, "SUBSTR statement - comma missing between parameters");
+
+                                        //token for precedence parser
+                                        token = get_new_token(&tokenStr);
+                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
+                                        
+                                        if (token == ID)
+                                        {
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
+
+                                                strInit(&stringSUBSTR);
+                                                strCopyString(&stringSUBSTR, &tokenStr);
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringSUBSTR);
+                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
+                                                strFree(&stringSUBSTR);
+                                        }
+ 
+                                        //Right param token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement -missing ')'");
+
+                                        //EOL token
+                                        token = get_new_token(&tokenStr);
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing EOL ");
+
+                                        return result;
+                                }
+                        }
+                        //token for prec parser
+                        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
+
+                        //call precedence parser 
+                        precResult = prec_parse(treePtr, token, tokenStr);
+                        token = precResult.end_token;
+                        //EOL token loeaded in precedence parser
+                        if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement assign - missing EOL");
+
+
+                        //check if type on left sides is equal to type on right side of assign
+                        int variableType = getType(*treePtr, stringID);
+                        //if left side is '_' we do not need to check type
+                        if (strcmp(stringID.str, "_") != 0)
+                        {
+                                if (variableType != precResult.end_datatype){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment"); }
+                        }
+                }
+                else if (token == COMMA)//more IDs on left side
+                {
+                        //TODO
+                        return ass_stat(treePtr);
+                }
+                
+                else if (token == L_PAR) //<fun> ID ( <fun_call_param> )
+                {
+                        //add function to tree
+                        strClear(&funName);                 
+                        strCopyString(&funName, &stringID); 
+                        funReturnCounter = 0;               
+                        funParamCounter = 0;               
+                        addFunToTree(&funTree, stringID);
+                        //handle parameters of called function
+                        return fun_call_param(treePtr);
+                }
+        }
+        else if (token == KW_RETURN) //<stat> return <return_values>
+        {
+                funReturnCounter = 0;
+                return return_values(treePtr);
+        }
+
+        /**
+         * Built-in functions
+         */
+
+
+        else if (token == F_INPUTF)
+        {
+                errorMsg(ERR_SEMANTIC_OTHER, "Statement inputf can not be lonely on line, it will be sad");
+        }
+        else if (token == F_INPUTI)
+        {
+                errorMsg(ERR_SEMANTIC_OTHER, "Statement inputi can not be lonely on line, it will be sad");
+        }
+        else if (token == F_INPUTS)
+        {
+                errorMsg(ERR_SEMANTIC_OTHER, "Statement inputs can not be lonely on line, it will be sad");
+        }
+        else if (token == F_FLOAT2INT)
+        {
+                errorMsg(ERR_SEMANTIC_PARAM, "Statement float2int can not be lonely on line, it will be sad");
+        }
+        else if (token == F_INT2FLOAT)
+        {
+                errorMsg(ERR_SEMANTIC_PARAM, "Statement int2float can not be lonely on line, it will be sad");
+        }
+        else if (token == F_LEN)
+        {
+                errorMsg(ERR_SEMANTIC_PARAM, "Statement len can not be lonely on line, it will be sad");
+        }
+        else if (token == F_ORD)
+        {
+                errorMsg(ERR_SEMANTIC_PARAM, "Statement ord can not be lonely on line, it will be sad");
+        }
+        else if (token == F_PRINT) // print function with
+        {
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "PRINT statement - '(' missing");
+
+                //handled in print_params
+                result = print_params(treePtr);
+                if (result != 0) return result;
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "PRINT statement - EOL missing");
+        }
+        else if (token == F_SUBSTR)
+        {
+                errorMsg(ERR_SEMANTIC_PARAM, "Statement substr can not be lonely on line, it will be sad");
+        }
+        else if (token == F_CHR)
+        {
+                errorMsg(ERR_SEMANTIC_PARAM, "Statement chr can not be lonely on line, it will be sad");
+        }
+        //IDs handled successfuly
+        return result;
+}
+
+
+/**
+ * @brief <ass_stat> <ass_ids> = <ass_exps>.
+ *  TODO
+ * 
+ * @param treePtr tree for variables
+ */
+int ass_stat(varNode *treePtr)
+{
+        int result = 0;
+
+        //ID token
+        token = get_new_token(&tokenStr);
+        if (token != ID) errorMsg(ERR_SYNTAX, "ASSIGN statement - must be ID");
+        //is ID declared?
+        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+        //comma or assign token
+        token = get_new_token(&tokenStr);
+        if (token != COMMA && token != ASSIGN) errorMsg(ERR_SYNTAX, "ASSIGN statement - token must be '=' or ',' for another ID");
+
+        //recursively call ass_stat for more IDs
+        if (token == COMMA) return ass_stat(treePtr);
+
+        //handle ass_exps
+        return ass_exps(treePtr);
+        //successfuly handled
+        return result;
+}
+
+
+/**
+ * @brief <ass_exps>	<exp> <ass_exps>
+ * <ass_exps>	, <exp>	<ass_exps>
+ * <ass_exps>	<ass_ids>
+ * <ass_exps>	<fun>
+ * TODO
+ * 
+ * @param treePtr tree for variables
+ */
+int ass_exps(varNode *treePtr)
+{
+        int result = 0;
+        prec_end_struct precResult;
+
+        //token for precedence parser
+        token = get_new_token(&tokenStr);
+        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
+
+        //if it is ID check if it is declared
+        if (token == ID)
+        {
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                if (isIDDeclared == false)
+                {
+                        if (funSearch(&funTree, tokenStr))
+                        {
+                                //add function to tree
+                                strClear(&funName);                 
+                                strCopyString(&funName, &tokenStr); 
+                                funReturnCounter = 0;               
+                                funParamCounter = 0;  
+
+                                //token must be left param
+                                token = get_new_token(&tokenStr);
+
+                                addFunToTree(&funTree, funName);
+                                //handle parameters of called function
+                                result = fun_call_param(treePtr);
+                                if (result != 0) return result;
+
+                                //token must be comma or EOL
+                                token = get_new_token(&tokenStr);
+
+                                //if comma recursively call ass_exps
+                                if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
+                                if (token == COMMA) return ass_exps(treePtr);
+                                return result;
+                        }
+                        else errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing declaration of function");
+                }
+        }
+
+        //precedence parser called
+        precResult = prec_parse(treePtr, token, tokenStr);
+        token = precResult.end_token;
+
+        //value from precedence parser can not be bool type
+        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
+
+        //if comma recursively call ass_exps
+        if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
+        if (token == COMMA) return ass_exps(treePtr);
+        return result;
+}
+
+
+/**
+ * @brief <fun_call_param> ID <fun_call_param>.
+ * Parameters of called function
+ * @param treePtr
+ */
+int fun_call_param(varNode *treePtr)
+{
+        int result = 0;
+
+        //token for parameter in called function
+        token = get_new_token(&tokenStr);
+        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
+
+        //if it is ID check if it is declared
+        if (token == ID)
+        {
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+        }
+
+        //function without parameters
+        if (token == R_PAR) 
+        {
+           addFunCall(&funTree, funName, *treePtr, funParamCounter/*, funReturnCounter*/);    
+           return result;  
+        }
+        //koniec spracovania parametrov
+        /*if (token == R_PAR && multipleParams == 0)
+        {
+        printf("hello friend\n");
+        printf("%d /\\ %d \n",funParamCounter, parCount(funTree, funName));
+        if (funParamCounter != parCount(funTree, funName)) {errorMsg(ERR_SEMANTIC_PARAM, "Incorrect parameter count");} //TODO
+        return result;
+        } */
+
+        //else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
+
+        //parameter counter
+        funParamCounter++; 
+        //add params but if token is ID we must get type of ID first
+        if (token == ID) addParam(&funTree, funName, getType(*treePtr, tokenStr), funParamCounter);
+        else addParam(&funTree, funName, token, funParamCounter);
+
+        //comma for another parameter or right param for end of paremeters
+        token = get_new_token(&tokenStr);
+        if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
+
+        //recursively call fun_call_param for another parameters
+        if (token == COMMA)
+        {
+                return fun_call_param(treePtr);
+        }
+        //TODO Comment
+        addFunCall(&funTree, funName, *treePtr, funParamCounter/*, funReturnCounter*/);
+        return result;
+}
+
+
+/**
+ * @brief <fun_params> <par> <par_next>.
+ * parameters in function
+ * 
+ * @param treePtr tree for variables
+ */
+
+int fun_params(varNode *treePtr)
+{
+        int result = 0;
+        //variable for checking if multiple parameters are present
+        int multipleParams = 0;
         
-      }
-      if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) 
-        errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
-      //zavolame precedencku na vyraz!!!
-      precResult = prec_parse(treePtr, token, tokenStr);
-      token = precResult.end_token;
-      if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement assign - missing EOL");
-      //kontrola typov ci priradovany typ odpoveda typu premennej
-      int variableType = getType(*treePtr,stringID);
-      if (strcmp(stringID.str, "_") != 0)
-      {
-      if (variableType != precResult.end_datatype)
-      {
-        errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment");
-      }  
-        BSTInsert(treePtr, stringID, precResult.end_datatype);
-      }
-      //v pripade ze priradujeme do '_' tak nebudeme insertovat inak ano      
-    }
-    else if (token == COMMA)
-    {
-      return ass_stat(treePtr);
-    }
-    //<fun>	ID	(	<fun_call_param>	)												
-    else if(token == L_PAR)
-    {
-      return fun_call_param();
-    }
-  }
-  //<stat>	return	<ass_exps>														
-  else if(token == KW_RETURN)
-  {
-    return ass_exps(treePtr);
-  }
-  //sekcia vstavanych funkcii
+        //if token is comma multiple parameters are present
+        if (token == COMMA) multipleParams = 1;
 
-  //input funkcie myslim nemozu byt ako samostatny prikaz
-  else if (token == F_INPUTF)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement inputf can not be lonely on line, it will be sad");
-    // token = get_new_token(&tokenStr);
-    // if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - '(' missing");
-    // token = get_new_token(&tokenStr);
-    // if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - ')' missing");
-    // token = get_new_token(&tokenStr);
-    // if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - EOL missing");
-  }
-  else if (token == F_INPUTI)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement inputi can not be lonely on line, it will be sad");
-    // token = get_new_token(&tokenStr);
-    // if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - '(' missing");
-    // token = get_new_token(&tokenStr);
-    // if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - ')' missing");
-    // token = get_new_token(&tokenStr);
-    // if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - EOL missing");
-  }
-  else if (token == F_INPUTS)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement inputs can not be lonely on line, it will be sad");
-    // token = get_new_token(&tokenStr);
-    // if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - '(' missing");
-    // token = get_new_token(&tokenStr);
-    // if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - ')' missing");
-    // token = get_new_token(&tokenStr);
-    // if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - EOL missing");
-  }
-  else if (token == F_FLOAT2INT)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement float2int can not be lonely on line, it will be sad");
-  }
-  else if (token == F_INT2FLOAT)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement int2float can not be lonely on line, it will be sad");
-  }
-  else if (token == F_LEN)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement len can not be lonely on line, it will be sad");
-  }
-  else if (token == F_ORD)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement ord can not be lonely on line, it will be sad");
-  }
-  else if (token == F_PRINT)
-  {
-    token = get_new_token(&tokenStr);
-    if (token != L_PAR) errorMsg(ERR_SYNTAX, "PRINT statement - '(' missing");    
-    result = print_params(treePtr);
-    if (result != 0) return result;
-    token = get_new_token(&tokenStr);
-    if (token != EOL) errorMsg(ERR_SYNTAX, "PRINT statement - EOL missing");    
-  }
-  else if (token == F_SUBSTR)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement substr can not be lonely on line, it will be sad");
-  }
-  else if (token == F_CHR)
-  {
-    errorMsg(ERR_SEMANTIC_OTHER, "Statement chr can not be lonely on line, it will be sad");
-  }
+        //token id or Right par for end of parameters
+        token = get_new_token(&tokenStr);
+        if (token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
 
-  return result;
+        //jump out of function
+        if (token == R_PAR && multipleParams == 0)
+        {
+                //TODO
+                return result;
+        }
+        else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect params");
+
+        //check if variable is declared
+        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+        string stringID;
+        strInit(&stringID);
+        strCopyString(&stringID, &tokenStr);
+        //cannot declare variable '_'
+        if (strcmp(stringID.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
+
+        //if ID is declared it is error
+        if (isIDDeclared == true) { errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared"); }
+
+        //token must be keyword for type
+        token = get_new_token(&tokenStr);
+        if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) errorMsg(ERR_SYNTAX, "Incorrect or missing param type");
+
+        //save type of token to variable
+        int tokenDataType = 0;
+        if (token == KW_FLOAT64) tokenDataType = T_FLOAT;
+        else if (token == KW_INT) tokenDataType = T_INT;
+        else if (token == KW_STRING) tokenDataType = T_STRING;
+        else errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");
+
+        //counter for parameters increment
+        funParamCounter++;         
+        // add parameter to function                                  
+        addParam(&funTree, funName, tokenDataType, funParamCounter); 
+        //add ID and type of variable to tree
+        BSTInsert(treePtr, stringID, tokenDataType, levelOfScope);
+
+        //recursively call fun_params if it is comma or end parameterrs
+        token = get_new_token(&tokenStr);
+        if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
+        if (token == COMMA) return fun_params(treePtr);
+        //sucesfully handled
+        return result;
 }
 
-//<ass_stat>	<ass_ids>	=	<ass_exps>													
-int ass_stat(Node * treePtr)
-{
-  int result = 0;
-  token = get_new_token(&tokenStr);
-  if (token != ID) errorMsg(ERR_SYNTAX, "ASSIGN statement - must be ID");
-  token = get_new_token(&tokenStr);
-  if (token != COMMA && token != ASSIGN) errorMsg(ERR_SYNTAX, "ASSIGN statement - token must be '=' or ',' for another ID");
-  if (token == COMMA) return ass_stat(treePtr);
-  return ass_exps(treePtr);
-  return result;
-}
+/**
+ * @brief <fun_returns>	<ret>	<ret_next>.
+ * Returns in definition of function
+ */
 
-//<ass_exps>	<exp>	<ass_exps>	
-//<ass_exps>	,	<exp>	<ass_exps>
-//<ass_exps>	<ass_ids>		
-//<ass_exps>	<fun>		
-int ass_exps(Node * treePtr)
-// toto sa bude menit ked pride ID opytame sa ci existuje taka funkcia v tabulke symbolov
-//ak existuje spracuvame ako funkciu inak posielame precedencke
-{
-  int result = 0;
-  prec_end_struct precResult;
-  token = get_new_token(&tokenStr);
-  //printf("token je %d\n", token);
-  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
-  precResult = prec_parse(treePtr, token, tokenStr);
-  token = precResult.end_token; // asi bude treba kontrolovat typ, pravdepodobne moze prejst len INT
-
-  //kontrola toho ci spracovavame funkciu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  /*if (token == L_PAR)
-  {
-    result = fun_call_param();
-    if (result != 0) return result;
-    if (token != R_PAR) errorMsg(ERR_SYNTAX, "FUNCTION CALL statement - ')' missing");
-    token = get_new_token(&tokenStr);
-  }*/
-
-  if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
-  //token = get_new_token(&tokenStr); //toto pojde prec precedencka vrati SEMICOL token 
-  if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
-  if (token == COMMA) return ass_exps(treePtr);
-  return result;
-}
-
-
-//<fun_call_param>	ID	<fun_call_param>														
-//<fun_call_param>	,	ID	<fun_call_param>													
-//<fun_call_param>	e															
-int fun_call_param()
-{
-  int result = 0;
-  int multipleParams = 0;
-  if (token == COMMA) multipleParams = 1;
-
-  token = get_new_token(&tokenStr);
-  if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != R_PAR) 
-    errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
-  if (token == R_PAR && multipleParams == 0) return result;
-  else if (token == R_PAR && multipleParams == 1) 
-    errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
-  token = get_new_token(&tokenStr);
-  if (token != COMMA && token != R_PAR) 
-    errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters");
-  if (token == COMMA) return fun_call_param();
-  return result;
-}
-//<fun_params>	<par>	<par_next>														
-//<fun_params>	e															
-//<par_next>	,	<par>	<par_next>													
-//<par_next>	e															
-//<par>	ID	<type>														
-//<type>	FLOAT64															
-//<type>	INT															
-//<type>	STRING															
-int fun_params(Node * treePtr)
-{
-  int result = 0;
-  int multipleParams = 0;
-  if (token == COMMA) multipleParams = 1;
-
-  token = get_new_token(&tokenStr);
-  if (token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
-  if (token == R_PAR && multipleParams == 0) return result;
-  else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect params");
-
-  //pozrieme do stromu ci tam id premennej je
-  bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-  string stringID; strInit(&stringID); strCopyString(&stringID, &tokenStr);
-  if (strcmp(stringID.str, "_") == 0){errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'");}
-  //kontrola ak je id uz deklarovane hodime chybu 3
-  if (isIDDeclared == true)
-  {
-    errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared");
-  }
-
-  token = get_new_token(&tokenStr);
-  if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) errorMsg(ERR_SYNTAX, "Incorrect or missing param type");
-  //kontrola spravnosti typu pri deklaraci premennej
-  int tokenDataType = 0;
-  if (token == KW_FLOAT64){tokenDataType = T_FLOAT;}
-  else if(token == KW_INT){tokenDataType = T_INT;}
-  else if(token == KW_STRING){tokenDataType = T_STRING;}
-  else {errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");}
-  //deklaracia prebehla a ID a typ premennej ulozime do stromu
-  BSTInsert(treePtr, stringID, tokenDataType);
-
-  token = get_new_token(&tokenStr);
-  if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
-  if (token == COMMA) return fun_params(treePtr);
-  return result;
-}
-//<fun_returns>	<ret>	<ret_next>														
-//<fun_returns>	e	 														
-//<ret_next>	, 	<ret>	<ret_next>													
-//<ret_next>	e	
-//<ret>	<type>															
 int fun_returns()
 {
-  int result = 0;
-  int multipleParams = 0;
-  if (token == COMMA) multipleParams = 1;
+        int result = 0;
+        //variable for multiple returns
+        int multipleParams = 0;
+        //multiple returns are present
+        if (token == COMMA) multipleParams = 1;
 
-  token = get_new_token(&tokenStr);
-  if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect return params");
-  if (token == R_PAR && multipleParams == 0) return result;
-  else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect return params");
-  token = get_new_token(&tokenStr);
-  if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect return params");
-  if (token == COMMA) return fun_returns();
-  return result;
+        //token must be float int string or right param for function without returns
+        token = get_new_token(&tokenStr);
+        if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect return params");
+
+        //end of function
+        if (token == R_PAR && multipleParams == 0) return result;
+        //handling of more parameters
+        else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect return params");
+
+        //save type of token to variable
+        int tokenDataType = 0;
+        if (token == KW_FLOAT64) tokenDataType = T_FLOAT;
+        else if (token == KW_INT) tokenDataType = T_INT;
+        else if (token == KW_STRING) tokenDataType = T_STRING;
+        else errorMsg(ERR_SEMANTIC_DATATYPE, "ASSIGN statement - assign can not be boolean");
+
+        //counter for returns increment
+        funReturnCounter++;         
+        // add return to function                                  
+        addReturn(&funTree, funName, tokenDataType, funReturnCounter); 
+
+        //end of parameters or multiple parameters
+        token = get_new_token(&tokenStr);
+        if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect return params");
+        if (token == COMMA) return fun_returns();
+
+        return result;
 }
 
-//fun_params for PRINT function
-int print_params(Node * treePtr)
+
+/**
+ * @brief Parameters in print function
+ * 
+ * @param treePtr tree for variables
+ */
+int print_params(varNode *treePtr)
 {
+        int result = 0;
 
-  int result = 0;
-  int multipleParams = 0;
-  if (token == COMMA) multipleParams = 1;
+        //variable for multiple parameters
+        int multipleParams = 0;
+        //multiple parameters are present
+        if (token == COMMA) multipleParams = 1;
 
-  token = get_new_token(&tokenStr);
-  if (token != ID && token != T_STRING && token != T_FLOAT && token != T_INT && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
-  if (token == R_PAR && multipleParams == 0) return result;
-  else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
+        //token must be type or Right param for function without parameters
+        token = get_new_token(&tokenStr);
+        if (token != ID && token != T_STRING && token != T_FLOAT && token != T_INT && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
 
-  //pozrieme do stromu ci tam id premennej je
-  bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-  if (isIDDeclared != true  && token == ID)
-  {
-    errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");
-  }
-  token = get_new_token(&tokenStr);
-  if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
-  if (token == COMMA) return print_params(treePtr);
-  return result;
+        //end of function or wrong token inside
+        if (token == R_PAR && multipleParams == 0) return result;
+        else if (token == R_PAR && multipleParams == 1)  errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
+
+        //check if variable is declared
+        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+        if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
+
+        //if comma multiple parameters are present recursively call print_params
+        token = get_new_token(&tokenStr);
+        if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
+        if (token == COMMA) return print_params(treePtr);
+        //print parameters handled correctly
+        return result;
+}
+
+
+/**
+ * @brief Values in return function, this is <ass_exps> but with return checks
+ * 
+ * @param treePtr tree for variables
+ */
+int return_values(varNode *treePtr)
+{
+        int result = 0;
+        
+        prec_end_struct precResult;
+        //variable for multiple parameters
+        int multipleParams = 0;
+        //multiple parameters are present
+        if (token == COMMA) multipleParams = 1;
+
+        //token viable for return function
+        token = get_new_token(&tokenStr);
+        if (token != ID && token != T_STRING && token != T_FLOAT && token != T_INT && token != EOL) errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
+
+        //end of function or wrong token inside, checking types of returns
+        if (token == EOL && multipleParams == 0) 
+        { 
+                funReturnCheck(&funTree,funDeclaredName,funReturnCounter);
+                return result; 
+        }
+        else if (token == EOL && multipleParams == 1)  errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
+
+        //check if variable is declared
+        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+        if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
+
+        //call precedence parser with tree of variables, current token, and string of token
+        precResult = prec_parse(treePtr, token, tokenStr);
+        //token loaded last first token after expression
+        token = precResult.end_token;
+
+        //check return types
+        funReturnCounter++;
+        addReturn(&funTree,funDeclaredName,precResult.end_datatype,funReturnCounter);
+        
+        //token was already loaded in precedence parser
+        //recursively calling values if comma or end handling if EOL
+        if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
+        if (token == COMMA) return return_values(treePtr);
+
+        //sanity check
+        funReturnCheck(&funTree,funDeclaredName,funReturnCounter);
+        return result;
 }
