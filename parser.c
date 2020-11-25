@@ -500,6 +500,7 @@ int stat(varNode *treePtr)
         //<stat>	<fun>
         else if (token == ID)
         {
+
                 //check in tree if variable is declared and store in for further use
                 //save string of id for further use
                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
@@ -550,15 +551,9 @@ int stat(varNode *treePtr)
                         token = get_new_token(&tokenStr);
 
                         //build in functions
-                        if (token == F_INPUTS 
-                        || token == F_INPUTI 
-                        || token == F_INPUTF 
-                        || token == F_INT2FLOAT 
+                        if (token == F_INT2FLOAT 
                         || token == F_FLOAT2INT 
-                        || token == F_LEN 
-                        || token == F_SUBSTR 
-                        || token == F_ORD 
-                        || token == F_CHR)
+                        || token == F_LEN )
                         {
                                 if (token == F_INT2FLOAT) //int2float function
                                 {
@@ -626,54 +621,6 @@ int stat(varNode *treePtr)
                                         strFree(&stringF2I);
                                         return result;
                                 }
-                                else if (token == F_INPUTI) // inputi function
-                                {                                    
-                                        //left param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - missing '(' ");
-                                        
-                                        //Right param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement -missing ')'");
-
-                                        //EOL token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - missing EOL ");
-
-                                        return result;
-                                }
-                                else if (token == F_INPUTS) // inputs function
-                                {                                    
-                                        //left param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - missing '(' ");
-                                        
-                                        //Right param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement -missing ')'");
-
-                                        //EOL token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - missing EOL ");
-
-                                        return result;
-                                }
-                                else if (token == F_INPUTF) //inputf function
-                                {                                    
-                                        //left param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - missing '(' ");
-                                        
-                                        //Right param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement -missing ')'");
-
-                                        //EOL token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - missing EOL ");
-
-                                        return result;
-                                }
                                 else if (token == F_LEN) // len function
                                 {
                                        string stringLEN;                                     
@@ -709,180 +656,56 @@ int stat(varNode *treePtr)
                                      
                                         return result;
                                 }
-                                else if (token == F_CHR) // chr function
-                                {
-                                       string stringCHR;                                     
-
-                                        //left param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "CHR statement - missing '(' ");
-                                        //token for precedence parser
-                                        token = get_new_token(&tokenStr);
-                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "CHR statement - token must be ID or integer");
-                                        
-                                        if (token == ID)
-                                        {
-                                                //check if ID is declared
-                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
-
-                                                strInit(&stringCHR);
-                                                strCopyString(&stringCHR, &tokenStr);
-                                                //check if type of input is float
-                                                int variableType = getType(*treePtr, stringCHR);
-                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be integer"); }
-                                                strFree(&stringCHR);
-                                        }
- 
-                                        //Right param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "CHR statement -missing ')'");
-
-                                        //EOL token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != EOL) errorMsg(ERR_SYNTAX, "CHR statement - missing EOL ");
-
-                                        return result;
-                                }
-                                else if (token == F_ORD) // ord function
-                                {
-                                       string stringORD;                                     
-
-                                        //left param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "ORD statement - missing '(' ");
-                                        //token for precedence parser
-                                        token = get_new_token(&tokenStr);
-                                        if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or string");
-                                        
-                                        if (token == ID)
-                                        {
-                                                //check if ID is declared
-                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
-
-                                                strInit(&stringORD);
-                                                strCopyString(&stringORD, &tokenStr);
-                                                //check if type of input is float
-                                                int variableType = getType(*treePtr, stringORD);
-                                                if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be string"); }
-                                                strFree(&stringORD);
-                                        }
-
-                                        //comma token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != COMMA) errorMsg(ERR_SYNTAX, "ORD statement - comma missing between parameters");
-
-                                        //token for precedence parser
-                                        token = get_new_token(&tokenStr);
-                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or integer");
-                                        
-                                        if (token == ID)
-                                        {
-                                                //check if ID is declared
-                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
-
-                                                strInit(&stringORD);
-                                                strCopyString(&stringORD, &tokenStr);
-                                                //check if type of input is float
-                                                int variableType = getType(*treePtr, stringORD);
-                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "ORD statement - ID must be integer"); }
-                                                strFree(&stringORD);
-                                        }
- 
-                                        //Right param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "ORD statement -missing ')'");
-
-                                        //EOL token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != EOL) errorMsg(ERR_SYNTAX, "ORD statement - missing EOL ");
-
-                                        return result;
-                                }
-                                else if (token == F_SUBSTR) // ord function
-                                {
-                                       string stringSUBSTR;                                     
-
-                                        //left param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != L_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing '(' ");
-                                        //token for precedence parser
-                                        token = get_new_token(&tokenStr);
-                                        if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or string");
-                                        
-                                        if (token == ID)
-                                        {
-                                                //check if ID is declared
-                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
-
-                                                strInit(&stringSUBSTR);
-                                                strCopyString(&stringSUBSTR, &tokenStr);
-                                                //check if type of input is float
-                                                int variableType = getType(*treePtr, stringSUBSTR);
-                                                if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be string"); }
-                                                strFree(&stringSUBSTR);
-                                        }
-
-                                        //comma token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != COMMA) errorMsg(ERR_SYNTAX, "SUBSTR statement - comma missing between parameters");
-
-                                        //token for precedence parser
-                                        token = get_new_token(&tokenStr);
-                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
-                                        
-                                        if (token == ID)
-                                        {
-                                                //check if ID is declared
-                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
-
-                                                strInit(&stringSUBSTR);
-                                                strCopyString(&stringSUBSTR, &tokenStr);
-                                                //check if type of input is float
-                                                int variableType = getType(*treePtr, stringSUBSTR);
-                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
-                                                strFree(&stringSUBSTR);
-                                        }
-
-                                        //comma token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != COMMA) errorMsg(ERR_SYNTAX, "SUBSTR statement - comma missing between parameters");
-
-                                        //token for precedence parser
-                                        token = get_new_token(&tokenStr);
-                                        if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
-                                        
-                                        if (token == ID)
-                                        {
-                                                //check if ID is declared
-                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
-
-                                                strInit(&stringSUBSTR);
-                                                strCopyString(&stringSUBSTR, &tokenStr);
-                                                //check if type of input is float
-                                                int variableType = getType(*treePtr, stringSUBSTR);
-                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
-                                                strFree(&stringSUBSTR);
-                                        }
- 
-                                        //Right param token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != R_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement -missing ')'");
-
-                                        //EOL token
-                                        token = get_new_token(&tokenStr);
-                                        if (token != EOL) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing EOL ");
-
-                                        return result;
-                                }
                         }
                         //token for prec parser
                         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
+
+
+                        //TODO funkcia na pravej strane priradenia
+                        //ulozit typ navratovej hodnoty premennej
+                        //if it is ID check if it is declared
+                        if (token == ID)
+                        {
+                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                if (isIDDeclared == false)
+                                {
+                                        
+
+                                        //add function to tree
+                                        strClear(&funName);                 
+                                        strCopyString(&funName, &tokenStr); 
+                                        //funReturnCounter = 0;               
+                                        funParamCounter = 0;  
+
+                                        //token must be left param
+                                        token = get_new_token(&tokenStr);
+
+                                        //check type of variable to which value will be assigned                                     
+                                        int variableType = getType(*treePtr, stringID);
+                                        //check if function was used and process return type
+                                        printFunTree(funTree);
+                                        addFunToTree(&funTree, funName);
+                                        addReturn(&funTree, funName, variableType, 1);
+
+
+                                        //handle parameters of called function
+                                        result = fun_call_param(treePtr);
+                                        if (result != 0) return result;
+                                        
+                                        printFunTree(funTree);
+                                        //check number of returns
+                                        funReturnCheck(&funTree,funName,1);
+
+                                        printFunTree(funTree);
+
+                                        //token must be comma or EOL
+                                        token = get_new_token(&tokenStr);
+
+                                        //in this case where function is on right side of assign there cant be another id or function or vaule 
+                                        if (token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - EOL missing");
+                                        return result;
+                                }
+                        }
 
                         //call precedence parser 
                         precResult = prec_parse(treePtr, token, tokenStr);
@@ -910,9 +733,14 @@ int stat(varNode *treePtr)
                         //add function to tree
                         strClear(&funName);                 
                         strCopyString(&funName, &stringID); 
-                        funReturnCounter = 0;               
+
+                        //funReturnCounter = 0;               
                         funParamCounter = 0;               
                         addFunToTree(&funTree, stringID);
+
+                        //function with return cant be called alone on line
+                        funReturnCheck(&funTree,funName,0);
+
                         //handle parameters of called function
                         return fun_call_param(treePtr);
                 }
@@ -1028,8 +856,240 @@ int ass_exps(varNode *treePtr)
         int result = 0;
         prec_end_struct precResult;
 
-        //token for precedence parser
+
+
+        
         token = get_new_token(&tokenStr);
+
+        
+        /**
+        * token for built-in functions
+        * 
+        */
+        if (token == F_INPUTI)
+        {
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement - missing '(' ");
+                
+                //Right param token
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTI statement -missing ')'");
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - missing EOL ");
+
+                return result;
+        }
+        else if (token == F_INPUTF)
+        {
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement - missing '(' ");
+                
+                //Right param token
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTF statement -missing ')'");
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - missing EOL ");
+
+                return result;
+        }
+        else if (token == F_INPUTS)
+        {
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement - missing '(' ");
+                
+                //Right param token
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "INPUTS statement -missing ')'");
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - missing EOL ");
+
+                return result;               
+        }
+        else if (token == F_SUBSTR)
+        {
+                string stringSUBSTR;                                     
+
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing '(' ");
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or string");
+                
+                if (token == ID)
+                {
+                        //check if ID is declared
+                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                        strInit(&stringSUBSTR);
+                        strCopyString(&stringSUBSTR, &tokenStr);
+                        //check if type of input is float
+                        int variableType = getType(*treePtr, stringSUBSTR);
+                        if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be string"); }
+                        strFree(&stringSUBSTR);
+                }
+
+                //comma token
+                token = get_new_token(&tokenStr);
+                if (token != COMMA) errorMsg(ERR_SYNTAX, "SUBSTR statement - comma missing between parameters");
+
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
+                
+                if (token == ID)
+                {
+                        //check if ID is declared
+                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
+
+                        strInit(&stringSUBSTR);
+                        strCopyString(&stringSUBSTR, &tokenStr);
+                        //check if type of input is float
+                        int variableType = getType(*treePtr, stringSUBSTR);
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
+                        strFree(&stringSUBSTR);
+                }
+
+                //comma token
+                token = get_new_token(&tokenStr);
+                if (token != COMMA) errorMsg(ERR_SYNTAX, "SUBSTR statement - comma missing between parameters");
+
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
+                
+                if (token == ID)
+                {
+                        //check if ID is declared
+                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
+
+                        strInit(&stringSUBSTR);
+                        strCopyString(&stringSUBSTR, &tokenStr);
+                        //check if type of input is float
+                        int variableType = getType(*treePtr, stringSUBSTR);
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
+                        strFree(&stringSUBSTR);
+                }
+
+                //Right param token
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement -missing ')'");
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing EOL ");
+
+                return result;
+        }
+        else if (token == F_CHR)
+        {
+                string stringCHR;                                     
+
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "CHR statement - missing '(' ");
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "CHR statement - token must be ID or integer");
+                
+                if (token == ID)
+                {
+                        //check if ID is declared
+                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                        strInit(&stringCHR);
+                        strCopyString(&stringCHR, &tokenStr);
+                        //check if type of input is float
+                        int variableType = getType(*treePtr, stringCHR);
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be integer"); }
+                        strFree(&stringCHR);
+                }
+
+                //Right param token
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "CHR statement -missing ')'");
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "CHR statement - missing EOL ");
+
+                return result; 
+        }
+        else if (token == F_ORD)
+        {
+                string stringORD;                                     
+
+                //left param token
+                token = get_new_token(&tokenStr);
+                if (token != L_PAR) errorMsg(ERR_SYNTAX, "ORD statement - missing '(' ");
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or string");
+                
+                if (token == ID)
+                {
+                        //check if ID is declared
+                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                        strInit(&stringORD);
+                        strCopyString(&stringORD, &tokenStr);
+                        //check if type of input is float
+                        int variableType = getType(*treePtr, stringORD);
+                        if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be string"); }
+                        strFree(&stringORD);
+                }
+
+                //comma token
+                token = get_new_token(&tokenStr);
+                if (token != COMMA) errorMsg(ERR_SYNTAX, "ORD statement - comma missing between parameters");
+
+                //token for precedence parser
+                token = get_new_token(&tokenStr);
+                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or integer");
+                
+                if (token == ID)
+                {
+                        //check if ID is declared
+                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                        strInit(&stringORD);
+                        strCopyString(&stringORD, &tokenStr);
+                        //check if type of input is float
+                        int variableType = getType(*treePtr, stringORD);
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "ORD statement - ID must be integer"); }
+                        strFree(&stringORD);
+                }
+
+                //Right param token
+                token = get_new_token(&tokenStr);
+                if (token != R_PAR) errorMsg(ERR_SYNTAX, "ORD statement -missing ')'");
+
+                //EOL token
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "ORD statement - missing EOL ");
+
+                return result;    
+        }
+
+
+
+
+        //token for precedence parser or user function
         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
 
         //if it is ID check if it is declared
@@ -1038,31 +1098,26 @@ int ass_exps(varNode *treePtr)
                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                 if (isIDDeclared == false)
                 {
-                        if (funSearch(&funTree, tokenStr))
-                        {
-                                //add function to tree
-                                strClear(&funName);                 
-                                strCopyString(&funName, &tokenStr); 
-                                funReturnCounter = 0;               
-                                funParamCounter = 0;  
+                        //add function to tree
+                        strClear(&funName);                 
+                        strCopyString(&funName, &tokenStr); 
+                        funReturnCounter = 0;               
+                        funParamCounter = 0;  
 
-                                //token must be left param
-                                token = get_new_token(&tokenStr);
+                        //token must be left param
+                        token = get_new_token(&tokenStr);
 
-                                addFunToTree(&funTree, funName);
-                                //handle parameters of called function
-                                result = fun_call_param(treePtr);
-                                if (result != 0) return result;
+                        addFunToTree(&funTree, funName);
+                        //handle parameters of called function
+                        result = fun_call_param(treePtr);
+                        if (result != 0) return result;
 
-                                //token must be comma or EOL
-                                token = get_new_token(&tokenStr);
+                        //token must be comma or EOL
+                        token = get_new_token(&tokenStr);
 
-                                //if comma recursively call ass_exps
-                                if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
-                                if (token == COMMA) return ass_exps(treePtr);
-                                return result;
-                        }
-                        else errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing declaration of function");
+                        //in this case where function is on right side of assign there cant be another id or function or vaule 
+                        if (token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - EOL missing");
+                        return result;
                 }
         }
 

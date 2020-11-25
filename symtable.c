@@ -489,6 +489,7 @@ void funReturnCheck(funNode *RootPtr, string Key, int returnCount){
 	RootPtr = funSearch(RootPtr, Key);
 
 	if((*RootPtr)->returnCodes->elementCount != returnCount){
+		printf("%d , %d\n",(*RootPtr)->returnCodes->elementCount,returnCount);
 		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
 		exit(6);
 	}
