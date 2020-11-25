@@ -359,12 +359,11 @@ void addFunToTree(funNode *RootPtr, string Key){
  * @param Declaration true if the function was declared, used for checking if the function isn't declared twice
  * @param Call true if the fuction was called, used in isFunCallDec() to check if the function wasn't called without being declared
  * @param paramCount number of function parameters, used for checking if the function isn't called or declared with different amount of parameters in other instances
- * @param returnCount number of function return types, used for checking if the function isn't called or declared with different amount of return types in other instances
- */
-void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount, int returnCount){
+*/
+void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount){
 	RootPtr = funSearch(RootPtr, Key);
 	
-	if (!strCmpConstStr(&Key, "main") && ((paramCount != 0) || (returnCount != 0) )){
+	if (!strCmpConstStr(&Key, "main") && paramCount != 0){
 		fprintf(stderr,"ERROR 3: Function main can't have any parameters or return codes.\n");
 		exit(3);
 	}
@@ -381,11 +380,6 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 
 	if((*RootPtr)->parameters->elementCount != paramCount){
 		fprintf(stderr,"ERROR 6: Function has wrong amount of parameters [%s]\n", Key.str);
-		exit(6);
-	}
-
-	if((*RootPtr)->returnCodes->elementCount != returnCount){
-		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
 		exit(6);
 	}
 
@@ -427,13 +421,13 @@ void funDisposeTree (funNode *RootPtr) {
  * @param paramCount number of function parameters, used by funActualize() for error chcecking
  * @param returnCount number of function return types, used by funActualize() for error chcecking
  */
-void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, int returnCount){
+void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount){
 	if(BSTSearch (varTree, Key)){
 		fprintf(stderr,"Error 3: Function is also a variable in the same scope! [%s]\n", Key.str);
 		exit(3);
 	}
 
-	funActualize(RootPtr, Key, false, true, paramCount, returnCount);
+	funActualize(RootPtr, Key, false, true, paramCount);
 }
 
 /**
@@ -444,8 +438,8 @@ void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount, i
  * @param paramCount number of function parameters, used by funActualize() for error chcecking
  * @param returnCount number of function return types, used by funActualize() for error chcecking
  */
-void addFunDec(funNode *RootPtr, string Key, int paramCount, int returnCount){
-	funActualize(RootPtr, Key, true, false, paramCount, returnCount);
+void addFunDec(funNode *RootPtr, string Key, int paramCount){
+	funActualize(RootPtr, Key, true, false, paramCount);
 }
 
 /**
