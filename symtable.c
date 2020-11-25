@@ -9,7 +9,13 @@
  *  symtable.c
  * 
  * DESCRIPTION:
- *  Implementation of symbol table using binary tree
+ *  Implementation of symbol table using binary search tree.
+ *  The functions are implemented in this order:
+ *  	- variable stack
+ * 		- variable BST
+ * 		- function list
+ * 		- function BST
+ * 		- printing functions
  * 
  * AUTHOR:
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
@@ -18,7 +24,54 @@
 #include "symtable.h"
 #include "error.h"
 
-// TODO returnTypes in functions
+// TODO returnTypes in functions (2/2)
+// TODO addFunCall, addFunDec and funActualize don't need returnOrder
+
+
+/**********************************************/
+/*************** Variable stack ***************/
+
+/**
+ * @brief Pops the top values on the stack, so it now has the previous values on top.
+ * 
+ * @param varTree pointer to the variable BST
+ */
+void stackPop(varNode* varTree){
+	if ((*varTree)->varStack != NULL){
+		varStackElement temp = (*varTree)->varStack;
+		(*varTree)->varStack = (*varTree)->varStack->previousElement;
+		free(temp);
+	}
+}
+
+/**
+ * @brief Pushes the variable stack so the top now has new values and points to the previous element.
+ * 
+ * @param varTree pointer to the variable BST
+ * @param type type of the variable
+ * @param scope scope of the variable
+ */
+void stackPush(varNode* varTree, int type, int scope){
+	varStackElement newElement = (varStackElement) malloc(sizeof(struct varStackElement));
+	newElement->type = type;
+	newElement->scope = scope;
+
+	newElement->previousElement = (*varTree)->varStack;
+
+	(*varTree)->varStack = newElement;
+}
+
+/**
+ * @brief Frees the whole stack.
+ * 
+ * @param varTree pointer to the variable BST
+ */
+void stackDelete(varNode *varTree){
+	while ((*varTree)->varStack != NULL){
+		stackPop(varTree);
+	}
+}
+
 
 /********************************************************/
 /*************** Variable tree operations ***************/
@@ -234,50 +287,6 @@ void BSTScopeDelete(varNode *RootPtr, int newScope){
 	}
 }
 
-/*********************************************************/
-/*************** Var tree stack operations ***************/
-
-/**
- * @brief Pops the top values on the stack, so it now has the previous values on top.
- * 
- * @param varTree pointer to the variable BST
- */
-void stackPop(varNode* varTree){
-	if ((*varTree)->varStack != NULL){
-		varStackElement temp = (*varTree)->varStack;
-		(*varTree)->varStack = (*varTree)->varStack->previousElement;
-		free(temp);
-	}
-}
-
-/**
- * @brief Pushes the variable stack so the top now has new values and points to the previous element.
- * 
- * @param varTree pointer to the variable BST
- * @param type type of the variable
- * @param scope scope of the variable
- */
-void stackPush(varNode* varTree, int type, int scope){
-	varStackElement newElement = (varStackElement) malloc(sizeof(struct varStackElement));
-	newElement->type = type;
-	newElement->scope = scope;
-
-	newElement->previousElement = (*varTree)->varStack;
-
-	(*varTree)->varStack = newElement;
-}
-
-/**
- * @brief Frees the whole stack.
- * 
- * @param varTree pointer to the variable BST
- */
-void stackDelete(varNode *varTree){
-	while ((*varTree)->varStack != NULL){
-		stackPop(varTree);
-	}
-}
-
 /********************************************************/
 /*************** Function tree operations ***************/
 
@@ -299,16 +308,16 @@ void funInit (funNode *RootPtr) {
  * @return funNode with searched name or NULL if it is not in the BST
  */
 funNode *funSearch (funNode *RootPtr, string Key)	{
-	if(!*RootPtr)
+	if(!*RootPtr) // the function was not found, we can its NULL pointer for adding next node, because it points to the same place in memory as the previous node
 		return RootPtr;
 
-	else if (strCmpString(&Key, &((*RootPtr)->name)) < 0)
+	else if (strCmpString(&Key, &((*RootPtr)->name)) < 0) // the function should be in the left branch
 		return funSearch(&((*RootPtr)->LPtr), Key);
 
-	else if (strCmpString(&Key, &((*RootPtr)->name)) > 0)
+	else if (strCmpString(&Key, &((*RootPtr)->name)) > 0) // the function should be in the right branch
 		return funSearch(&((*RootPtr)->RPtr), Key);
 
-	return RootPtr;
+	return RootPtr; // the function was found
 }
 
 /**
@@ -325,6 +334,7 @@ void addFunToTree(funNode *RootPtr, string Key){
 		if(RootPtr == NULL)
 			return;
 
+		// ugly inicialization, trying to do this in a separate function always results in a segfault no matter how hard i try 
 		(*RootPtr)->parameters = malloc(sizeof(struct funList));
 		(*RootPtr)->parameters->First = NULL;
 		(*RootPtr)->parameters->elementCount = 0;
@@ -349,15 +359,14 @@ void addFunToTree(funNode *RootPtr, string Key){
  * @param Declaration true if the function was declared, used for checking if the function isn't declared twice
  * @param Call true if the fuction was called, used in isFunCallDec() to check if the function wasn't called without being declared
  * @param paramCount number of function parameters, used for checking if the function isn't called or declared with different amount of parameters in other instances
- * @param returnCount number of function return types, used for checking if the function isn't called or declared with different amount of return types in other instances
- */
-void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount/*, int returnCount*/){
+*/
+void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount){
 	RootPtr = funSearch(RootPtr, Key);
 	
-	/*if (!strCmpConstStr(&Key, "main") && ((paramCount != 0) || (returnCount != 0) )){
-		fprintf(stderr,"ERROR 6: Function main can't have any parameters or return codes.\n");
-		exit(6);
-	}*/
+	if (!strCmpConstStr(&Key, "main") && paramCount != 0){
+		fprintf(stderr,"ERROR 3: Function main can't have any parameters or return codes.\n");
+		exit(3);
+	}
 
 	if(!*RootPtr){
 		fprintf(stderr,"ERROR 666: Function was not found for actualization purposes [%s]\n", Key.str);
@@ -374,11 +383,6 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 		exit(6);
 	}
 
-	/*if((*RootPtr)->returnCodes->elementCount != returnCount){
-		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
-		exit(6);
-	}*/
-
 	if(Declaration == true && !((*RootPtr)->isDeclared == true)){
 		(*RootPtr)->isDeclared = true;
 	}
@@ -389,7 +393,7 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 }
 
 /**
- * @brief Frees the whole function BST and the elements of each node.
+ * @brief Recursively frees the whole function BST and the elements of each node.
  * 
  * @param RootPtr pointer to the function BST
  */
@@ -417,13 +421,13 @@ void funDisposeTree (funNode *RootPtr) {
  * @param paramCount number of function parameters, used by funActualize() for error chcecking
  * @param returnCount number of function return types, used by funActualize() for error chcecking
  */
-void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount/*, int returnCount*/){
+void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount){
 	if(BSTSearch (varTree, Key)){
 		fprintf(stderr,"Error 3: Function is also a variable in the same scope! [%s]\n", Key.str);
 		exit(3);
 	}
 
-	funActualize(RootPtr, Key, false, true, paramCount/*, returnCount*/);
+	funActualize(RootPtr, Key, false, true, paramCount);
 }
 
 /**
@@ -434,8 +438,8 @@ void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount/*,
  * @param paramCount number of function parameters, used by funActualize() for error chcecking
  * @param returnCount number of function return types, used by funActualize() for error chcecking
  */
-void addFunDec(funNode *RootPtr, string Key, int paramCount/*, int returnCount*/){
-	funActualize(RootPtr, Key, true, false, paramCount/*, returnCount*/);
+void addFunDec(funNode *RootPtr, string Key, int paramCount){
+	funActualize(RootPtr, Key, true, false, paramCount);
 }
 
 /**
@@ -499,6 +503,7 @@ void isFunCallDec(funNode RootPtr){
 	if(RootPtr != NULL){
 		isFunCallDec(RootPtr->LPtr);
 		isFunCallDec(RootPtr->RPtr);
+		
 		if (RootPtr->isCalled && !RootPtr->isDeclared ){
 			fprintf(stderr,"Error - the function %s is called but not declared!\n", RootPtr->name.str);
 			exit(3); 
@@ -506,18 +511,42 @@ void isFunCallDec(funNode RootPtr){
 	}
 }
 
+/**
+ * @brief Adds a list of returns to a function if the function was not called or declared, or compares a list of returns with functions list of returns.
+ * 
+ * 
+ * @param list pointer to a list of return types
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the function
+ * @param returnCount number of function return types
+ */
+void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int returnCount){	
+	RootPtr = funSearch(RootPtr, Key);
+	
+	funListElement newReturns = list->First;
+	
+	if ((*RootPtr)->isCalled == false && (*RootPtr)->isDeclared == false){ // function has no parameters yet
+		(*RootPtr)->returnCodes->First = newReturns;
+		(*RootPtr)->returnCodes->elementCount = list->elementCount;
 
-// int parCount(funNode RootPtr,string name){
-// 	funNode *temp;
-// 	temp = funSearch ( &RootPtr,  name);	
-// 	return (*temp)->parameters->elementCount;
-// }
-
-// int retCount(funNode RootPtr, string name){
-// 	funNode *temp;
-// 	temp = funSearch ( &RootPtr,  name);	
-// 	return (*temp)->returnCodes->elementCount;
-// }
+	}else{ // function has parameters that have to be checked
+		funListElement funReturns = (*RootPtr)->returnCodes->First;
+		if (returnCount != (*RootPtr)->returnCodes->elementCount ){
+			fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
+			exit(6);
+		}
+		
+		// comparison of function list return types and new return list element types
+		while (newReturns != NULL && funReturns != NULL){
+			if ( newReturns->type != funReturns->type){
+				fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
+				exit(6);
+			}
+			newReturns = newReturns->NextPtr;
+			funReturns = funReturns->NextPtr;
+		}
+	}
+}
 
 /********************************************************/
 /*************** Function list operations ***************/
@@ -529,6 +558,7 @@ void isFunCallDec(funNode RootPtr){
  * @param list pointer to the function list
  */
 void funListInit (funList *list) {
+	list = malloc(sizeof(struct funList));
 	list->First = NULL;
 	list->elementCount = 0;
 }

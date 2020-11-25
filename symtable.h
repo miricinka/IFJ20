@@ -106,16 +106,15 @@ void stackDelete(varNode *varTree);
 void funInit (funNode *RootPtr);
 funNode *funSearch (funNode *RootPtr, string Key);
 void addFunToTree(funNode *RootPtr, string Key);
-void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount/*, int returnCount*/);
+void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, int paramCount);
 void funDisposeTree (funNode *RootPtr);
-void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount/*, int returnCount*/);
-void addFunDec(funNode *RootPtr, string Key, int paramCount/*, int returnCount*/);
+void addFunCall(funNode *RootPtr, string Key, varNode varTree, int paramCount);
+void addFunDec(funNode *RootPtr, string Key, int paramCount);
 void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrder);
 void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 void isFunCallDec(funNode RootPtr);
 void funReturnCheck(funNode *RootPtr, string Key, int returnCount);
-// int parCount(funNode RootPtr,string name);
-// int retCount(funNode RootPtr,string name);
+void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int returnCount);
 
 /*Prototypes of function list operations*/
 
