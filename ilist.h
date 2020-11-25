@@ -81,10 +81,10 @@
 
 typedef struct
 {
-  int instType;  // typ instrukce
-  void *addr1; // adresa 1
-  void *addr2; // adresa 2
-  void *addr3; // adresa 3
+  char* instType;  // typ instrukce
+  char* addr1; // adresa 1
+  char* addr2; // adresa 2
+  char* addr3; // adresa 3
 } tInstr;
 
 typedef struct listItem
@@ -108,5 +108,6 @@ void listNext(tListOfInstr *L);
 void listGoto(tListOfInstr *L, void *gotoInstr);
 void *listGetPointerLast(tListOfInstr *L);
 tInstr *listGetData(tListOfInstr *L);
+void printList(tListOfInstr *L);
 
 #endif //IFJ_ILIST_H
