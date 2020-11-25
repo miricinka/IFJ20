@@ -21,6 +21,28 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ilist.h"
+#include "prec_parser.h"
+
+    void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3);
+    void genFileHead();
+    void genMainFunc();
+    void genMainEnd();
+    void genAdds();
+    void genSubs();
+    void genMuls();
+    void genDivs();
+    void genIDivs();
+    void genPushs(int type, char* content);
+    void genDefvar(char* variable);
+    void genPops(char* variable);
+    void genClears();
+    void genRead(char* variable);
+    void genReturn();
+    void genIfElsehead();
+    void genIfElseEnd();
+    void genPostIf();
+    void genWrite(int Type, char* content);
 
 #endif 

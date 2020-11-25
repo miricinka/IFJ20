@@ -93,3 +93,45 @@ tInstr *listGetData(tListOfInstr *L)
   }
   else return &(L->active->Instruction);
 }
+
+void printList(tListOfInstr *L)
+{
+  listFirst(L);
+  while (L->active != NULL)
+  {
+    if(L->active->Instruction.instType != NULL){
+      printf("%s", L->active->Instruction.instType);
+    }
+    else{
+      listNext(L);
+      printf("\n");
+      continue;
+    }
+    if(L->active->Instruction.addr1 != NULL){
+      printf(" %s", L->active->Instruction.addr1);
+    }
+    else{
+      listNext(L);
+      printf("\n");
+      continue;
+    }
+    if(L->active->Instruction.addr2 != NULL){
+      printf(" %s", L->active->Instruction.addr2);
+    }
+    else{
+      listNext(L);
+      printf("\n");
+      continue;
+    }
+    if(L->active->Instruction.addr3 != NULL){
+      printf(" %s\n", L->active->Instruction.addr3);
+      listNext(L);
+    }
+    else{
+      listNext(L);
+      printf("\n");
+      continue;
+    }
+  }
+  listFree(L);
+}
