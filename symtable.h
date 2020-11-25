@@ -114,6 +114,7 @@ void addParam(funNode *RootPtr, string Key, int parameterType, int parameterOrde
 void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 void isFunCallDec(funNode RootPtr);
 void funReturnCheck(funNode *RootPtr, string Key, int returnCount);
+void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int returnCount);
 
 /*Prototypes of function list operations*/
 

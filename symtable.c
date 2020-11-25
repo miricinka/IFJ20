@@ -308,16 +308,16 @@ void funInit (funNode *RootPtr) {
  * @return funNode with searched name or NULL if it is not in the BST
  */
 funNode *funSearch (funNode *RootPtr, string Key)	{
-	if(!*RootPtr)
+	if(!*RootPtr) // the function was not found, we can its NULL pointer for adding next node, because it points to the same place in memory as the previous node
 		return RootPtr;
 
-	else if (strCmpString(&Key, &((*RootPtr)->name)) < 0)
+	else if (strCmpString(&Key, &((*RootPtr)->name)) < 0) // the function should be in the left branch
 		return funSearch(&((*RootPtr)->LPtr), Key);
 
-	else if (strCmpString(&Key, &((*RootPtr)->name)) > 0)
+	else if (strCmpString(&Key, &((*RootPtr)->name)) > 0) // the function should be in the right branch
 		return funSearch(&((*RootPtr)->RPtr), Key);
 
-	return RootPtr;
+	return RootPtr; // the function was found
 }
 
 /**
@@ -334,6 +334,7 @@ void addFunToTree(funNode *RootPtr, string Key){
 		if(RootPtr == NULL)
 			return;
 
+		// ugly inicialization, trying to do this in a separate function always results in a segfault no matter how hard i try 
 		(*RootPtr)->parameters = malloc(sizeof(struct funList));
 		(*RootPtr)->parameters->First = NULL;
 		(*RootPtr)->parameters->elementCount = 0;
@@ -398,7 +399,7 @@ void funActualize (funNode *RootPtr, string Key, bool Declaration, bool Call, in
 }
 
 /**
- * @brief Frees the whole function BST and the elements of each node.
+ * @brief Recursively frees the whole function BST and the elements of each node.
  * 
  * @param RootPtr pointer to the function BST
  */
@@ -516,18 +517,42 @@ void isFunCallDec(funNode RootPtr){
 	}
 }
 
+/**
+ * @brief Adds a list of returns to a function if the function was not called or declared, or compares a list of returns with functions list of returns.
+ * 
+ * 
+ * @param list pointer to a list of return types
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the function
+ * @param returnCount number of function return types
+ */
+void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int returnCount){	
+	RootPtr = funSearch(RootPtr, Key);
+	
+	funListElement newReturns = list->First;
+	
+	if ((*RootPtr)->isCalled == false && (*RootPtr)->isDeclared == false){ // function has no parameters yet
+		(*RootPtr)->returnCodes->First = newReturns;
+		(*RootPtr)->returnCodes->elementCount = list->elementCount;
 
-// int parCount(funNode RootPtr,string name){
-// 	funNode *temp;
-// 	temp = funSearch ( &RootPtr,  name);	
-// 	return (*temp)->parameters->elementCount;
-// }
-
-// int retCount(funNode RootPtr, string name){
-// 	funNode *temp;
-// 	temp = funSearch ( &RootPtr,  name);	
-// 	return (*temp)->returnCodes->elementCount;
-// }
+	}else{ // function has parameters that have to be checked
+		funListElement funReturns = (*RootPtr)->returnCodes->First;
+		if (returnCount != (*RootPtr)->returnCodes->elementCount ){
+			fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
+			exit(6);
+		}
+		
+		// comparison of function list return types and new return list element types
+		while (newReturns != NULL && funReturns != NULL){
+			if ( newReturns->type != funReturns->type){
+				fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
+				exit(6);
+			}
+			newReturns = newReturns->NextPtr;
+			funReturns = funReturns->NextPtr;
+		}
+	}
+}
 
 /********************************************************/
 /*************** Function list operations ***************/
@@ -539,6 +564,7 @@ void isFunCallDec(funNode RootPtr){
  * @param list pointer to the function list
  */
 void funListInit (funList *list) {
+	list = malloc(sizeof(struct funList));
 	list->First = NULL;
 	list->elementCount = 0;
 }
