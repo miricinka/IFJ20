@@ -9,11 +9,6 @@
 * [Aleš Řezáč](https://github.com/xrezac21), the brilliant Mathematician
 * [Martin Žovinec](https://github.com/xzovin00), the planning Mastermind
 
-## Goals
-* Have a **working project so we pass the subject** (*obviously*)
-* Have a Github repository with efficient planning via usage of many Github funcitions for a nice CV
-* Learn to use tests for headache-less debugging process
-
 ## Timeline
 * Deadlines:
 	* 30.9.2020 Team leader registration
