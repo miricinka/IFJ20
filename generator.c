@@ -25,7 +25,6 @@
 //výpis instruction listu
 //linking globals
 //TODO concatenate strings (inspire by DEFVAR {completed})
-
 int labelcnt = 1;
 int endif = 1;
 
@@ -39,89 +38,13 @@ void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3){
    listInsertLast(list, I);
 }
 
-/*void genReturn(){
-
-    generateInstruction(I_RETURN, NULL, NULL, NULL);
-}
-
-void genPrint(void *addr1){
-    generateInstruction(I_WRITE, addr1, NULL, NULL);
-}
-
-void genDefvar(void *addr1){
-    generateInstruction(I_DEFVAR, addr1, NULL, NULL);
-}
-
-void genFunc(void *addr1){
-    generateInstruction(I_LABEL, addr1, NULL, NULL);
-    generateInstruction(I_CREATEFRAME, NULL, NULL, NULL);
-}
-
-void genJump(void *addr1){
-    generateInstruction(I_JUMP, addr1, NULL, NULL);
-}
-
-void Compare(void *addr1, void *addr2, void *addr3){
-    switch (addr2){
-        case "==":
-            generateInstruction(I_JUMPIFNEQ, NULL, addr1, addr3);
-            break;
-
-        case "!=":
-            generateInstruction(I_JUMPIFEQ, NULL, addr1, addr3);
-            break;
-
-        case ">":
-            generateInstruction(I_GT, NULL, addr1, addr3);
-            generateInstruction(I_JUMPIFEQ, NULL, "bool@true", NULL);
-            break;
-
-        case "<":
-            generateInstruction(I_LT, NULL, addr1, addr3);
-            generateInstruction(I_JUMPIFEQ, NULL, "bool@true", NULL);
-            break;
-
-        case "=>" || ">=":
-            generateInstruction(I_LT, NULL, addr1, addr3);
-            generateInstruction(I_JUMPIFNEQ, NULL, "bool@true", NULL);
-            break;
-
-        case "=<" || "<=":
-            generateInstruction(I_GT, NULL, addr1, addr3);
-            generateInstruction(I_JUMPIFNEQ, NULL, "bool@true", NULL);
-            break;
-
-        default:
-            break;
-    }
-}
-
-
-void genForhead(char *part1, char *part2, char *part3){
-    generateInstruction(I_LABEL, NULL, NULL, NULL);
-    if(part1 != NULL){ // variable declaration/initialization
-        generateInstruction(I_DEFVAR, promena, hodnota, NULL;);
-    }
-    Compare(part2);
-    if(part3 != NULL){
-        if(part3 == '^++.*'){
-            generateInstruction(I_ADD, promena, 1, NULL);
-        }
-        if(part3 == '^--.*'){
-            generateInstruction(I_SUB, promena, 1, NULL);
-        }
-    }
-}
-
-void genIfhead(){
-    generateInstruction(I_LABEL, NULL, NULL, NULL);
-
-}*/
-
-
 void genFileHead(){
-    generateInstruction(".IFJcode20", NULL, NULL, NULL);
-    generateInstruction("JUMP", "_main", NULL, NULL);
+    generateInstruction(".IFJcode20\n", NULL, NULL, NULL);
+    generateInstruction("DEFVAR", "GF@concat1", NULL, NULL);
+    generateInstruction("DEFVAR", "GF@concat2", NULL, NULL);
+    generateInstruction("DEFVAR", "GF@concatfin\n", NULL, NULL);
+    generateInstruction("JUMP", "_main\n", NULL, NULL);
+        
 }
 
 void genMainFunc(){
@@ -131,6 +54,7 @@ void genMainFunc(){
 
 void genMainEnd(){
     generateInstruction("POPFRAME", NULL, NULL, NULL);
+    generateInstruction("CLEARS\n", NULL, NULL, NULL);
 }
 
 void genAdds(){
@@ -154,7 +78,7 @@ void genIDivs(){
 }
 
 void genPushs(int type, char* content){
-    char* ans = NULL;
+    char* ans = (char*) malloc(sizeof(char) * strlen(content));
     if(type == NT_INT){
         sprintf(ans,"int@%s", content);
     }
@@ -172,17 +96,13 @@ void genPushs(int type, char* content){
 }
 
 void genDefvar(char* variable){
-    size_t len;
-    char* ans;
-    len = (size_t)snprintf(NULL,0,"TF@%s",variable) + 1; // +1 to add '\0'
-    ans = malloc(len);
-    snprintf(ans, len, "TF@%s", variable);
+    char* ans = (char*) malloc(sizeof(char) * strlen(variable));
+    sprintf(ans, "TF@%s", variable);
     generateInstruction("DEFVAR", ans, NULL, NULL);
-    //free(ans); //for Martin's sanity
 }
 
 void genPops(char* variable){
-    char* ans = NULL;
+    char* ans = (char*) malloc(sizeof(char) * strlen(variable));
     sprintf(ans, "TF@%s", variable);
     generateInstruction("POPS", ans, NULL, NULL);
 }
@@ -191,10 +111,19 @@ void genClears(){
     generateInstruction("CLEARS", NULL, NULL, NULL);
 }
 
-void genRead(char* variable){
-    char* ans = NULL;
+void genRead(int type, char* variable){
+    char* ans = (char*) malloc(sizeof(char) * strlen(variable));
     sprintf(ans, "TF@%s", variable);
-    generateInstruction("READ", ans, "int", NULL);
+    if(type == F_INPUTI){
+        generateInstruction("READ", ans, "int", NULL);
+    }
+    else if(type == F_INPUTF){
+        generateInstruction("READ", ans, "float", NULL);
+    }
+    else if(type == F_INPUTS){
+        generateInstruction("READ", ans, "string", NULL);
+    }
+    else{}
 }
 
 void genReturn(){
@@ -202,27 +131,28 @@ void genReturn(){
 }
 
 void genIfElseHead(){
-    char* labelname = NULL;
+    char* labelname = (char*) malloc(sizeof(labelcnt));
     sprintf(labelname, "_label%d", labelcnt);
     labelcnt++;
     generateInstruction("LABEL", labelname, NULL, NULL);
 }
 
 void genIfElseEnd(){
-    char* finif = NULL;
+    char* finif = (char*) malloc(sizeof(endif));
     sprintf(finif, "_endif%d", endif);
+    endif++;
     generateInstruction("JUMP", finif, NULL, NULL);
 }
 
 void genPostIf(){
-    char* successor = NULL;
+    char* successor = (char*) malloc(sizeof(endif));
     sprintf(successor, "_endif%d", endif);
     endif++;
     generateInstruction("LABEL", successor, NULL, NULL);
 }
 
 void genWrite(int Type, char* content){
-    char* ans = NULL;
+    char* ans = (char*) malloc(sizeof(char) * strlen(content));
     if(Type == T_INT){
         sprintf(ans, "int@%s", content);
     }
@@ -239,9 +169,9 @@ void genWrite(int Type, char* content){
     generateInstruction("WRITE", ans, NULL, NULL);
 }
 
-/*int main(){
-    genClears();
-    listFirst(list);
-    printf("%s\n", list->active->Instruction.instType);
-    return 0;
-}*/
+void genConcat(){
+    generateInstruction("POPS", "GF@concat1", NULL, NULL);
+    generateInstruction("POPS", "GF@concat2", NULL, NULL);
+    generateInstruction("CONCAT", "GF@concatfin", "GF@concat1", "GF@concat2");
+    generateInstruction("PUSHS", "GF@concatfin", NULL, NULL);
+}
