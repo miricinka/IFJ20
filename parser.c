@@ -755,7 +755,6 @@ int stat(varNode *treePtr)
                                                 variableType = EMPTY;
                                         }                                                
                                         //check if function was used and process return type
-                                        printFunTree(funTree);
                                         addFunToTree(&funTree, funName);
                                         addReturn(&funTree, funName, variableType, 1);
 
@@ -764,11 +763,8 @@ int stat(varNode *treePtr)
                                         result = fun_call_param(treePtr);
                                         if (result != 0) return result;
                                         
-                                        printFunTree(funTree);
                                         //check number of returns
                                         funReturnCheck(&funTree,funName,1);
-
-                                        printFunTree(funTree);
 
                                         //token must be comma or EOL
                                         token = get_new_token(&tokenStr);
@@ -952,8 +948,6 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter)
         }       
         strFree(&emptyID);     
 
-
-        printFunList(*assignVariablesList);
 
         //comma or assign token
         token = get_new_token(&tokenStr);
