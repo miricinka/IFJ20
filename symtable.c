@@ -666,19 +666,26 @@ void checkListElement(funList *list, int type, int order){
  * @param list1 first list to be compared
  * @param list2 second list to be compared
  */
-void compareLists (funList *list1, funList *list2){	
-	funListElement element1 = list1->First;
-	funListElement element2 = list2->First;
-		
-	while (element1 != NULL && element2 != NULL){
-		
-		if ( element1->type != element2->type && element1->type != EMPTY){
-			fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
-			exit(6);
-		}
-		element1 = element1->NextPtr;
-		element2 = element2->NextPtr;
-	}
+void compareLists (funList *list1, funList *list2){
+
+    if ( list1->elementCount != list2->elementCount){
+	    printf("%d, %d\n",list1->elementCount ,list2->elementCount);
+            fprintf(stderr,"ERROR 6: Assigment has wrong ammount of returns\n");
+            exit(6);
+        }
+
+    funListElement element1 = list1->First;
+    funListElement element2 = list2->First;
+
+    while (element1 != NULL && element2 != NULL){
+
+        if ( element1->type != element2->type && element1->type != EMPTY){
+            fprintf(stderr,"Error 6: Wrong return/parameter type of an assigment\n");
+            exit(6);
+        }
+        element1 = element1->NextPtr;
+        element2 = element2->NextPtr;
+    }
 }
 
 /*********************************************************************/

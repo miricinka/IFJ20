@@ -27,6 +27,8 @@ string funDeclaredName; //variable for name of currently defined function
 int levelOfScope = 1; //variabel for scope, it is incremented
 //generation
 tListOfInstr *list; //variable for list of instructions
+//return checker
+int returnCalled = 0;
 
 
 /**
@@ -137,6 +139,8 @@ int fun_def_list()
         case KW_FUNC: //starts <fun_def> non-term analysis
                 result = fun_def();
                 if (result != 0) return result;
+                //checks if function with returns has called return
+                if (returnCalled == 1) errorMsg(ERR_SEMANTIC_PARAM, "Function is missing return");
                 return fun_def_list();
         case EOL: //recursively chceck for optional EOLs
                 return fun_def_list();
@@ -249,6 +253,11 @@ int fun_def()
                         //hande fun_returns rule
                         result = fun_returns();
                         if (result != 0) return result;
+                        //check number of returns
+                        funReturnCheck(&funTree,funName, funReturnCounter);
+                        
+                        //function must call return in body if returncounter is not zero
+                        if (funReturnCounter != 0) {returnCalled = 1;}
 
                         //right param token, it was already loaded in fun returns
                         if (token != R_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing ')' ");
@@ -545,7 +554,9 @@ int stat(varNode *treePtr)
                         {
                                 //check if variable is in tree
                                 if (isIDDeclared == false) { errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared"); }
+                                
                         }
+
 
                         //right side of assign can be function
                         token = get_new_token(&tokenStr);
@@ -557,7 +568,18 @@ int stat(varNode *treePtr)
                         {
                                 if (token == F_INT2FLOAT) //int2float function
                                 {
-                                        string stringI2F;                                     
+                                        string stringI2F;
+
+                                        int IDType;     
+                                        //check type of ID to which valuse is assigned to
+                                        if (strcmp(stringID.str, "_") != 0)
+                                        {
+                                                IDType = getType(*treePtr, stringID);
+                                        }
+                                        else
+                                        {
+                                                IDType = EMPTY;
+                                        }                                
 
                                         //left param token
                                         token = get_new_token(&tokenStr);
@@ -585,12 +607,26 @@ int stat(varNode *treePtr)
                                         token = get_new_token(&tokenStr);
                                         if (token != EOL) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing EOL ");
 
+                                        //check if return types are equal
+                                        if(IDType != T_FLOAT && IDType != EMPTY) errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - Wrong type of value to which output is assigned to");
+
                                         strFree(&stringI2F);
                                         return result;
                                 }
                                 else if (token == F_FLOAT2INT) // float2int function
                                 {
-                                       string stringF2I;                                     
+                                        string stringF2I;   
+
+                                        int IDType;
+                                        //check type of ID to which valuse is assigned to
+                                        if (strcmp(stringID.str, "_") != 0)
+                                        {
+                                                IDType = getType(*treePtr, stringID);
+                                        }
+                                        else
+                                        {
+                                                IDType = EMPTY;
+                                        }                                                         
 
                                         //left param token
                                         token = get_new_token(&tokenStr);
@@ -618,12 +654,26 @@ int stat(varNode *treePtr)
                                         token = get_new_token(&tokenStr);
                                         if (token != EOL) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing EOL ");
 
+                                        //check if return types are equal
+                                        if(IDType != T_INT && IDType != EMPTY) errorMsg(ERR_SEMANTIC_PARAM, "FLOAT2INT statement - Wrong type of value to which output is assigned to");
+
                                         strFree(&stringF2I);
                                         return result;
                                 }
                                 else if (token == F_LEN) // len function
                                 {
-                                       string stringLEN;                                     
+                                        string stringLEN; 
+
+                                        int IDType;
+                                        //check type of ID to which valuse is assigned to
+                                        if (strcmp(stringID.str, "_") != 0)
+                                        {
+                                                IDType = getType(*treePtr, stringID);
+                                        }
+                                        else
+                                        {
+                                                IDType = EMPTY;
+                                        }                                                              
 
                                         //left param token
                                         token = get_new_token(&tokenStr);
@@ -653,12 +703,16 @@ int stat(varNode *treePtr)
                                         //EOL token
                                         token = get_new_token(&tokenStr);
                                         if (token != EOL) errorMsg(ERR_SYNTAX, "LEN statement - missing EOL ");
+
+                                        //check if return types are equal
+                                        if(IDType != T_INT && IDType != EMPTY) errorMsg(ERR_SEMANTIC_PARAM, "LEN statement - Wrong type of value to which output is assigned to");
                                      
                                         return result;
                                 }
                         }
                         //token for prec parser
-                        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after =");
+                        if (token == F_INPUTI || token == F_INPUTS || token == F_INPUTF || token == F_CHR || token == F_ORD || token == F_SUBSTR) {errorMsg(ERR_SEMANTIC_PARAM, "ASSIGN statement - wrong number of return types for built in function");}
+                        else if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "ASSIGN statement - bad token after =");
 
 
                         //TODO funkcia na pravej strane priradenia
@@ -680,8 +734,17 @@ int stat(varNode *treePtr)
                                         //token must be left param
                                         token = get_new_token(&tokenStr);
 
+                                        int variableType;
                                         //check type of variable to which value will be assigned                                     
-                                        int variableType = getType(*treePtr, stringID);
+                                        //check type of ID to which valuse is assigned to
+                                        if (strcmp(stringID.str, "_") != 0)
+                                        {
+                                                variableType = getType(*treePtr, stringID);
+                                        }
+                                        else
+                                        {
+                                                variableType = EMPTY;
+                                        }                                                
                                         //check if function was used and process return type
                                         printFunTree(funTree);
                                         addFunToTree(&funTree, funName);
@@ -713,9 +776,16 @@ int stat(varNode *treePtr)
                         //EOL token loeaded in precedence parser
                         if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement assign - missing EOL");
 
-
+                        int variableType;
                         //check if type on left sides is equal to type on right side of assign
-                        int variableType = getType(*treePtr, stringID);
+                        if (strcmp(stringID.str, "_") != 0)
+                        {
+                                variableType = getType(*treePtr, stringID);
+                        }
+                        else
+                        {
+                                variableType = EMPTY;
+                        }                         
                         //if left side is '_' we do not need to check type
                         if (strcmp(stringID.str, "_") != 0)
                         {
@@ -724,8 +794,27 @@ int stat(varNode *treePtr)
                 }
                 else if (token == COMMA)//more IDs on left side
                 {
-                        //TODO
-                        return ass_stat(treePtr);
+                        //list for variables
+                        funList *assignVariablesList;
+                        assignVariablesList = malloc(sizeof(struct funList));
+                        assignVariablesList->First = NULL;
+                        assignVariablesList->elementCount = 0;
+
+                        int assignVarCounter = 1;
+                        if (strcmp(stringID.str, "_") != 0)
+                        {
+                                //look up type of first variable
+                                int variableType = getType(*treePtr, stringID);
+                                //add first variable to list
+                                funListAdd(assignVariablesList,variableType,assignVarCounter);
+                        }
+                        else
+                        {
+                                //add empty variable to list
+                                funListAdd(assignVariablesList,EMPTY,assignVarCounter); 
+                        }
+
+                        return ass_stat(treePtr,assignVariablesList,assignVarCounter);
                 }
                 
                 else if (token == L_PAR) //<fun> ID ( <fun_call_param> )
@@ -748,6 +837,8 @@ int stat(varNode *treePtr)
         else if (token == KW_RETURN) //<stat> return <return_values>
         {
                 funReturnCounter = 0;
+                // return was call so it is set to zero
+                returnCalled = 0;
                 return return_values(treePtr);
         }
 
@@ -817,26 +908,64 @@ int stat(varNode *treePtr)
  * 
  * @param treePtr tree for variables
  */
-int ass_stat(varNode *treePtr)
+int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter)
 {
         int result = 0;
 
         //ID token
         token = get_new_token(&tokenStr);
         if (token != ID) errorMsg(ERR_SYNTAX, "ASSIGN statement - must be ID");
-        //is ID declared?
-        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+        //empty ID
+        string emptyID;
+        strInit(&emptyID);
+        strCopyString(&emptyID, &tokenStr);
+
+        //if variable is basic ID we check if it is declared,get type and add it to list
+        //else if variable is empty we add EMPTY type variable to list
+        assignVarCounter++;
+        if (strcmp(emptyID.str, "_") != 0)
+        {
+                //is ID declared?
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+
+                //look up type of variable
+                int variableType = getType(*treePtr, tokenStr);
+        
+                //add variable to list
+                funListAdd(assignVariablesList,variableType,assignVarCounter);
+        }
+        else
+        {
+                //add empty variable to list
+                funListAdd(assignVariablesList,EMPTY,assignVarCounter);
+        }       
+        strFree(&emptyID);     
+
+
+        printFunList(*assignVariablesList);
 
         //comma or assign token
         token = get_new_token(&tokenStr);
         if (token != COMMA && token != ASSIGN) errorMsg(ERR_SYNTAX, "ASSIGN statement - token must be '=' or ',' for another ID");
 
         //recursively call ass_stat for more IDs
-        if (token == COMMA) return ass_stat(treePtr);
+        if (token == COMMA) return ass_stat(treePtr,assignVariablesList,assignVarCounter);
+
+        //list for right side of assignment
+        funList *assignAssignList;
+        assignAssignList = malloc(sizeof(struct funList));
+        assignAssignList->First = NULL;
+        assignAssignList->elementCount = 0;
+
+        int assignAssignmentCounter = 0;
 
         //handle ass_exps
-        return ass_exps(treePtr);
+        return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter);
+
+        //clear list of variables
+        funListDelete(assignVariablesList);
         //successfuly handled
         return result;
 }
@@ -851,12 +980,10 @@ int ass_stat(varNode *treePtr)
  * 
  * @param treePtr tree for variables
  */
-int ass_exps(varNode *treePtr)
+int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,funList *assignAssignList,int assignAssignmentCounter)
 {
         int result = 0;
         prec_end_struct precResult;
-
-
 
         
         token = get_new_token(&tokenStr);
@@ -879,6 +1006,13 @@ int ass_exps(varNode *treePtr)
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTI statement - missing EOL ");
+                
+                //check if return types are equal
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                compareLists(assignVariablesList,assignAssignList);
 
                 return result;
         }
@@ -896,6 +1030,13 @@ int ass_exps(varNode *treePtr)
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTF statement - missing EOL ");
 
+                //check if return types are equal
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_FLOAT,assignAssignmentCounter);
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                compareLists(assignVariablesList,assignAssignList);
+
                 return result;
         }
         else if (token == F_INPUTS)
@@ -911,6 +1052,13 @@ int ass_exps(varNode *treePtr)
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "INPUTS statement - missing EOL ");
+
+                //check if return types are equal
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_STRING,assignAssignmentCounter);
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                compareLists(assignVariablesList,assignAssignList);
 
                 return result;               
         }
@@ -991,6 +1139,13 @@ int ass_exps(varNode *treePtr)
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing EOL ");
 
+                //check if return types are equal
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_STRING,assignAssignmentCounter);
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                compareLists(assignVariablesList,assignAssignList);
+
                 return result;
         }
         else if (token == F_CHR)
@@ -1025,6 +1180,13 @@ int ass_exps(varNode *treePtr)
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "CHR statement - missing EOL ");
+
+                //check if return types are equal
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_STRING,assignAssignmentCounter);
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                compareLists(assignVariablesList,assignAssignList);
 
                 return result; 
         }
@@ -1083,6 +1245,13 @@ int ass_exps(varNode *treePtr)
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "ORD statement - missing EOL ");
 
+                //check if return types are equal
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,T_INT,assignAssignmentCounter);
+                compareLists(assignVariablesList,assignAssignList);
+
                 return result;    
         }
 
@@ -1096,18 +1265,23 @@ int ass_exps(varNode *treePtr)
         if (token == ID)
         {
                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                //if ID is not declared it means it must be function
                 if (isIDDeclared == false)
                 {
                         //add function to tree
                         strClear(&funName);                 
                         strCopyString(&funName, &tokenStr); 
                         funReturnCounter = 0;               
-                        funParamCounter = 0;  
+                        funParamCounter = 0;                       
 
                         //token must be left param
                         token = get_new_token(&tokenStr);
 
+
                         addFunToTree(&funTree, funName);
+                        //check return count and type
+                        funListCompareReturn (assignVariablesList, &funTree, funName, assignVarCounter);
+                        
                         //handle parameters of called function
                         result = fun_call_param(treePtr);
                         if (result != 0) return result;
@@ -1119,18 +1293,34 @@ int ass_exps(varNode *treePtr)
                         if (token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - EOL missing");
                         return result;
                 }
+                //precedence parser called
+                precResult = prec_parse(treePtr, token, tokenStr);
+                token = precResult.end_token;
+
+                //value from precedence parser can not be bool type
+                if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
+                //add right side of assign to list
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,precResult.end_datatype,assignAssignmentCounter);
+        }
+        else if (token != L_PAR)
+        {
+                assignAssignmentCounter++;
+                funListAdd(assignAssignList,token,assignAssignmentCounter);
+                token = get_new_token(&tokenStr);
         }
 
-        //precedence parser called
-        precResult = prec_parse(treePtr, token, tokenStr);
-        token = precResult.end_token;
 
-        //value from precedence parser can not be bool type
-        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
+        //funListAdd(assignAssignList,EMPTY,assignAssignmentCounter);
+
+        //funListAdd(assignAssignList,T_TYPE,assignAssignmentCounter);
 
         //if comma recursively call ass_exps
         if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
-        if (token == COMMA) return ass_exps(treePtr);
+        if (token == COMMA) return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter);
+
+        //check if return types are equal
+        compareLists(assignVariablesList,assignAssignList);
         return result;
 }
 
