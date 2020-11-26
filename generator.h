@@ -38,11 +38,12 @@
     void genDefvar(char* variable);
     void genPops(char* variable);
     void genClears();
-    void genRead(char* variable);
+    void genRead(int type, char* variable);
     void genReturn();
-    void genIfElsehead();
+    void genIfElseHead();
     void genIfElseEnd();
     void genPostIf();
     void genWrite(int Type, char* content);
+    void genConcat();
 
 #endif 
