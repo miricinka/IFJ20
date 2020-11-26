@@ -28,8 +28,8 @@ int levelOfScope = 1; //variabel for scope, it is incremented
 //generation
 tListOfInstr *list; //variable for list of instructions
 //return checker
-int returnCalled = 0;
-bool mainCheck = false;
+int returnCalled = 0; //checks if return is called in function with returns
+bool mainCheck = false; //checks if main function is in program
 
 
 /**
@@ -909,7 +909,7 @@ int stat(varNode *treePtr)
 
 /**
  * @brief <ass_stat> <ass_ids> = <ass_exps>.
- *  TODO
+ *  Left sides of assign statement
  * 
  * @param treePtr tree for variables
  */

@@ -28,20 +28,20 @@
 #include "symtable.h"
 #include "generator.h"
 
-int parse(tListOfInstr *instrList);
-int program();
-int prolog();
-int fun_def_list();
-int fun_def();
-int stat_list(varNode * treePtr);
-int fun_params(varNode * treePtr);
-int fun_returns();
-int stat(varNode * treePtr);
+int parse(tListOfInstr *instrList); //Function called in main that starts parsing
+int program(); //First rule of LL grammar it will continuously dive deeper in LL grammar and than bubble back to main
+int prolog(); //First line of program according to LL-grammar
+int fun_def_list(); //Rule for list of function definitions
+int fun_def(); //Rule for function definition
+int stat_list(varNode * treePtr); //Rule for list of statements in function
+int fun_params(varNode * treePtr); //Handling of parameters in definition of function
+int fun_returns(); //handling of returns in definition of function
+int stat(varNode * treePtr); //Rule for single statement
 int ass_exps(varNode * treePtr, funList *assignVariablesList,int assignVarCounter, funList *assignAssignList,int assignAssignmentCounter);
-int ass_stat(varNode * treePtr, funList *assignVariablesList, int assignVarCounter);
-int fun_call_param(varNode * treePtr);
-int print_params(varNode * treePtr);
-int return_values(varNode * treePtr);
+int ass_stat(varNode * treePtr, funList *assignVariablesList, int assignVarCounter); //Left sides of assign statement
+int fun_call_param(varNode * treePtr); //Handling of paramters in calling of function
+int print_params(varNode * treePtr); //Handling of print parameters
+int return_values(varNode * treePtr); //Handling of return values
 
 #endif /* PARSER_H*/
 
