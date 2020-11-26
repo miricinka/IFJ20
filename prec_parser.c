@@ -236,7 +236,6 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 				errorMsg(ERR_RUNTIME, "division by zero constant");
 			}
 			arithm_semantic_check(stackPtr);
-			//print_precStack(stackPtr);
 
 
 		}else if(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT){
@@ -300,8 +299,8 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse(int new_token, string tokenStr){
-
+prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
+	//printf("#####INTRUCTION CLEARS\n");
 	string testStr; strInit(&testStr); strClear(&testStr);
 	//string tokenStr; strInit(&tokenStr);
 	int fullstack = 0;
@@ -312,10 +311,6 @@ prec_end_struct prec_parse(int new_token, string tokenStr){
 	if(fullstack){exit(99);}
 
 	struc_token *topNT = peek1_precStack(ptrStack);
-
-	//current token
-	//GET FROM TOM
-	//int new_token = get_new_token(&tokenStr);
 
 	bool prec_analisis_end = false;
 
@@ -345,8 +340,9 @@ prec_end_struct prec_parse(int new_token, string tokenStr){
 			case '<':
 				if(push_precStack(ptrStack, token_to_NT(new_token), tokenStr)){exit(99);}
 				new_token = get_new_token(&tokenStr);
+				printf("%d\n", new_token);
 				//operand cannot go after operand
-				if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING){
+				if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING || new_token == ID){
 					if(last_token_operand == true){
 						errorMsg(ERR_SYNTAX, "Err syntax in expression - operand cannot go after operand");
 					}else{
