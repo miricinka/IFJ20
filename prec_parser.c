@@ -173,7 +173,7 @@ void reduce_parenthesis(struc_prec_stack *stackPtr){
 }
 
 /* reduces expression on stack */
-void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
+void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 	//print_precStack(stackPtr);
 
 	//E -> id pushs id
@@ -196,89 +196,96 @@ void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		}else{
 			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type in variable - in expression");
 		}
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//only type is important
+		strcpy(topNT->tokenStr.str, "");
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> int pushs int
 	}else if(topNT->tokenNum == NT_INT){ 
 		topNT->tokenNum = RULE_INT;
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> float pushs float
 	}else if(topNT->tokenNum == NT_FLOAT){
 		topNT->tokenNum = RULE_FLOAT;
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> str pushs str
 	}else if(topNT->tokenNum == NT_STR){
 		topNT->tokenNum = RULE_STR;
-		printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//reduce 3 symbols
 	}else if(topNT->tokenNum == NT_ADD){ //E -> E+E TODO str+str CONCAT
-		printf("#####INTRUCTION ADDS\n");
+		//printf("#####INTRUCTION ADDS\n");
 		arithm_semantic_check(stackPtr);
 	//E -> E+E
 	}else if(topNT->tokenNum == NT_MUL){
-		printf("#####INTRUCTION MULS\n");
+		//printf("#####INTRUCTION MULS\n");
 		arithm_semantic_check(stackPtr);
 	//E -> E-E
 	}else if(topNT->tokenNum == NT_SUB){
-		printf("#####INTRUCTION SUBS\n");
+		//printf("#####INTRUCTION SUBS\n");
 		arithm_semantic_check(stackPtr);
 	//E -> E/E
 	}else if(topNT->tokenNum == NT_DIV){
 		struc_token *top1 = peek1_precStack(stackPtr);
 		struc_token *top3 = top3 = peek3_precStack(stackPtr);
 
-		//E -> E/0 division by zero constant error
-		if(strcmp(top1->tokenStr.str,"0") == 0){
-			errorMsg(ERR_RUNTIME, "division by zero constant");
-		}
 
 		if(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_INT){
-			printf("#####INTRUCTION DIVS\n");
+			//printf("#####INTRUCTION DIVS\n");
+			//E -> E/0 division by zero constant error
+			if(strcmp(top1->tokenStr.str,"0") == 0){
+				errorMsg(ERR_RUNTIME, "division by zero constant");
+			}
 			arithm_semantic_check(stackPtr);
-			//print_precStack(stackPtr);
 
-		}else if((top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT) || 
-			(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_FLOAT) ||
-			(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_INT)){
-			printf("#####INTRUCTION IDIVS\n");
-			string Str1; strInit(&Str1); strClear(&Str1);
-			pop3(stackPtr);
-			push_precStack(stackPtr, RULE_FLOAT, Str1);
+
+		}else if(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT){
+			//printf("#####INTRUCTION IDIVS\n");
+			
+			//E -> E/0 division by zero constant error
+			if (strcmp(top1->tokenStr.str,"") != 0){
+				double check_zero = atof(top1->tokenStr.str);
+				if (check_zero == 0){
+					errorMsg(ERR_RUNTIME, "division by zero constant");
+				}
+			}
+			arithm_semantic_check(stackPtr);
 
 		}else{
-			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
+			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type compability in division");
 		}
+
 	//E -> (E)
 	}else if(topNT->tokenNum == NT_RPAR){
 		reduce_parenthesis(stackPtr);
 
 	//E -> E==E
 	}else if(topNT->tokenNum == NT_EQ){
-		printf("#####INTRUCTION EQS\n");
-		print_precStack(stackPtr);
+		//printf("#####INTRUCTION EQS\n");
+		//print_precStack(stackPtr);
 		reduce_boolean(stackPtr);
-		print_precStack(stackPtr);
+		//print_precStack(stackPtr);
 	//E -> E<E
 	}else if(topNT->tokenNum == NT_LESS){
-		printf("#####INTRUCTION LTS\n");
+		//printf("#####INTRUCTION LTS\n");
 		reduce_boolean(stackPtr);
 	//E -> E>E
 	}else if(topNT->tokenNum == NT_GREAT){
-		printf("#####INTRUCTION GTS\n");
+		//printf("#####INTRUCTION GTS\n");
 		reduce_boolean(stackPtr);
 	//E -> E!=E
 	}else if(topNT->tokenNum == NT_NEQ){
-		printf("#####INTRUCTION EQS\n");
-		printf("#####INTRUCTION NOTS\n");
+		//printf("#####INTRUCTION EQS\n");
+		//printf("#####INTRUCTION NOTS\n");
 		reduce_boolean(stackPtr);
 	//E -> E>=E
 	}else if(topNT->tokenNum == NT_LEQ){
-		printf("#####INTRUCTION LTS\n");
-		printf("#####INTRUCTION NOT\n");
+		//printf("#####INTRUCTION LTS\n");
+		//printf("#####INTRUCTION NOT\n");
 		reduce_boolean(stackPtr);
 	//E -> E<=E
 	}else if(topNT->tokenNum == NT_GEQ){
-		printf("#####INTRUCTION GTS\n");
-		printf("#####INTRUCTION NOT\n");
+		//printf("#####INTRUCTION GTS\n");
+		//printf("#####INTRUCTION NOT\n");
 		reduce_boolean(stackPtr);
 
 	}else{
@@ -292,8 +299,8 @@ void reduce(Node *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 /* main funtion
  checks syntax and semantics of expression
  returns final datatype and end token */
-prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr){
-	printf("#####INTRUCTION CLEARS\n");
+prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
+	//printf("#####INTRUCTION CLEARS\n");
 	string testStr; strInit(&testStr); strClear(&testStr);
 	//string tokenStr; strInit(&tokenStr);
 	int fullstack = 0;
@@ -312,6 +319,14 @@ prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr){
 		errorMsg(ERR_SYNTAX, "Incorrect first expression token");
 	}
 
+    //variable to check that operators and operands are switching 
+    // 8**2 -> syntax
+	bool last_token_operand = false;
+	if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING || new_token == ID){
+		last_token_operand = true;
+	}
+
+
 	//main parse loop
 	do{
 		//top symbol - nonterminal
@@ -325,12 +340,29 @@ prec_end_struct prec_parse(Node *treePtr, int new_token, string tokenStr){
 			case '<':
 				if(push_precStack(ptrStack, token_to_NT(new_token), tokenStr)){exit(99);}
 				new_token = get_new_token(&tokenStr);
+				printf("%d\n", new_token);
+				//operand cannot go after operand
+				if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING || new_token == ID){
+					if(last_token_operand == true){
+						errorMsg(ERR_SYNTAX, "Err syntax in expression - operand cannot go after operand");
+					}else{
+						last_token_operand = true;}
+				//operator cannot go after operator
+				}else if(new_token >= ADD && new_token <= GEQ){
+					if(last_token_operand == false){
+						errorMsg(ERR_SYNTAX, "Err syntax in expression - operator cannot go after operator");
+					}else{
+						last_token_operand = false;}
+				}else{}
 				break;
 			case '>':
 				reduce(treePtr, ptrStack, topNT);
 				break;
+			case 'X':
+				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - X in prec table");
+				break;
 			default:
-				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - incompatible datatypes");
+				errorMsg(ERR_SYNTAX, "Err syntax in expression - not in precence table");
 		}
 
 	}while(prec_analisis_end != true);
