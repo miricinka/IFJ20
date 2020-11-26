@@ -340,8 +340,9 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 			case '<':
 				if(push_precStack(ptrStack, token_to_NT(new_token), tokenStr)){exit(99);}
 				new_token = get_new_token(&tokenStr);
+				printf("%d\n", new_token);
 				//operand cannot go after operand
-				if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING){
+				if(new_token == T_INT || new_token == T_FLOAT || new_token == T_STRING || new_token == ID){
 					if(last_token_operand == true){
 						errorMsg(ERR_SYNTAX, "Err syntax in expression - operand cannot go after operand");
 					}else{
