@@ -29,6 +29,9 @@ int labelcnt = 1;
 int endif = 1;
 
 tListOfInstr *list;
+
+
+/* Save instruction into instruction list */
 void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3){
    tInstr I;
    I.instType = instType;
@@ -38,6 +41,11 @@ void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3){
    listInsertLast(list, I);
 }
 
+/*  
+    .IFJcode20
+    generating global variables for concatenation
+    let's go to main function
+*/
 void genFileHead(){
     generateInstruction(".IFJcode20\n", NULL, NULL, NULL);
     generateInstruction("DEFVAR", "GF@concat1", NULL, NULL);
@@ -47,36 +55,43 @@ void genFileHead(){
         
 }
 
+/* start of main function */
 void genMainFunc(){
     generateInstruction("LABEL", "_main", NULL, NULL);
     generateInstruction("CREATEFRAME", NULL, NULL, NULL);
 }
-
+/* end of main function */
 void genMainEnd(){
     generateInstruction("POPFRAME", NULL, NULL, NULL);
     generateInstruction("CLEARS\n", NULL, NULL, NULL);
 }
 
+/* stack addition */
 void genAdds(){
     generateInstruction("ADDS", NULL, NULL, NULL);
 }
 
+/* stack subtraction */
 void genSubs(){
     generateInstruction("SUBS", NULL, NULL, NULL);
 }
 
+/* stack multiplicating */
 void genMuls(){
     generateInstruction("MULS", NULL, NULL, NULL);
 }
 
+/* decimal stack dividing */
 void genDivs(){
     generateInstruction("DIVS", NULL, NULL, NULL);
 }
 
+/* integers stack dividing */
 void genIDivs(){
     generateInstruction("IDIVS", NULL, NULL, NULL);
 }
 
+/* push to stack */
 void genPushs(int type, char* content){
     char* ans = (char*) malloc(sizeof(char) * strlen(content));
     if(type == NT_INT){
@@ -95,22 +110,26 @@ void genPushs(int type, char* content){
     generateInstruction("PUSHS", ans, NULL, NULL);
 }
 
+/* variable definition */
 void genDefvar(char* variable){
     char* ans = (char*) malloc(sizeof(char) * strlen(variable));
     sprintf(ans, "TF@%s", variable);
     generateInstruction("DEFVAR", ans, NULL, NULL);
 }
 
+/* pop from stack */
 void genPops(char* variable){
     char* ans = (char*) malloc(sizeof(char) * strlen(variable));
     sprintf(ans, "TF@%s", variable);
     generateInstruction("POPS", ans, NULL, NULL);
 }
 
+/* clear stack */
 void genClears(){
     generateInstruction("CLEARS", NULL, NULL, NULL);
 }
 
+/* detecting input */
 void genRead(int type, char* variable){
     char* ans = (char*) malloc(sizeof(char) * strlen(variable));
     sprintf(ans, "TF@%s", variable);
@@ -126,10 +145,7 @@ void genRead(int type, char* variable){
     else{}
 }
 
-void genReturn(){
-    generateInstruction("RETURN", NULL, NULL, NULL);
-}
-
+/* conditions head */
 void genIfElseHead(){
     char* labelname = (char*) malloc(sizeof(labelcnt));
     sprintf(labelname, "_label%d", labelcnt);
@@ -137,6 +153,7 @@ void genIfElseHead(){
     generateInstruction("LABEL", labelname, NULL, NULL);
 }
 
+/* end of for/if */
 void genIfElseEnd(){
     char* finif = (char*) malloc(sizeof(endif));
     sprintf(finif, "_endif%d", endif);
@@ -144,6 +161,7 @@ void genIfElseEnd(){
     generateInstruction("JUMP", finif, NULL, NULL);
 }
 
+/* label to continue from if/for */
 void genPostIf(){
     char* successor = (char*) malloc(sizeof(endif));
     sprintf(successor, "_endif%d", endif);
@@ -151,6 +169,7 @@ void genPostIf(){
     generateInstruction("LABEL", successor, NULL, NULL);
 }
 
+/* print to output */
 void genWrite(int Type, char* content){
     char* ans = (char*) malloc(sizeof(char) * strlen(content));
     if(Type == T_INT){
@@ -169,6 +188,7 @@ void genWrite(int Type, char* content){
     generateInstruction("WRITE", ans, NULL, NULL);
 }
 
+/* concatenate */
 void genConcat(){
     generateInstruction("POPS", "GF@concat1", NULL, NULL);
     generateInstruction("POPS", "GF@concat2", NULL, NULL);
@@ -176,18 +196,43 @@ void genConcat(){
     generateInstruction("PUSHS", "GF@concatfin", NULL, NULL);
 }
 
+/* stack comparing > */
 void genGTS(){
     generateInstruction("GTS", NULL, NULL, NULL);
 }
 
+/* stack comparing < */
 void genLTS(){
     generateInstruction("LTS", NULL, NULL, NULL);
 }
 
+/* stack comparing == */
 void genEQS(){
     generateInstruction("EQS", NULL, NULL, NULL);
 }
 
+/* stack compraing ! */
 void genNOT(){
     generateInstruction("NOT", NULL, NULL, NULL);
+}
+
+/* call function */
+void genCall(char* funcname){
+    char* ans = (char*) malloc(sizeof(char) * strlen(funcname));
+    sprintf(ans, "_%s", funcname);
+    generateInstruction("CALL", ans, NULL, NULL);
+}
+
+/* start of function */
+void genFuncHead(char* funcname){
+    char* ans = (char*) malloc(sizeof(char) * strlen(funcname));
+    sprintf(ans, "_%s", funcname);
+    generateInstruction("LABEL", ans, NULL, NULL);
+    generateInstruction("PUSHFRAME", NULL, NULL, NULL);
+    generateInstruction("CREATEFRAME", NULL, NULL, NULL);
+}
+
+/* end of function, return to main */
+void genFuncEnd(){
+    generateInstruction("RETURN", NULL, NULL, NULL);
 }

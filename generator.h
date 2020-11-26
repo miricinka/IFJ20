@@ -39,7 +39,6 @@
     void genPops(char* variable);
     void genClears();
     void genRead(int type, char* variable);
-    void genReturn();
     void genIfElseHead();
     void genIfElseEnd();
     void genPostIf();
@@ -49,5 +48,8 @@
     void genLTS();
     void genEQS();
     void genNOT();
+    void genCall(char* funcname);
+    void genFuncHead(char* funcname);
+    void genFuncEnd();
 
 #endif 
