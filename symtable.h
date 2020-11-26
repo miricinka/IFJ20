@@ -104,7 +104,6 @@ void stackDelete(varNode *varTree);
 
 /* Prototypes of function operations */
 
-bool mainSearch (funNode *RootPtr, string Key);
 void funInit (funNode *RootPtr);
 funNode *funSearch (funNode *RootPtr, string Key);
 void addFunToTree(funNode *RootPtr, string Key);

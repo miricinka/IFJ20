@@ -29,6 +29,7 @@ int levelOfScope = 1; //variabel for scope, it is incremented
 tListOfInstr *list; //variable for list of instructions
 //return checker
 int returnCalled = 0;
+bool mainCheck = false;
 
 
 /**
@@ -131,7 +132,6 @@ int fun_def_list()
 {
         int result = 0;
         //because in case it's apperantly wrong
-        string tempMain;
 
         token = get_new_token(&tokenStr);       
         switch (token)
@@ -146,10 +146,7 @@ int fun_def_list()
                 return fun_def_list();
         case ENDFILE: //end of program
                 printFunTree(funTree);               
-                strInit(&tempMain);
-                strAddChars(&tempMain, "main");
-                //funSearch finds function in tree of functions, if main is not there it is error 3
-                if (!mainSearch (funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
+                if (mainCheck == false) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
                 //check in tree if called functions were declared
                 isFunCallDec(funTree);
                 return result;
@@ -183,6 +180,7 @@ int fun_def()
                 addFunDec(&funTree, tempMain, funParamCounter/*, funReturnCounter*/);
                 strFree(&tempMain);
 
+                mainCheck = true;
                 //left param token
                 token = get_new_token(&tokenStr);
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '(' ");

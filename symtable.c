@@ -300,27 +300,6 @@ void funInit (funNode *RootPtr) {
 }
 
 /**
- * @brief Tells parser if the program has a mainfunction
- * 
- * @param RootPtr pointer to the function BST
- * @param name name of the function we are looking for
- * 
- * @return false if no main was found or true if main was found
- */
-bool mainSearch (funNode *RootPtr, string Key){
-	if(!*RootPtr) // the function was not found, we can its NULL pointer for adding next node, because it points to the same place in memory as the previous node
-		return false;
-
-	else if (strCmpString(&Key, &((*RootPtr)->name)) < 0) // the function should be in the left branch
-		return funSearch(&((*RootPtr)->LPtr), Key);
-
-	else if (strCmpString(&Key, &((*RootPtr)->name)) > 0) // the function should be in the right branch
-		return funSearch(&((*RootPtr)->RPtr), Key);
-
-	return true; // the function was found
-}
-
-/**
  * @brief Searches the function BST for function for key.
  * 
  * @param RootPtr pointer to the function BST
