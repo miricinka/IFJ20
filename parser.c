@@ -149,7 +149,7 @@ int fun_def_list()
                 strInit(&tempMain);
                 strAddChars(&tempMain, "main");
                 //funSearch finds function in tree of functions, if main is not there it is error 3
-                if (!funSearch(&funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
+                if (!mainSearch (funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
                 //check in tree if called functions were declared
                 isFunCallDec(funTree);
                 return result;
