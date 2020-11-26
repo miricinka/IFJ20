@@ -489,7 +489,6 @@ void funReturnCheck(funNode *RootPtr, string Key, int returnCount){
 	RootPtr = funSearch(RootPtr, Key);
 
 	if((*RootPtr)->returnCodes->elementCount != returnCount){
-		printf("%d , %d\n",(*RootPtr)->returnCodes->elementCount,returnCount);
 		fprintf(stderr,"ERROR 6: Function has wrong amount of return types [%s]\n", Key.str);
 		exit(6);
 	}
@@ -539,7 +538,9 @@ void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int retu
 		
 		// comparison of function list return types and new return list element types
 		while (newReturns != NULL && funReturns != NULL){
-			if ( newReturns->type != funReturns->type){
+			if (funReturns->type == EMPTY){
+				funReturns->type = newReturns->type;
+			}else if ( newReturns->type != funReturns->type && newReturns->type != EMPTY){
 				fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
 				exit(6);
 			}
@@ -653,9 +654,30 @@ void checkListElement(funList *list, int type, int order){
 		return;
 	}
 	
-	if (tempListElement->type != type){
+	if (tempListElement->type != type && type != EMPTY){
 		fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
 		exit(6);
+	}
+}
+
+/**
+ * @brief Compare types of elements of two lists.
+ * 
+ * @param list1 first list to be compared
+ * @param list2 second list to be compared
+ */
+void compareLists (funList *list1, funList *list2){	
+	funListElement element1 = list1->First;
+	funListElement element2 = list2->First;
+		
+	while (element1 != NULL && element2 != NULL){
+		
+		if ( element1->type != element2->type && element1->type != EMPTY){
+			fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
+			exit(6);
+		}
+		element1 = element1->NextPtr;
+		element2 = element2->NextPtr;
 	}
 }
 
@@ -677,6 +699,8 @@ char* printType(int typeNum){
 		return "float";
 	}else if (typeNum == T_STRING){
 		return "string";
+	}else if (typeNum == EMPTY){
+		return "empty";
 	}else{
 		return "Unknown type";
 	}
