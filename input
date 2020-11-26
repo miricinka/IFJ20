@@ -1,0 +1,19 @@
+package main
+
+func main () {
+}
+
+
+func foo (var int, retazec string) (int, string) {
+	if 5 < 3 {
+		funkcia()
+		premenna := 5
+		variable,asd = 5 + 1,6
+	} else {
+		for i:= 5 ; 11 > 10 ; i = 1 + 2  {
+			asd()	
+			return "string", 5, 6
+		}
+	}	
+}
+
