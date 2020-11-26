@@ -53,10 +53,8 @@ int parse(tListOfInstr *instrList)
         list = instrList;
 
 
-        /*listInit(list);
-	genMainFunc();
-    	listFirst(list);
-    	printf("%s\n", list->active->Instruction.instType);*/
+        listInit(list);
+
 
         //loads next token
         token = get_new_token(&tokenStr);
@@ -120,6 +118,7 @@ int prolog()
         token = get_new_token(&tokenStr);
         if (token != EOL) errorMsg(ERR_SYNTAX, "Wrong header - missing EOL");
         //first line of program successful
+        genFileHead();
         return result;
 }
 
@@ -149,6 +148,8 @@ int fun_def_list()
                 if (mainCheck == false) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
                 //check in tree if called functions were declared
                 isFunCallDec(funTree);
+
+                printList(list);
                 return result;
                 break;
         }
@@ -201,6 +202,8 @@ int fun_def()
                 //left bracket token
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
 
+                genMainFunc();
+
                 //create variable tree for main functions
                 varNode treePtr;
                 BSTInit(&treePtr);
@@ -210,6 +213,8 @@ int fun_def()
 
                 //right bracket token, this is end of main function
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '}' ");
+
+                genMainEnd();
                 //main function successful
                 return result;
         }
@@ -527,6 +532,8 @@ int stat(varNode *treePtr)
                         //if id on left side of definition was "_" it cannot be defined
                         if (strcmp(stringID.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
 
+                        genDefvar(stringID.str);
+
                         //token for precedence parser
                         token = get_new_token(&tokenStr);
                         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");
@@ -542,6 +549,7 @@ int stat(varNode *treePtr)
 
                         //EOL token 
                         if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
+                        genPops(stringID.str);
                 }
                 
                 else if (token == ASSIGN) // <ass_stat> <ass_ids> = <ass_exps> ONLY FOR ONE VARIABLE!!!
@@ -1516,11 +1524,14 @@ int print_params(varNode *treePtr)
         //end of function or wrong token inside
         if (token == R_PAR && multipleParams == 0) return result;
         else if (token == R_PAR && multipleParams == 1)  errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
-
-        //check if variable is declared
-        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-        if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
-
+        
+        if (token == ID)
+        {
+                //check if variable is declared
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
+        }
+        genWrite(token, tokenStr.str);
         //if comma multiple parameters are present recursively call print_params
         token = get_new_token(&tokenStr);
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");

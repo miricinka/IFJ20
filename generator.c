@@ -51,8 +51,7 @@ void genFileHead(){
     generateInstruction("DEFVAR", "GF@concat1", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concat2", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concatfin\n", NULL, NULL);
-    generateInstruction("JUMP", "_main\n", NULL, NULL);
-        
+    generateInstruction("JUMP", "_main\n", NULL, NULL);  
 }
 
 /* start of main function */
@@ -62,7 +61,6 @@ void genMainFunc(){
 }
 /* end of main function */
 void genMainEnd(){
-    generateInstruction("POPFRAME", NULL, NULL, NULL);
     generateInstruction("CLEARS\n", NULL, NULL, NULL);
 }
 
@@ -221,6 +219,7 @@ void genCall(char* funcname){
     char* ans = (char*) malloc(sizeof(char) * strlen(funcname));
     sprintf(ans, "_%s", funcname);
     generateInstruction("CALL", ans, NULL, NULL);
+    generateInstruction("POPFRAME", NULL, NULL, NULL);
 }
 
 /* start of function */

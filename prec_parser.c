@@ -196,6 +196,8 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		}else{
 			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type in variable - in expression");
 		}
+
+		genPushs(NT_ID, topNT->tokenStr.str);
 		//only type is important
 		strcpy(topNT->tokenStr.str, "");
 		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
@@ -203,26 +205,32 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 	}else if(topNT->tokenNum == NT_INT){ 
 		topNT->tokenNum = RULE_INT;
 		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		genPushs(NT_INT, topNT->tokenStr.str);
 	//E -> float pushs float
 	}else if(topNT->tokenNum == NT_FLOAT){
 		topNT->tokenNum = RULE_FLOAT;
 		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
+		genPushs(NT_FLOAT, topNT->tokenStr.str);
 	//E -> str pushs str
 	}else if(topNT->tokenNum == NT_STR){
 		topNT->tokenNum = RULE_STR;
+		genPushs(NT_STR, topNT->tokenStr.str);
 		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//reduce 3 symbols
 	}else if(topNT->tokenNum == NT_ADD){ //E -> E+E TODO str+str CONCAT
 		//printf("#####INTRUCTION ADDS\n");
 		arithm_semantic_check(stackPtr);
+		genAdds();
 	//E -> E+E
 	}else if(topNT->tokenNum == NT_MUL){
 		//printf("#####INTRUCTION MULS\n");
 		arithm_semantic_check(stackPtr);
+		genMuls();
 	//E -> E-E
 	}else if(topNT->tokenNum == NT_SUB){
 		//printf("#####INTRUCTION SUBS\n");
 		arithm_semantic_check(stackPtr);
+		genSubs();
 	//E -> E/E
 	}else if(topNT->tokenNum == NT_DIV){
 		struc_token *top1 = peek1_precStack(stackPtr);
@@ -236,6 +244,7 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 				errorMsg(ERR_RUNTIME, "division by zero constant");
 			}
 			arithm_semantic_check(stackPtr);
+			genDivs();
 
 
 		}else if(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT){
@@ -249,6 +258,7 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 				}
 			}
 			arithm_semantic_check(stackPtr);
+			genIDivs();
 
 		}else{
 			errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Bad type compability in division");
