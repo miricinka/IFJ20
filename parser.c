@@ -561,6 +561,9 @@ int stat(varNode *treePtr)
                         //right side of assign can be function
                         token = get_new_token(&tokenStr);
 
+                        //print can not be in assign 
+                        if (token == F_PRINT){errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Print can not be used in assign");}
+
                         //build in functions
                         if (token == F_INT2FLOAT 
                         || token == F_FLOAT2INT 
@@ -568,7 +571,6 @@ int stat(varNode *treePtr)
                         {
                                 if (token == F_INT2FLOAT) //int2float function
                                 {
-                                        string stringI2F;
 
                                         int IDType;     
                                         //check type of ID to which valuse is assigned to
@@ -586,18 +588,24 @@ int stat(varNode *treePtr)
                                         if (token != L_PAR) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing '(' ");
                                         //token for precedence parser
                                         token = get_new_token(&tokenStr);
-                                        if (token != ID) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - token must be ID");
+                                        if (token != ID && token != T_INT) errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - token must be ID or integer");
 
-                                        //check if ID is declared
-                                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+                                        //ID must check declaration and type
+                                        if (token == ID)
+                                        {
+                                                string stringI2F;
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
 
-                                        strInit(&stringI2F);
-                                        strCopyString(&stringI2F, &tokenStr);
+                                                strInit(&stringI2F);
+                                                strCopyString(&stringI2F, &tokenStr);
 
-                                        //check if type of input is integer
-                                        int variableType = getType(*treePtr, stringI2F);
-                                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "INT2FLOAT statement - ID must be integer"); }
+                                                //check if type of input is integer
+                                                int variableType = getType(*treePtr, stringI2F);
+                                                if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - ID must be integer"); }
+                                                strFree(&stringI2F);
+                                        }
  
                                         //Right param token
                                         token = get_new_token(&tokenStr);
@@ -610,12 +618,10 @@ int stat(varNode *treePtr)
                                         //check if return types are equal
                                         if(IDType != T_FLOAT && IDType != EMPTY) errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - Wrong type of value to which output is assigned to");
 
-                                        strFree(&stringI2F);
                                         return result;
                                 }
                                 else if (token == F_FLOAT2INT) // float2int function
                                 {
-                                        string stringF2I;   
 
                                         int IDType;
                                         //check type of ID to which valuse is assigned to
@@ -633,19 +639,25 @@ int stat(varNode *treePtr)
                                         if (token != L_PAR) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - missing '(' ");
                                         //token for precedence parser
                                         token = get_new_token(&tokenStr);
-                                        if (token != ID) errorMsg(ERR_SYNTAX, "INT2FLOAT statement - token must be ID");
+                                        if (token != ID && token != T_FLOAT) errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - token must be ID or float");
                                         
-                                        //check if ID is declared
-                                        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-                                        if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
+                                        //ID must check declaration and type
+                                        if (token == ID)
+                                        {
+                                                string stringF2I;   
+                                                //check if ID is declared
+                                                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                                                if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
 
-                                        strInit(&stringF2I);
-                                        strCopyString(&stringF2I, &tokenStr);
+                                                strInit(&stringF2I);
+                                                strCopyString(&stringF2I, &tokenStr);
 
-                                        //check if type of input is float
-                                        int variableType = getType(*treePtr, stringF2I);
-                                        if (variableType != T_FLOAT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "INT2FLOAT statement - ID must be float"); }
- 
+                                                //check if type of input is float
+                                                int variableType = getType(*treePtr, stringF2I);
+                                                if (variableType != T_FLOAT){ errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - ID must be float"); }
+                                                strFree(&stringF2I);
+                                        }
+        
                                         //Right param token
                                         token = get_new_token(&tokenStr);
                                         if (token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect INT2FLOAT statement -missing ')'");
@@ -657,7 +669,6 @@ int stat(varNode *treePtr)
                                         //check if return types are equal
                                         if(IDType != T_INT && IDType != EMPTY) errorMsg(ERR_SEMANTIC_PARAM, "FLOAT2INT statement - Wrong type of value to which output is assigned to");
 
-                                        strFree(&stringF2I);
                                         return result;
                                 }
                                 else if (token == F_LEN) // len function
@@ -993,6 +1004,8 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         * token for built-in functions
         * 
         */
+       //print can not be in assign 
+        if (token == F_PRINT){errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Print can not be used in assign");}
         if (token == F_INPUTI)
         {
                 //left param token
@@ -1071,7 +1084,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing '(' ");
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
-                if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or string");
+                if (token != ID && token != T_STRING) errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - token must be ID or string");
                 
                 if (token == ID)
                 {
@@ -1093,7 +1106,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
-                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
+                if (token != ID && token != T_INT) errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - token must be ID or integer");
                 
                 if (token == ID)
                 {
@@ -1105,7 +1118,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         strCopyString(&stringSUBSTR, &tokenStr);
                         //check if type of input is float
                         int variableType = getType(*treePtr, stringSUBSTR);
-                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - ID must be integer"); }
                         strFree(&stringSUBSTR);
                 }
 
@@ -1115,7 +1128,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
-                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "SUBSTR statement - token must be ID or integer");
+                if (token != ID && token != T_INT) errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - token must be ID or integer");
                 
                 if (token == ID)
                 {
@@ -1127,7 +1140,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         strCopyString(&stringSUBSTR, &tokenStr);
                         //check if type of input is float
                         int variableType = getType(*treePtr, stringSUBSTR);
-                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be integer"); }
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - ID must be integer"); }
                         strFree(&stringSUBSTR);
                 }
 
@@ -1157,7 +1170,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "CHR statement - missing '(' ");
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
-                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "CHR statement - token must be ID or integer");
+                if (token != ID && token != T_INT) errorMsg(ERR_SEMANTIC_PARAM, "CHR statement - token must be ID or integer");
                 
                 if (token == ID)
                 {
@@ -1169,7 +1182,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         strCopyString(&stringCHR, &tokenStr);
                         //check if type of input is float
                         int variableType = getType(*treePtr, stringCHR);
-                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be integer"); }
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "CHR statement - ID must be integer"); }
                         strFree(&stringCHR);
                 }
 
@@ -1199,7 +1212,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "ORD statement - missing '(' ");
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
-                if (token != ID && token != T_STRING) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or string");
+                if (token != ID && token != T_STRING) errorMsg(ERR_SEMANTIC_PARAM, "ORD statement - token must be ID or string");
                 
                 if (token == ID)
                 {
@@ -1211,7 +1224,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         strCopyString(&stringORD, &tokenStr);
                         //check if type of input is float
                         int variableType = getType(*treePtr, stringORD);
-                        if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "CHR statement - ID must be string"); }
+                        if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_PARAM, "CHR statement - ID must be string"); }
                         strFree(&stringORD);
                 }
 
@@ -1221,7 +1234,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
-                if (token != ID && token != T_INT) errorMsg(ERR_SYNTAX, "ORD statement - token must be ID or integer");
+                if (token != ID && token != T_INT) errorMsg(ERR_SEMANTIC_PARAM, "ORD statement - token must be ID or integer");
                 
                 if (token == ID)
                 {
@@ -1233,7 +1246,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         strCopyString(&stringORD, &tokenStr);
                         //check if type of input is float
                         int variableType = getType(*treePtr, stringORD);
-                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "ORD statement - ID must be integer"); }
+                        if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "ORD statement - ID must be integer"); }
                         strFree(&stringORD);
                 }
 
