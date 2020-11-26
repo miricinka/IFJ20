@@ -138,7 +138,7 @@ int fun_def_list()
         {
         case KW_FUNC: //starts <fun_def> non-term analysis
                 result = fun_def();
-                if (result != 0) return result;
+                if (result != 0) return result;   
                 //checks if function with returns has called return
                 if (returnCalled == 1) errorMsg(ERR_SEMANTIC_PARAM, "Function is missing return");
                 return fun_def_list();
