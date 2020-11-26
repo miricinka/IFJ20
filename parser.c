@@ -149,7 +149,7 @@ int fun_def_list()
                 strInit(&tempMain);
                 strAddChars(&tempMain, "main");
                 //funSearch finds function in tree of functions, if main is not there it is error 3
-                if (!mainSearch (funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
+                if (!mainSearch (&funTree, tempMain)) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
                 //check in tree if called functions were declared
                 isFunCallDec(funTree);
                 return result;
@@ -757,7 +757,6 @@ int stat(varNode *treePtr)
                                                 variableType = EMPTY;
                                         }                                                
                                         //check if function was used and process return type
-                                        printFunTree(funTree);
                                         addFunToTree(&funTree, funName);
                                         addReturn(&funTree, funName, variableType, 1);
 
@@ -766,11 +765,8 @@ int stat(varNode *treePtr)
                                         result = fun_call_param(treePtr);
                                         if (result != 0) return result;
                                         
-                                        printFunTree(funTree);
                                         //check number of returns
                                         funReturnCheck(&funTree,funName,1);
-
-                                        printFunTree(funTree);
 
                                         //token must be comma or EOL
                                         token = get_new_token(&tokenStr);
@@ -954,8 +950,6 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter)
         }       
         strFree(&emptyID);     
 
-
-        printFunList(*assignVariablesList);
 
         //comma or assign token
         token = get_new_token(&tokenStr);
