@@ -671,7 +671,7 @@ void compareLists (funList *list1, funList *list2){
     if ( list1->elementCount != list2->elementCount){
 	    printf("%d, %d\n",list1->elementCount ,list2->elementCount);
             fprintf(stderr,"ERROR 6: Assigment has wrong ammount of returns\n");
-            exit(6);
+            exit(7);
         }
 
     funListElement element1 = list1->First;
@@ -681,7 +681,7 @@ void compareLists (funList *list1, funList *list2){
 
         if ( element1->type != element2->type && element1->type != EMPTY){
             fprintf(stderr,"Error 6: Wrong return/parameter type of an assigment\n");
-            exit(6);
+            exit(7);
         }
         element1 = element1->NextPtr;
         element2 = element2->NextPtr;
