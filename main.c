@@ -28,10 +28,10 @@ int main() {
 
    	int result = 0;
    	result = parse(&instrList); // provedeme syntaktickou analyzu
-	   if (result != 0) errorMsg(result, "Něco se posralo");
+	if (result != 0) errorMsg(result, "Something went wrong");
 	if (result == 0)
 	{
-		printf("NOICE\n");
+		//printf("NOICE\n");
 	}
 	listFree(&instrList);   
 	return 0;
