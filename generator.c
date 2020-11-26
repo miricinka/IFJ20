@@ -175,3 +175,19 @@ void genConcat(){
     generateInstruction("CONCAT", "GF@concatfin", "GF@concat1", "GF@concat2");
     generateInstruction("PUSHS", "GF@concatfin", NULL, NULL);
 }
+
+void genGTS(){
+    generateInstruction("GTS", NULL, NULL, NULL);
+}
+
+void genLTS(){
+    generateInstruction("LTS", NULL, NULL, NULL);
+}
+
+void genEQS(){
+    generateInstruction("EQS", NULL, NULL, NULL);
+}
+
+void genNOT(){
+    generateInstruction("NOT", NULL, NULL, NULL);
+}

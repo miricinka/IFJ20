@@ -45,5 +45,9 @@
     void genPostIf();
     void genWrite(int Type, char* content);
     void genConcat();
+    void genGTS();
+    void genLTS();
+    void genEQS();
+    void genNOT();
 
 #endif 
