@@ -562,7 +562,7 @@ int stat(varNode *treePtr)
                         token = get_new_token(&tokenStr);
 
                         //print can not be in assign 
-                        if (token == F_PRINT){errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Print can not be used in assign");}
+                        if (token == F_PRINT){errorMsg(ERR_SEMANTIC_PARAM, "Print can not be used in assign");}
 
                         //build in functions
                         if (token == F_INT2FLOAT 
@@ -1005,7 +1005,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         * 
         */
        //print can not be in assign 
-        if (token == F_PRINT){errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Print can not be used in assign");}
+        if (token == F_PRINT){errorMsg(ERR_SEMANTIC_PARAM, "Print can not be used in assign");}
         if (token == F_INPUTI)
         {
                 //left param token
