@@ -538,7 +538,9 @@ void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int retu
 		
 		// comparison of function list return types and new return list element types
 		while (newReturns != NULL && funReturns != NULL){
-			if ( newReturns->type != funReturns->type){
+			if (funReturns->type == EMPTY){
+				funReturns->type = newReturns->type;
+			}else if ( newReturns->type != funReturns->type && newReturns->type != EMPTY){
 				fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
 				exit(6);
 			}
@@ -652,10 +654,38 @@ void checkListElement(funList *list, int type, int order){
 		return;
 	}
 	
-	if (tempListElement->type != type){
+	if (tempListElement->type != type && type != EMPTY){
 		fprintf(stderr,"Error 6: Wrong return/parameter type of a function\n");	
 		exit(6);
 	}
+}
+
+/**
+ * @brief Compare types of elements of two lists.
+ * 
+ * @param list1 first list to be compared
+ * @param list2 second list to be compared
+ */
+void compareLists (funList *list1, funList *list2){
+
+    if ( list1->elementCount != list2->elementCount){
+	    printf("%d, %d\n",list1->elementCount ,list2->elementCount);
+            fprintf(stderr,"ERROR 7: Assigment has wrong ammount of returns\n");
+            exit(7);
+        }
+
+    funListElement element1 = list1->First;
+    funListElement element2 = list2->First;
+
+    while (element1 != NULL && element2 != NULL){
+
+        if ( element1->type != element2->type && element1->type != EMPTY){
+            fprintf(stderr,"Error 7: Wrong return/parameter type of an assigment\n");
+            exit(7);
+        }
+        element1 = element1->NextPtr;
+        element2 = element2->NextPtr;
+    }
 }
 
 /*********************************************************************/
@@ -676,6 +706,8 @@ char* printType(int typeNum){
 		return "float";
 	}else if (typeNum == T_STRING){
 		return "string";
+	}else if (typeNum == EMPTY){
+		return "empty";
 	}else{
 		return "Unknown type";
 	}

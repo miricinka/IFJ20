@@ -10,9 +10,9 @@
 #define TEST_VAR_TREE  0
 #define VAR_TREE_STACK 0
 
-#define TEST_FUN_LIST  0
+#define TEST_FUN_LIST  1
 #define TEST_FUN_TREE  0
-#define TEST_TREE_LIST 1
+#define TEST_TREE_LIST 0
 
 
 /* Variable tree testing functions */
@@ -396,6 +396,7 @@ if (TEST_VAR_TREE){
 	
 	if (TEST_FUN_LIST){
 		funList TEMPLIST;
+		funList list2;
 
 		printf("Jednosmerne vazany seznam\n");
 		printf("=========================\n");
@@ -403,13 +404,14 @@ if (TEST_VAR_TREE){
 		printf("[TEST01]\n");
 		printf("Test inicializace....\n");
 		testFunListInit(TEMPLIST);
+		testFunListInit(list2);
 
 		printf("\n[TEST02]\n");
     	printf("Zavoláme 3x funListAdd\n");
     	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
 		testFunListAdd(&TEMPLIST, T_INT, 1);
 		testFunListAdd(&TEMPLIST, T_FLOAT , 2);
-		testFunListAdd(&TEMPLIST, T_STRING, 3);
+		testFunListAdd(&TEMPLIST, EMPTY, 3);
 
 		printf("\n[TEST03]\n");
     	printf("Zkusíme najít všechny prvky\n");
@@ -418,12 +420,26 @@ if (TEST_VAR_TREE){
 		testFunListSearch(&TEMPLIST, 2);
 		testFunListSearch(&TEMPLIST, 3);
 
-		printf("\n[TEST03]\n");
+		printf("\n[TEST04]\n");
     	printf("Zkusíme najít prvek co neexistuje\n");
     	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
 		testFunListSearch(&TEMPLIST, 4);
 
-		printf("\n[TEST04]\n");
+
+		printf("\n[TEST05]\n");
+    	printf("Zavoláme 3x funListAdd\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		testFunListAdd(&list2, T_INT, 1);
+		testFunListAdd(&list2, T_FLOAT , 2);
+		testFunListAdd(&list2, T_INT, 3);
+
+		printf("\n[TEST06]\n");
+    	printf("Porovnáme listy\n");
+    	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+		compareLists(&TEMPLIST,&list2);
+
+
+		printf("\n[TEST07]\n");
 		printf("Smažeme celý list\n");
     	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
 		
@@ -774,8 +790,29 @@ if (TEST_VAR_TREE){
 		addFunCall(&funTree, name, varTree, parameterOrder);
 			printFunTree(funTree);
 
-		printf("[TEST10]\n");
-		printf("Volani deklarovane funkce se spatnymi return kody\n");
+		// printf("[TEST10]\n");
+		// printf("Volani deklarovane funkce se spatnymi return kody\n");
+    	// printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
+
+		// returnOrder = 0;
+		// tmpList = malloc(sizeof(struct funList));
+		// tmpList->First = NULL;
+		// tmpList->elementCount = 0;
+
+		// testFunListAdd(tmpList, T_STRING, ++returnOrder);
+		// testFunListAdd(tmpList, T_INT , ++returnOrder);
+
+		// strClear(&name);
+		// strAddChars(&name,"asdsdas");
+
+		// addFunToTree(&funTree, name);
+
+		// funListCompareReturn (tmpList, &funTree, name,  returnOrder);
+
+		// addFunCall(&funTree, name, varTree, parameterOrder);
+
+		printf("[TEST11]\n");
+		printf("Test EMPTY\n");
     	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");	
 
 		returnOrder = 0;
@@ -783,17 +820,36 @@ if (TEST_VAR_TREE){
 		tmpList->First = NULL;
 		tmpList->elementCount = 0;
 
-		testFunListAdd(tmpList, T_STRING, ++returnOrder);
-		testFunListAdd(tmpList, T_INT , ++returnOrder);
+		testFunListAdd(tmpList, T_INT, ++returnOrder);
 
 		strClear(&name);
-		strAddChars(&name,"asdsdas");
+		strAddChars(&name,"bagr");
 
 		addFunToTree(&funTree, name);
 
 		funListCompareReturn (tmpList, &funTree, name,  returnOrder);
 
 		addFunCall(&funTree, name, varTree, parameterOrder);
+			printFunTree(funTree);
+
+
+		returnOrder = 0;
+		tmpList = malloc(sizeof(struct funList));
+		tmpList->First = NULL;
+		tmpList->elementCount = 0;
+
+		testFunListAdd(tmpList, EMPTY, ++returnOrder);
+
+		strClear(&name);
+		strAddChars(&name,"bagr");
+
+		addFunToTree(&funTree, name);
+
+		funListCompareReturn (tmpList, &funTree, name,  returnOrder);
+
+		addFunCall(&funTree, name, varTree, parameterOrder);
+			printFunTree(funTree);
+
 
 		/*Test end - be free my little string!*/
 		funListDelete(tmpList);

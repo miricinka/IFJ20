@@ -27,6 +27,7 @@
 #define T_INT        30
 #define T_FLOAT      31
 #define T_STRING     32 
+#define EMPTY		 33
 
 #define PointerError 	-1
 #define AllGood 		0
@@ -123,6 +124,7 @@ void funListAdd (funList *L, int val, int order);
 funListElement funListSearch (funList *L, int order);
 void funListDelete(funList *L);
 void checkListElement(funList *list, int type, int order);
+void compareLists (funList *list1, funList *list2);
 
 /* Prototypes of datastructure printing functions */
 
