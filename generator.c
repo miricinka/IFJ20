@@ -149,17 +149,18 @@ void genFileHead(){
     generateInstruction("DEFVAR", "GF@concat1", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concat2", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concatfin\n", NULL, NULL);
-    generateInstruction("JUMP", "_main\n", NULL, NULL);  
+    generateInstruction("JUMP", "_main", NULL, NULL);  
 }
 
 /* start of main function */
 void genMainFunc(){
-    generateInstruction("LABEL", "_main", NULL, NULL);
+    generateInstruction("\nLABEL", "_main", NULL, NULL);
     generateInstruction("CREATEFRAME", NULL, NULL, NULL);
 }
 /* end of main function */
 void genMainEnd(){
-    generateInstruction("CLEARS\n", NULL, NULL, NULL);
+    generateInstruction("CLEARS", NULL, NULL, NULL);
+    generateInstruction("EXIT", "int@0", NULL, NULL);
 }
 
 /* stack addition */
@@ -328,14 +329,14 @@ void genCall(char* funcname){
 void genFuncHead(char* funcname){
     char* ans = (char*) malloc(sizeof(char) * strlen(funcname));
     sprintf(ans, "_%s", funcname);
-    generateInstruction("LABEL", ans, NULL, NULL);
+    generateInstruction("\nLABEL", ans, NULL, NULL);
     generateInstruction("PUSHFRAME", NULL, NULL, NULL);
     generateInstruction("CREATEFRAME", NULL, NULL, NULL);
 }
 
 /* end of function, return to main */
 void genFuncEnd(){
-    generateInstruction("RETURN", NULL, NULL, NULL);
+    generateInstruction("RETURN\n", NULL, NULL, NULL);
 }
 
 void genInt2Fl(char* number, int type, char* string){

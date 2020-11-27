@@ -236,6 +236,9 @@ int fun_def()
                 token = get_new_token(&tokenStr);
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '(' ");
 
+                //generate function header
+                genFuncHead(funName.str);
+
                 //create tree for variables in function
                 varNode treePtr;
                 BSTInit(&treePtr);
@@ -273,7 +276,7 @@ int fun_def()
                 addFunDec(&funTree, funName, funParamCounter/*, funReturnCounter*/);
                 
                 //left bracket token
-                if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");
+                if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");               
 
                 //handle stat_list rule
                 result = stat_list(&treePtr);
@@ -281,6 +284,9 @@ int fun_def()
 
                 //right bracket token, already loaded in stat_list
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '}' ");
+
+                //generate end of definition of fucntion
+                genFuncEnd(funName.str);
 
                 //Dispose tree for variables because they are only local for function
                 BSTDispose(&treePtr);
@@ -770,11 +776,14 @@ int stat(varNode *treePtr)
                                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                                 if (isIDDeclared == false)
                                 {
-                                        
-
+                                       
                                         //add function to tree
                                         strClear(&funName);                 
                                         strCopyString(&funName, &tokenStr); 
+
+                                        //generate call user function instruction
+                                        genCall(funName.str);
+
                                         //funReturnCounter = 0;               
                                         funParamCounter = 0;  
 
@@ -865,6 +874,9 @@ int stat(varNode *treePtr)
                         //add function to tree
                         strClear(&funName);                 
                         strCopyString(&funName, &stringID); 
+
+                        //generate call user function instruction
+                        genCall(funName.str);
 
                         //funReturnCounter = 0;               
                         funParamCounter = 0;               
@@ -1314,6 +1326,10 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         //add function to tree
                         strClear(&funName);                 
                         strCopyString(&funName, &tokenStr); 
+
+                        //generate call user function instruction
+                        genCall(funName.str);
+
                         funReturnCounter = 0;               
                         funParamCounter = 0;                       
 
@@ -1447,11 +1463,7 @@ int fun_params(varNode *treePtr)
         if (token != ID && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
 
         //jump out of function
-        if (token == R_PAR && multipleParams == 0)
-        {
-                //TODO
-                return result;
-        }
+        if (token == R_PAR && multipleParams == 0)  { return result; }
         else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect params");
 
         //check if variable is declared
@@ -1464,6 +1476,9 @@ int fun_params(varNode *treePtr)
 
         //if ID is declared it is error
         if (isIDDeclared == true) { errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared"); }
+
+        //generate definition of variable in function header
+        genDefvar(tokenStr.str);
 
         //token must be keyword for type
         token = get_new_token(&tokenStr);
