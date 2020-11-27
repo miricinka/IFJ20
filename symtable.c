@@ -443,6 +443,20 @@ void addFunDec(funNode *RootPtr, string Key, int paramCount){
 }
 
 /**
+ * @brief Checks if the function is not beeing redeclared.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the searched function
+ */
+void funDecCheck(funNode *RootPtr, string Key){
+	RootPtr = funSearch(RootPtr, Key);
+
+	if((*RootPtr)->isDeclared){
+		fprintf(stderr,"ERROR 3: Redefinition of function [%s]\n", Key.str);
+		exit(3);
+	}
+}
+/**
  * @brief Adds a parameter to the function Key in the BST. If the function was already declared or called, checks the parameter for errors instead.
  * 
  * @param RootPtr pointer to the function BST

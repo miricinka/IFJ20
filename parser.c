@@ -225,6 +225,9 @@ int fun_def()
                 //add function to tree
                 addFunToTree(&funTree, funName);
 
+                //check for function redeclaration
+                funDecCheck(&funTree, funName);
+
                 //save function name for returns
                 strClear(&funDeclaredName);
                 strCopyString(&funDeclaredName, &tokenStr); 
