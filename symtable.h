@@ -116,6 +116,7 @@ void addReturn(funNode *RootPtr, string Key, int returnType, int returnOrder);
 void isFunCallDec(funNode RootPtr);
 void funReturnCheck(funNode *RootPtr, string Key, int returnCount);
 void funListCompareReturn (funList *list, funNode *RootPtr, string Key, int returnCount);
+void funDecCheck(funNode *RootPtr, string Key);
 
 /*Prototypes of function list operations*/
 

@@ -442,6 +442,15 @@ void addFunDec(funNode *RootPtr, string Key, int paramCount){
 	funActualize(RootPtr, Key, true, false, paramCount);
 }
 
+
+void funDecCheck(funNode *RootPtr, string Key){
+	RootPtr = funSearch(RootPtr, Key);
+
+	if((*RootPtr)->isDeclared){
+		fprintf(stderr,"ERROR 3: Redefinition of function [%s]\n", Key.str);
+		exit(3);
+	}
+}
 /**
  * @brief Adds a parameter to the function Key in the BST. If the function was already declared or called, checks the parameter for errors instead.
  * 
