@@ -26,6 +26,7 @@
 #include "prec_parser.h"
 
     void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3);
+    char* stringconvertor(char* srting_before);
     void genFileHead();
     void genMainFunc();
     void genMainEnd();
@@ -51,5 +52,8 @@
     void genCall(char* funcname);
     void genFuncHead(char* funcname);
     void genFuncEnd();
+    void genInt2Fl();
+    void genFl2Int();
+    void genStrlen(char* number, int type, char* string);
 
 #endif 
