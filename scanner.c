@@ -14,6 +14,7 @@
  * AUTHORS:
  *  Kolaříková Mirka    <xkolar76@stud.fit.vutbr.cz>
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
+ *  Based on scanner for IFJ19 by the same authors
 */
 
 

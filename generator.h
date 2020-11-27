@@ -13,7 +13,6 @@
  * 
  * AUTHORS:
  *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
- *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
 
 #ifndef IFJ_ILIST_GENERATOR

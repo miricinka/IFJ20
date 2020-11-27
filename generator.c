@@ -13,16 +13,13 @@
  *
  * AUTHORS:
  *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
- *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
 */
-
 
 #include "generator.h"
 
 //TODO instruction list
 //TODO Label stack
 //TODO ANDS ORS NOTS
-//výpis instruction listu
 //linking globals
 //TODO concatenate strings (inspire by DEFVAR {completed})
 int labelcnt = 1;
@@ -211,14 +208,14 @@ void genPushs(int type, char* content){
 
 /* variable definition */
 void genDefvar(char* variable){
-    char* ans = (char*) malloc(sizeof(char) * strlen(variable));
+    char* ans = (char*) malloc(sizeof(char) * strlen(variable) + 10);
     sprintf(ans, "TF@%s", variable);
     generateInstruction("DEFVAR", ans, NULL, NULL);
 }
 
 /* pop from stack */
 void genPops(char* variable){
-    char* ans = (char*) malloc(sizeof(char) * strlen(variable));
+    char* ans = (char*) malloc(sizeof(char) * strlen(variable) + 10);
     sprintf(ans, "TF@%s", variable);
     generateInstruction("POPS", ans, NULL, NULL);
 }
@@ -230,7 +227,7 @@ void genClears(){
 
 /* detecting input */
 void genRead(int type, char* variable){
-    char* ans = (char*) malloc(sizeof(char) * strlen(variable));
+    char* ans = (char*) malloc(sizeof(char) * strlen(variable) + 10);
     sprintf(ans, "TF@%s", variable);
     if(type == F_INPUTI){
         generateInstruction("READ", ans, "int", NULL);
@@ -246,7 +243,7 @@ void genRead(int type, char* variable){
 
 /* conditions head */
 void genIfElseHead(){
-    char* labelname = (char*) malloc(sizeof(labelcnt));
+    char* labelname = (char*) malloc(sizeof(labelcnt) + 10);
     sprintf(labelname, "_label%d", labelcnt);
     labelcnt++;
     generateInstruction("LABEL", labelname, NULL, NULL);
@@ -254,7 +251,7 @@ void genIfElseHead(){
 
 /* end of for/if */
 void genIfElseEnd(){
-    char* finif = (char*) malloc(sizeof(endif));
+    char* finif = (char*) malloc(sizeof(endif) + 10);
     sprintf(finif, "_endif%d", endif);
     endif++;
     generateInstruction("JUMP", finif, NULL, NULL);
@@ -262,7 +259,7 @@ void genIfElseEnd(){
 
 /* label to continue from if/for */
 void genPostIf(){
-    char* successor = (char*) malloc(sizeof(endif));
+    char* successor = (char*) malloc(sizeof(endif) + 10);
     sprintf(successor, "_endif%d", endif);
     endif++;
     generateInstruction("LABEL", successor, NULL, NULL);
@@ -270,7 +267,7 @@ void genPostIf(){
 
 /* print to output */
 void genWrite(int Type, char* content){
-    char* ans = (char*) malloc(sizeof(char) * strlen(content));
+    char* ans = (char*) malloc(sizeof(char) * strlen(content) * 10);
     if(Type == T_INT){
         sprintf(ans, "int@%s", content);
     }
@@ -319,7 +316,7 @@ void genNOT(){
 
 /* call function */
 void genCall(char* funcname){
-    char* ans = (char*) malloc(sizeof(char) * strlen(funcname));
+    char* ans = (char*) malloc(sizeof(char) * strlen(funcname) + 10);
     sprintf(ans, "_%s", funcname);
     generateInstruction("CALL", ans, NULL, NULL);
     generateInstruction("POPFRAME", NULL, NULL, NULL);
@@ -327,7 +324,7 @@ void genCall(char* funcname){
 
 /* start of function */
 void genFuncHead(char* funcname){
-    char* ans = (char*) malloc(sizeof(char) * strlen(funcname));
+    char* ans = (char*) malloc(sizeof(char) * strlen(funcname) + 10);
     sprintf(ans, "_%s", funcname);
     generateInstruction("\nLABEL", ans, NULL, NULL);
     generateInstruction("PUSHFRAME", NULL, NULL, NULL);
@@ -340,9 +337,9 @@ void genFuncEnd(){
 }
 
 void genInt2Fl(char* number, int type, char* string){
-    char* ans = (char*) malloc(sizeof(char) * strlen(number));
+    char* ans = (char*) malloc(sizeof(char) * strlen(number) + 10);
     sprintf(ans, "TF@%s", number);
-    char* line = (char*) malloc(sizeof(char) * strlen(string));
+    char* line = (char*) malloc(sizeof(char) * strlen(string) + 10);
     if(type == T_INT){
         sprintf(line, "int@%s", string);
     }
@@ -367,9 +364,9 @@ void genFl2Int(char* number, int type, char* string){
 }
 
 void genStrlen(char* number, int type, char* string){
-    char* ans = (char*) malloc(sizeof(char) * strlen(number));
+    char* ans = (char*) malloc(sizeof(char) * strlen(number) + 10);
     sprintf(ans, "TF@%s", number);
-    char* line = (char*) malloc(sizeof(char) * strlen(string));
+    char* line = (char*) malloc(sizeof(char) * strlen(string) + 10);
     if(type == T_STRING){
         string = stringconvertor(string);
         sprintf(line, "string@%s", string);

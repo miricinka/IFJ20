@@ -14,6 +14,7 @@
  * AUTHORS:
  *  Kolaříková Mirka    <xkolar76@stud.fit.vutbr.cz>
  *  Žovinec Martin      <xzovin00@stud.fit.vutbr.cz>
+ *  Taken from reference compiler by VUT FIT in Brno 
 */
 
 //#include "main.h"

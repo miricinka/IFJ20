@@ -12,7 +12,7 @@
  *  Error description
  * 
  * AUTHORS:
- *  Rezac Ales    <xrezac21@stud.fit.vutbr.cz>
+ *  Aleš Řezáč   <xrezac21@stud.fit.vutbr.cz>
 */
 
 #include "error.h"

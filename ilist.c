@@ -12,9 +12,8 @@
  *  List functions
  * 
  * AUTHORS:
- *  Hrúz Tomáš    <xhruzt00@stud.fit.vutbr.cz>
- *  Taken from reference compiler by VUT FIT in Brno
- *  
+ *  Aleš Řezáč <xrezac21@stud.fit.vutbr.cz>
+ *  Taken from reference compiler by VUT FIT in Brno 
 */
 
 #include "ilist.h"

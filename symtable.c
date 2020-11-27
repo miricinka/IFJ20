@@ -24,9 +24,6 @@
 #include "symtable.h"
 #include "error.h"
 
-// TODO returnTypes in functions (2/2)
-// TODO addFunCall, addFunDec and funActualize don't need returnOrder
-
 
 /**********************************************/
 /*************** Variable stack ***************/

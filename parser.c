@@ -12,7 +12,7 @@
  * Parser file
  * 
  * AUTHORS:
- *  Tomáš Hrúz          <xhruzt00@stud.fit.vutbr.cz>
+ *  Tomáš Hrúz  <xhruzt00@stud.fit.vutbr.cz> 
 */
 #include "parser.h"
 //tokens
@@ -768,7 +768,6 @@ int stat(varNode *treePtr)
                         else if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "ASSIGN statement - bad token after =");
 
 
-                        //TODO funkcia na pravej strane priradenia
                         //ulozit typ navratovej hodnoty premennej
                         //if it is ID check if it is declared
                         if (token == ID)
@@ -1029,7 +1028,6 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter)
  * <ass_exps>	, <exp>	<ass_exps>
  * <ass_exps>	<ass_ids>
  * <ass_exps>	<fun>
- * TODO
  * 
  * @param treePtr tree for variables
  */
@@ -1410,16 +1408,6 @@ int fun_call_param(varNode *treePtr)
            addFunCall(&funTree, funName, *treePtr, funParamCounter/*, funReturnCounter*/);    
            return result;  
         }
-        //koniec spracovania parametrov
-        /*if (token == R_PAR && multipleParams == 0)
-        {
-        printf("hello friend\n");
-        printf("%d /\\ %d \n",funParamCounter, parCount(funTree, funName));
-        if (funParamCounter != parCount(funTree, funName)) {errorMsg(ERR_SEMANTIC_PARAM, "Incorrect parameter count");} //TODO
-        return result;
-        } */
-
-        //else if (token == R_PAR && multipleParams == 1) errorMsg(ERR_SYNTAX, "Incorrect token in func call parameters - missing param");
 
         //parameter counter
         funParamCounter++; 
@@ -1436,7 +1424,6 @@ int fun_call_param(varNode *treePtr)
         {
                 return fun_call_param(treePtr);
         }
-        //TODO Comment
         addFunCall(&funTree, funName, *treePtr, funParamCounter/*, funReturnCounter*/);
         return result;
 }
