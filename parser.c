@@ -712,8 +712,17 @@ int stat(varNode *treePtr)
                                                 //check if type of input is float
                                                 int variableType = getType(*treePtr, stringLEN);
                                                 if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "LEN statement - ID must be string"); }
+                                                
+                                                //generate len instruction
+                                                genStrlen(stringID.str,ID,tokenStr.str);
+
                                                 strFree(&stringLEN);
                                         }
+                                        else
+                                        {
+                                                genStrlen(stringID.str,T_STRING,tokenStr.str);
+                                        }
+                                        
  
                                         //Right param token
                                         token = get_new_token(&tokenStr);
