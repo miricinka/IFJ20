@@ -34,8 +34,8 @@ int stat_list(varNode * treePtr); //Rule for list of statements in function
 int fun_params(varNode * treePtr); //Handling of parameters in definition of function
 int fun_returns(); //handling of returns in definition of function
 int stat(varNode * treePtr); //Rule for single statement
-int ass_exps(varNode * treePtr, funList *assignVariablesList,int assignVarCounter, funList *assignAssignList,int assignAssignmentCounter); //Right side of assign statement
-int ass_stat(varNode * treePtr, funList *assignVariablesList, int assignVarCounter); //Left side of assign statement
+int ass_exps(varNode * treePtr, funList *assignVariablesList,int assignVarCounter, funList *assignAssignList,int assignAssignmentCounter, string readFunctionID); //Right side of assign statement
+int ass_stat(varNode * treePtr, funList *assignVariablesList, int assignVarCounter, string readFunctionID); //Left side of assign statement
 int fun_call_param(varNode * treePtr); //Handling of paramters in calling of function
 int print_params(varNode * treePtr); //Handling of print parameters
 int return_values(varNode * treePtr); //Handling of return values
