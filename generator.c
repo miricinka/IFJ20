@@ -110,6 +110,35 @@ void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3){
    listInsertLast(list, I);
 }
 
+char* stringconvertor(char* string_before){
+    string string_after; strInit(&string_after); strClear(&string_after);
+    //printf("%s\n", string_before);
+
+    size_t i = 0;
+    while (string_before[i] != '\0') {    //loop trough chars
+        //printf("%c\n", string_before[i]);  
+        if ((string_before[i] >= 0 && string_before[i] <= 32)
+           || string_before[i] == 35 || string_before[i] == 92){
+            strAddChar(&string_after, '\\');
+            strAddChar(&string_after, '0');
+
+            int secund_num = string_before[i]%10; 
+            int first_num = (string_before[i] - secund_num)/10;
+            strAddChar(&string_after,  first_num+'0');
+            strAddChar(&string_after,  secund_num+'0');
+
+        }else{
+            strAddChar(&string_after, string_before[i]);
+
+        }
+
+        i++;
+    }
+    return string_after.str;
+}
+
+
+
 /*  
     .IFJcode20
     generating global variables for concatenation
@@ -165,6 +194,7 @@ void genPushs(int type, char* content){
         sprintf(ans,"int@%s", content);
     }
     else if(type == NT_STR){
+        content = stringconvertor(content);
         sprintf(ans,"string@%s", content);
     }
     else if(type == NT_FLOAT){
@@ -243,9 +273,11 @@ void genWrite(int Type, char* content){
         sprintf(ans, "int@%s", content);
     }
     else if(Type == T_FLOAT){
-        sprintf(ans, "float@%s", content);
+        double number = strtod(content, NULL);
+        sprintf(ans, "float@%a", number);
     }
     else if(Type == T_STRING){
+        content = stringconvertor(content);
         sprintf(ans, "string@%s", content);
     }
     else if(Type == ID){
@@ -303,4 +335,26 @@ void genFuncHead(char* funcname){
 /* end of function, return to main */
 void genFuncEnd(){
     generateInstruction("RETURN", NULL, NULL, NULL);
+}
+
+void genInt2Fl(){
+    generateInstruction("INT2FLOATS", NULL, NULL, NULL);
+}
+
+void genFl2Int(){
+    generateInstruction("FLOAT2INTS", NULL, NULL, NULL);
+}
+
+void genStrlen(char* number, int type, char* string){
+    char* ans = (char*) malloc(sizeof(char) * strlen(number));
+    sprintf(ans, "TF@%s", number);
+    char* line = (char*) malloc(sizeof(char) * strlen(string));
+    if(type == NT_STR){
+        string = stringconvertor(string);
+        sprintf(line, "string@%s", string);
+    }
+    else{
+        sprintf(line, "TF@%s", string);
+    }
+    generateInstruction("STRLEN", ans, line, NULL);
 }
