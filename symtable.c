@@ -442,7 +442,12 @@ void addFunDec(funNode *RootPtr, string Key, int paramCount){
 	funActualize(RootPtr, Key, true, false, paramCount);
 }
 
-
+/**
+ * @brief Checks if the function is not beeing redeclared.
+ * 
+ * @param RootPtr pointer to the function BST
+ * @param Key name of the searched function
+ */
 void funDecCheck(funNode *RootPtr, string Key){
 	RootPtr = funSearch(RootPtr, Key);
 
