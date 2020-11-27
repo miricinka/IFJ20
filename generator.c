@@ -280,7 +280,7 @@ void genStrlen(char* number, int type, char* string){
     char* ans = (char*) malloc(sizeof(char) * strlen(number));
     sprintf(ans, "TF@%s", number);
     char* line = (char*) malloc(sizeof(char) * strlen(string));
-    if(type == NT_STR){
+    if(type == T_STRING){
         string = stringconvertor(string);
         sprintf(line, "string@%s", string);
     }
