@@ -310,7 +310,9 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
  checks syntax and semantics of expression
  returns final datatype and end token */
 prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
-	//printf("#####INTRUCTION CLEARS\n");
+
+	genClears();
+
 	string testStr; strInit(&testStr); strClear(&testStr);
 	//string tokenStr; strInit(&tokenStr);
 	int fullstack = 0;

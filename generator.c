@@ -189,7 +189,7 @@ void genIDivs(){
 
 /* push to stack */
 void genPushs(int type, char* content){
-    char* ans = (char*) malloc(sizeof(char) * strlen(content));
+    char* ans = (char*) malloc(sizeof(char) * strlen(content) * 10);
     if(type == NT_INT){
         sprintf(ans,"int@%s", content);
     }
@@ -198,7 +198,8 @@ void genPushs(int type, char* content){
         sprintf(ans,"string@%s", content);
     }
     else if(type == NT_FLOAT){
-        sprintf(ans,"float@%s", content);
+        double number = strtod(content,NULL);
+        sprintf(ans,"float@%a", number);
     }
     else if(type == NT_ID){
         sprintf(ans,"TF@%s", content);
@@ -337,12 +338,31 @@ void genFuncEnd(){
     generateInstruction("RETURN", NULL, NULL, NULL);
 }
 
-void genInt2Fl(){
-    generateInstruction("INT2FLOATS", NULL, NULL, NULL);
+void genInt2Fl(char* number, int type, char* string){
+    char* ans = (char*) malloc(sizeof(char) * strlen(number));
+    sprintf(ans, "TF@%s", number);
+    char* line = (char*) malloc(sizeof(char) * strlen(string));
+    if(type == T_INT){
+        sprintf(line, "int@%s", string);
+    }
+    else{
+        sprintf(line, "TF@%s", string);
+    }
+    generateInstruction("INT2FLOAT", ans, line, NULL);
 }
 
-void genFl2Int(){
-    generateInstruction("FLOAT2INTS", NULL, NULL, NULL);
+void genFl2Int(char* number, int type, char* string){
+    char* ans = (char*) malloc(sizeof(char) * strlen(number) * 10);
+    sprintf(ans, "TF@%s", number);
+    char* line = (char*) malloc(sizeof(char) * strlen(string) * 10);
+    if(type == T_FLOAT){
+        double number = strtod(string,NULL);
+        sprintf(line, "float@%a", number);
+    }
+    else{
+        sprintf(line, "TF@%s", string);
+    }
+    generateInstruction("FLOAT2INT", ans, line, NULL);
 }
 
 void genStrlen(char* number, int type, char* string){

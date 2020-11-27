@@ -50,11 +50,10 @@ int parse(tListOfInstr *instrList)
         //after result is zero after this function it bubbles to main as sucesfull analysis of code
         //this applies to whole parser
         int result = 0;
+
+        //initialize list of instructions
         list = instrList;
-
-
         listInit(list);
-
 
         //loads next token
         token = get_new_token(&tokenStr);
@@ -144,7 +143,7 @@ int fun_def_list()
         case EOL: //recursively chceck for optional EOLs
                 return fun_def_list();
         case ENDFILE: //end of program
-                printFunTree(funTree);               
+                //printFunTree(funTree);               
                 if (mainCheck == false) errorMsg(ERR_SEMANTIC_DEFINITION, "Program is missing \"main\" function");
                 //check in tree if called functions were declared
                 isFunCallDec(funTree);
@@ -609,7 +608,16 @@ int stat(varNode *treePtr)
                                                 //check if type of input is integer
                                                 int variableType = getType(*treePtr, stringI2F);
                                                 if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - ID must be integer"); }
+
+                                                //generate int2float instruction with ID as input
+                                                genInt2Fl(stringID.str,ID,tokenStr.str);
+
                                                 strFree(&stringI2F);
+                                        }
+                                        else
+                                        {
+                                                //generate int2float instruction with integer as input
+                                                genInt2Fl(stringID.str,T_INT,tokenStr.str);
                                         }
  
                                         //Right param token
@@ -660,8 +668,18 @@ int stat(varNode *treePtr)
                                                 //check if type of input is float
                                                 int variableType = getType(*treePtr, stringF2I);
                                                 if (variableType != T_FLOAT){ errorMsg(ERR_SEMANTIC_PARAM, "INT2FLOAT statement - ID must be float"); }
+
+                                                //generate float2int instruction with ID as input
+                                                genFl2Int(stringID.str,ID,tokenStr.str);
+
                                                 strFree(&stringF2I);
                                         }
+                                        else
+                                        {
+                                                //generate float2int instruction with float as input
+                                                genFl2Int(stringID.str,T_FLOAT,tokenStr.str);
+                                        }
+                                        
         
                                         //Right param token
                                         token = get_new_token(&tokenStr);
@@ -710,13 +728,14 @@ int stat(varNode *treePtr)
                                                 int variableType = getType(*treePtr, stringLEN);
                                                 if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "LEN statement - ID must be string"); }
                                                 
-                                                //generate len instruction
+                                                //generate len instruction with ID as input
                                                 genStrlen(stringID.str,ID,tokenStr.str);
 
                                                 strFree(&stringLEN);
                                         }
                                         else
-                                        {
+                                        {       
+                                                //generate len instruction with string as input
                                                 genStrlen(stringID.str,T_STRING,tokenStr.str);
                                         }
                                         
