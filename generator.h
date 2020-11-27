@@ -25,31 +25,43 @@
 #include "ilist.h"
 #include "prec_parser.h"
 
-    void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3);
-    void genFileHead();
-    void genMainFunc();
-    void genMainEnd();
-    void genAdds();
-    void genSubs();
-    void genMuls();
-    void genDivs();
-    void genIDivs();
-    void genPushs(int type, char* content);
-    void genDefvar(char* variable);
-    void genPops(char* variable);
-    void genClears();
-    void genRead(int type, char* variable);
-    void genIfElseHead();
-    void genIfElseEnd();
-    void genPostIf();
-    void genWrite(int Type, char* content);
-    void genConcat();
-    void genGTS();
-    void genLTS();
-    void genEQS();
-    void genNOT();
-    void genCall(char* funcname);
-    void genFuncHead(char* funcname);
-    void genFuncEnd();
+
+typedef struct labelStack{
+	int labelCount;
+
+	struct labelStack *previousElement;
+} *labelStack;
+
+void genStackPop(labelStack* stack);
+void genStackPush(labelStack* stack, int newLabel);
+void genStackDelete(labelStack* stack);
+void genStackTest(labelStack* stack);
+
+void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3);
+void genFileHead();
+void genMainFunc();
+void genMainEnd();
+void genAdds();
+void genSubs();
+void genMuls();
+void genDivs();
+void genIDivs();
+void genPushs(int type, char* content);
+void genDefvar(char* variable);
+void genPops(char* variable);
+void genClears();
+void genRead(int type, char* variable);
+void genIfElseHead();
+void genIfElseEnd();
+void genPostIf();
+void genWrite(int Type, char* content);
+void genConcat();
+void genGTS();
+void genLTS();
+void genEQS();
+void genNOT();
+void genCall(char* funcname);
+void genFuncHead(char* funcname);
+void genFuncEnd();
 
 #endif 

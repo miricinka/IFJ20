@@ -30,6 +30,75 @@ int endif = 1;
 
 tListOfInstr *list;
 
+void genStackPop(labelStack* stack){
+	if (stack != NULL){
+		labelStack popMe = (*stack);
+		(*stack) = (*stack)->previousElement;
+		free(popMe);
+	}
+}
+
+void genStackPush(labelStack* stack, int newLabel){
+	labelStack newEStacklement = (labelStack) malloc(sizeof(struct labelStack));
+	newEStacklement->labelCount = newLabel;
+
+    if(*stack == NULL){
+	    newEStacklement->previousElement = NULL;
+    }else{
+        newEStacklement->previousElement = (*stack);
+    }
+    
+	(*stack) = newEStacklement;
+}
+
+
+void genStackDelete(labelStack* stack){
+	while (*stack != NULL){
+		genStackPop(stack);
+	}
+}
+
+void genStackTest(labelStack* stack){
+
+    printf("\n[TEST 01] Inicializing stack, pushing 1\n");
+    *stack = NULL;
+    genStackPush(stack,1);
+    printf("Top stack is %d\n", (*stack)->labelCount);
+
+    printf("\n[TEST 02] Popping stack, should be empty\n");
+    genStackPop(stack);
+    if(*stack == NULL){
+        printf("empty stack\n");
+    }else{
+        printf("NOT empty stack\n");
+    }
+
+    printf("\n[TEST 03] Pushing 1 again, should NOT be empty\n");
+    genStackPush(stack,1);
+    printf("Top stack is %d\n", (*stack)->labelCount);
+    if(*stack == NULL){
+        printf("empty stack\n");
+    }else{
+        printf("NOT empty stack\n");
+    }
+
+    printf("\n[TEST 04] Pushing 2,3,4 and popping once, top should be 3.\n");
+    genStackPush(stack,2);
+    genStackPush(stack,3);
+    genStackPush(stack,4);
+
+    genStackPop(stack);
+    printf("Top stack is %d\n", (*stack)->labelCount);
+
+
+    printf("\n[TEST 05] Deleting the stack, should be empty.\n");
+    genStackDelete(stack);
+    if(*stack == NULL){
+        printf("empty stack\n");
+    }else{
+        printf("NOT empty stack\n");
+    }
+}
 
 /* Save instruction into instruction list */
 void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3){
