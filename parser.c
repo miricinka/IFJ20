@@ -15,19 +15,23 @@
  *  Tomáš Hrúz  <xhruzt00@stud.fit.vutbr.cz> 
 */
 #include "parser.h"
+
 //tokens
-string tokenStr; //variable for string of token
-int token = 0;   //variable for tokens
+string tokenStr; //string value of currently loaded token
+int token = 0;   //currently loaded token
+
 //trees
-funNode funTree;      //variable for tree of functions
-int funParamCounter;  //variable for number of parameters
-int funReturnCounter; //variable for number of returns
-string funName;       //variable for name of function in tree
-string funDeclaredName; //variable for name of currently defined function
-int levelOfScope = 1; //variabel for scope, it is incremented
+funNode funTree;      //tree for user declared functions
+int funParamCounter;  //number of function parameters, used to add parameters to function in tree and to check when it is called
+int funReturnCounter; //number of function returns, used to add returns to function in tree and to check when returns are called
+string funName;       //name of function, used to add function to tree or check if it is in tree
+string funDeclaredName; //name of currently declared function to check returns
+int levelOfScope = 1; //scope of variables, increments with more levels of scope and decrements when scope ends
+
 //generation
-tListOfInstr *list; //variable for list of instructions
-//return checker
+tListOfInstr *list; //list of generated instructions
+
+//end checkers
 int returnCalled = 0; //checks if return is called in function with returns
 bool mainCheck = false; //checks if main function is in program
 
