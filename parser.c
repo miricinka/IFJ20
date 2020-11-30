@@ -205,6 +205,10 @@ int fun_def()
                 //left bracket token
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing '{' ");
 
+                //required eol after left bracket
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "Wrong main func signature - missing EOL after '{' ");
+
                 genMainFunc();
 
                 //create variable tree for main functions
@@ -280,7 +284,12 @@ int fun_def()
                 addFunDec(&funTree, funName, funParamCounter/*, funReturnCounter*/);
                 
                 //left bracket token
-                if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");               
+                if (token != L_BR) errorMsg(ERR_SYNTAX, "Wrong func signature - missing '{' ");      
+
+
+                //required eol after left bracket
+                token = get_new_token(&tokenStr);
+                if (token != EOL) errorMsg(ERR_SYNTAX, "Wrong func signature - missing EOL after '{' ");         
 
                 //handle stat_list rule
                 result = stat_list(&treePtr);
