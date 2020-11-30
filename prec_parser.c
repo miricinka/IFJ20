@@ -29,13 +29,13 @@ int table [17][17] = {
 /* >= */    { '<', '<', '<', '<', 'X', 'X', 'X', 'X', 'X', 'X', '<', '>', '<', '<', '<', '<', '>' },
 /* == */    { '<', '<', '<', '<', 'X', 'X', 'X', 'X', 'X', 'X', '<', '>', '<', '<', '<', '<', '>' },
 /* != */    { '<', '<', '<', '<', 'X', 'X', 'X', 'X', 'X', 'X', '<', '>', '<', '<', '<', '<', '>' },
-/* ( */     { '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '=', '<', '<', '<', '<', 'X' },
+/* ( */     { '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '=', '<', '<', '<', '<', 'Y' },
 /* ) */     { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'X', '>', 'X', 'X', 'X', 'X', '>' },
-/* ID */    { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'X', '>', 'X', 'X', 'X', 'X', '>' },
-/* INT */   { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'X', '>', 'X', 'X', 'X', 'X', '>' },
-/* FLOAT */ { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'X', '>', 'X', 'X', 'X', 'X', '>' },
-/* STR */   { '>', 'X', 'X', 'X', '>', '>', '>', '>', '>', '>', 'X', '>', 'X', 'X', 'X', 'X', '>' },
-/* $ */     { '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', 'X', '<', '<', '<', '<', '#' }
+/* ID */    { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'Y', '>', 'X', 'X', 'X', 'X', '>' },
+/* INT */   { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'Y', '>', 'X', 'X', 'X', 'X', '>' },
+/* FLOAT */ { '>', '>', '>', '>', '>', '>', '>', '>', '>', '>', 'Y', '>', 'X', 'X', 'X', 'X', '>' },
+/* STR */   { '>', 'X', 'X', 'X', '>', '>', '>', '>', '>', '>', 'Y', '>', 'X', 'X', 'X', 'X', '>' },
+/* $ */     { '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', '<', 'Y', '<', '<', '<', '<', '#' }
 };
 
 
@@ -178,15 +178,12 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 
 	//E -> id pushs id
 	if(topNT->tokenNum == NT_ID){
-		//printf("before ID:\n");
-		//print_precStack(stackPtr);
+
 		bool isIDDeclared = isDeclared(*treePtr, topNT->tokenStr);
 		if (!isIDDeclared)
 			errorMsg(ERR_SEMANTIC_DEFINITION, "Variable is not declared when using in expression");
 
-		//printf("'%s' is declared\n", topNT->tokenStr.str);
 		int variableType = getType(*treePtr,topNT->tokenStr);
-		//printf("var '%s' is of type %d\n", topNT->tokenStr.str, variableType);
 		if (variableType == T_INT){
 			topNT->tokenNum = RULE_INT;
 		}else if(variableType == T_FLOAT){
@@ -200,35 +197,28 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		genPushs(NT_ID, topNT->tokenStr.str);
 		//only type is important
 		strcpy(topNT->tokenStr.str, "");
-		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//E -> int pushs int
 	}else if(topNT->tokenNum == NT_INT){ 
 		topNT->tokenNum = RULE_INT;
-		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 		genPushs(NT_INT, topNT->tokenStr.str);
 	//E -> float pushs float
 	}else if(topNT->tokenNum == NT_FLOAT){
 		topNT->tokenNum = RULE_FLOAT;
-		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 		genPushs(NT_FLOAT, topNT->tokenStr.str);
 	//E -> str pushs str
 	}else if(topNT->tokenNum == NT_STR){
 		topNT->tokenNum = RULE_STR;
 		genPushs(NT_STR, topNT->tokenStr.str);
-		//printf("#####INTRUCTION PUSHS %s\n", topNT->tokenStr.str);
 	//reduce 3 symbols
 	}else if(topNT->tokenNum == NT_ADD){ //E -> E+E TODO str+str CONCAT
-		//printf("#####INTRUCTION ADDS\n");
 		arithm_semantic_check(stackPtr);
 		genAdds();
 	//E -> E+E
 	}else if(topNT->tokenNum == NT_MUL){
-		//printf("#####INTRUCTION MULS\n");
 		arithm_semantic_check(stackPtr);
 		genMuls();
 	//E -> E-E
 	}else if(topNT->tokenNum == NT_SUB){
-		//printf("#####INTRUCTION SUBS\n");
 		arithm_semantic_check(stackPtr);
 		genSubs();
 	//E -> E/E
@@ -238,7 +228,6 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 
 
 		if(top1->tokenNum == RULE_INT && top3->tokenNum == RULE_INT){
-			//printf("#####INTRUCTION DIVS\n");
 			//E -> E/0 division by zero constant error
 			if(strcmp(top1->tokenStr.str,"0") == 0){
 				errorMsg(ERR_RUNTIME, "division by zero constant");
@@ -248,7 +237,6 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 
 
 		}else if(top1->tokenNum == RULE_FLOAT && top3->tokenNum == RULE_FLOAT){
-			//printf("#####INTRUCTION IDIVS\n");
 			
 			//E -> E/0 division by zero constant error
 			if (strcmp(top1->tokenStr.str,"") != 0){
@@ -343,7 +331,7 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 	do{
 		//top symbol - nonterminal
 		topNT = get_NT(ptrStack);
-	
+		
 		switch(table[topNT->tokenNum][token_to_NT(new_token)]){
 			case '#':
 				prec_analisis_end = true;
@@ -364,6 +352,11 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 						errorMsg(ERR_SYNTAX, "Err syntax in expression - operator cannot go after operator");
 					}else{
 						last_token_operand = false;}
+				}else if(token_to_NT(new_token) == NT_DOLLAR){
+					if(last_token_operand == false){
+						errorMsg(ERR_SYNTAX, "Expression cannot end with operator");}
+				}else if(new_token == R_PAR && last_token_operand == false){
+					errorMsg(ERR_SYNTAX, "Operand before right bracket");
 				}else{}
 				break;
 			case '>':
@@ -371,6 +364,9 @@ prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
 				break;
 			case 'X':
 				errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Semantic error in expression - X in prec table");
+				break;
+			case 'Y':
+				errorMsg(ERR_SYNTAX, "Err expression - bad usage of parenthesis");
 				break;
 			default:
 				errorMsg(ERR_SYNTAX, "Err syntax in expression - not in precence table");
