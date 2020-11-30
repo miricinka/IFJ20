@@ -211,8 +211,19 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 		genPushs(NT_STR, topNT->tokenStr.str);
 	//reduce 3 symbols
 	}else if(topNT->tokenNum == NT_ADD){ //E -> E+E TODO str+str CONCAT
-		arithm_semantic_check(stackPtr);
-		genAdds();
+		struc_token *top1 = peek1_precStack(stackPtr);
+		struc_token *top3 = top3 = peek3_precStack(stackPtr);
+		if(top1->tokenNum == RULE_STR && top3->tokenNum == RULE_STR){
+			arithm_semantic_check(stackPtr);
+			genConcat();
+
+		}else{
+			arithm_semantic_check(stackPtr);
+			genAdds();
+		}
+
+		//arithm_semantic_check(stackPtr);
+		//genAdds();
 	//E -> E+E
 	}else if(topNT->tokenNum == NT_MUL){
 		arithm_semantic_check(stackPtr);
