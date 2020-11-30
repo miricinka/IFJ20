@@ -516,7 +516,7 @@ void isFunCallDec(funNode RootPtr){
 		isFunCallDec(RootPtr->RPtr);
 		
 		if (RootPtr->isCalled && !RootPtr->isDeclared ){
-			fprintf(stderr,"Error - the function %s is called but not declared!\n", RootPtr->name.str);
+			fprintf(stderr,"Error 3 - the function %s is called but not declared!\n", RootPtr->name.str);
 			exit(3); 
 		}
 	}
@@ -681,8 +681,8 @@ void compareLists (funList *list1, funList *list2){
 
     if ( list1->elementCount != list2->elementCount){
 	    printf("%d, %d\n",list1->elementCount ,list2->elementCount);
-            fprintf(stderr,"ERROR 7: Assigment has wrong ammount of returns\n");
-            exit(7);
+            fprintf(stderr,"ERROR 5: Assigment has wrong ammount of returns\n");
+            exit(5);
         }
 
     funListElement element1 = list1->First;
@@ -691,8 +691,8 @@ void compareLists (funList *list1, funList *list2){
     while (element1 != NULL && element2 != NULL){
 
         if ( element1->type != element2->type && element1->type != EMPTY){
-            fprintf(stderr,"Error 7: Wrong return/parameter type of an assigment\n");
-            exit(7);
+            fprintf(stderr,"Error 5: Wrong return/parameter type of an assigment\n");
+            exit(5);
         }
         element1 = element1->NextPtr;
         element2 = element2->NextPtr;
