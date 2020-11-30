@@ -181,6 +181,10 @@ int fun_def()
                 //set counters to zero
                 funParamCounter = 0;
                 funReturnCounter = 0;
+
+                //main can not have return
+                returnCalled = 100;
+
                 addFunDec(&funTree, tempMain, funParamCounter/*, funReturnCounter*/);
                 strFree(&tempMain);
 
@@ -223,6 +227,7 @@ int fun_def()
 
                 genMainEnd();
                 //main function successful
+
                 return result;
         }
         else if (token == ID) //<fun_def> func ID ( <fun_params> ) ( <fun_returns> ) { <stat_list> }
@@ -904,8 +909,19 @@ int stat(varNode *treePtr)
         else if (token == KW_RETURN) //<stat> return <return_values>
         {
                 funReturnCounter = 0;
+                //returnCalled was set to 100 in main function,main cannot have return with value
+                if (returnCalled == 100) 
+                {       
+                        //return EOL is option, in this case return is valid
+                        token = get_new_token(&tokenStr);
+                        if (token != EOL) errorMsg(ERR_SEMANTIC_PARAM, "Function main can not have return");
+                        return result;
+                        
+                }
+                
                 // return was call so it is set to zero
-                returnCalled = 0;
+                returnCalled = 0;             
+                
                 return return_values(treePtr);
         }
 
