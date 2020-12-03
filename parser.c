@@ -183,10 +183,13 @@ int fun_def()
                 funParamCounter = 0;
                 funReturnCounter = 0;
 
+                //check for function redeclaration
+                funDecCheck(&funTree, tempMain);
+
                 //main can not have return
                 returnCalled = 100;
 
-                addFunDec(&funTree, tempMain, funParamCounter/*, funReturnCounter*/);
+                addFunDec(&funTree, tempMain, funParamCounter);
                 strFree(&tempMain);
 
                 mainCheck = true;
