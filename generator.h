@@ -35,6 +35,7 @@ void genStackPop(labelStack* stack);
 void genStackPush(labelStack* stack, int newLabel);
 void genStackDelete(labelStack* stack);
 void genStackTest(labelStack* stack);
+void genStackInit(labelStack* stack);
 
 void generateInstruction(char* instType, char* addr1, char* addr2, char* addr3);
 char* stringconvertor(char* srting_before);
@@ -51,11 +52,12 @@ void genDefvar(char* variable);
 void genPops(char* variable);
 void genClears();
 void genRead(int type, char* variable, char* variable2);
-void genIfHead();
-void genElseHead();
-void genIfEnd();
-void genPostIf();
-void genForHead();
+void genIfHead(labelStack *elses);
+void genElseHead(labelStack *elses);
+void genIfEnd(labelStack *postifs);
+void genPostIf(labelStack *postifs);
+
+// void genForHead();
 void genWrite(int Type, char* content);
 void genConcat();
 void genGTS();

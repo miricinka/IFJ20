@@ -30,11 +30,12 @@ int levelOfScope = 1; //scope of variables, increments with more levels of scope
 
 //generation
 tListOfInstr *list; //list of generated instructions
+labelStack* elses;
+labelStack* postifs;
 
 //end checkers
 int returnCalled = 0; //checks if return is called in function with returns
 bool mainCheck = false; //checks if main function is in program
-labelStack stack = NULL;
 
 /**
  * @brief Start of parsing, initialization of structures
@@ -43,6 +44,8 @@ labelStack stack = NULL;
  */
 int parse(tListOfInstr *instrList)
 {
+        elses = NULL;
+        postifs = NULL;
 
         //initialization of string for names of functions
         strInit(&funName);
@@ -154,7 +157,6 @@ int fun_def_list()
                 isFunCallDec(funTree);
 
                 printList(list);
-                genStackTest(&stack);
                 return result;
                 break;
         }
@@ -402,12 +404,16 @@ int stat(varNode *treePtr)
 
                 //call precedence parser with tree of variables, current token, and string of token
                 precResult = prec_parse(treePtr, token, tokenStr);
+
                 //token loaded last first token after expression
                 token = precResult.end_token;
                 //if can have only bool value in condition
                 if (precResult.end_datatype != TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "IF statement expression must be boolean");
                 //left bracket was loaded in precedence parser
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
+
+                //generate if head
+                // genIfHead(elses);
 
                 //handle stat_list rule
                 result = stat_list(treePtr);
@@ -419,6 +425,10 @@ int stat(varNode *treePtr)
 
                 //right bracket token after all statements in if
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
+
+                //generate if end
+                // genIfEnd(postifs);
+
                 //else token
                 token = get_new_token(&tokenStr);
                 if (token != KW_ELSE)errorMsg(ERR_SYNTAX, "IF statement - missing 'ELSE'");
@@ -428,6 +438,10 @@ int stat(varNode *treePtr)
                 //left bracket token
                 token = get_new_token(&tokenStr);
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
+
+                //generate else head
+                // genElseHead(elses);
+
                 token = get_new_token(&tokenStr);
                 //EOL token
                 if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - no EOL after ELSE");
@@ -437,6 +451,9 @@ int stat(varNode *treePtr)
                 if (result != 0) return result;
                 //right bracket loaded in stat_list
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
+
+                //generate end of else
+                // genPostIf(postifs);
 
                 //end of else scope
                 levelOfScope--;

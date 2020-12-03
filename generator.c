@@ -29,9 +29,6 @@ static int labelCnt = 1;
 static int inputCnt = 0;
 
 tListOfInstr *list;
-labelStack* elses = NULL;
-labelStack* postifs = NULL;
-
 
 void genStackPop(labelStack* stack){
 	if (stack != NULL){
@@ -45,14 +42,15 @@ void genStackPush(labelStack* stack, int newLabel){
 	labelStack newEStacklement = (labelStack) malloc(sizeof(struct labelStack));
 	newEStacklement->labelCount = newLabel;
 
-    if(*stack == NULL){
+    if(stack == NULL){
 	    newEStacklement->previousElement = NULL;
     }else{
         newEStacklement->previousElement = (*stack);
     }
     
-	(*stack) = newEStacklement;
+	stack = &newEStacklement;
 }
+
 
 void genStackDelete(labelStack* stack){
 	while (*stack != NULL){
@@ -288,7 +286,7 @@ void genRead(int type, char* variable,  char* variable2){
 }
 
 /* conditions head */
-void genIfHead(){
+void genIfHead(labelStack *elses){
     genStackPush(elses, labelCnt);
     char *label = makeLabel((*elses)->labelCount,"elselabel_");
     labelCnt++;
@@ -296,14 +294,14 @@ void genIfHead(){
     generateInstruction("JUMPIFNEQ", label, "bool@true", "GF@compare");
 }
 
-void genElseHead(){
+void genElseHead(labelStack *elses){
     char *label = makeLabel((*elses)->labelCount,"elselabel_");
     generateInstruction("LABEL", label, NULL, NULL);
     genStackPop(elses);
 }
 
 /* end of for/if */
-void genIfEnd(){
+void genIfEnd(labelStack *postifs){
     genStackPush(postifs, endif);
     char *label = makeLabel((*postifs)->labelCount,"postif_");
     endif++;
@@ -311,21 +309,21 @@ void genIfEnd(){
 }
 
 /* label to continue from if/for */
-void genPostIf(){
+void genPostIf(labelStack *postifs){
     char *label = makeLabel((*postifs)->labelCount,"postif_");
-    generateInstruction("LABEL", successor, NULL, NULL);
+    generateInstruction("LABEL", label, NULL, NULL);
     genStackPop(postifs);
 }
 
-void genForHead(){
-
-    char* labelname = (char*) malloc(sizeof(labelCnt) + 10);
-    genStackPush(elses, labelCnt);
-    sprintf(labelname, "forlabel_%d", elses->labelcount);
-    labelCnt++;
-    generateInstruction("POPS", "GF@compare", NULL, NULL);
-    generateInstruction("JUMPIFNEQ", labelname, "bool@true", "GF@compare");
-}
+// void genForHead(){
+    
+//     char* labelname = (char*) malloc(sizeof(labelCnt) + 10);
+//     genStackPush(elses, labelCnt);
+//     sprintf(labelname, "forlabel_%d",(*elses)->labelCount);
+//     labelCnt++;
+//     generateInstruction("POPS", "GF@compare", NULL, NULL);
+//     generateInstruction("JUMPIFNEQ", labelname, "bool@true", "GF@compare");
+// }
 
 
 /* print to output */
