@@ -50,7 +50,7 @@ void genPushs(int type, char* content);
 void genDefvar(char* variable);
 void genPops(char* variable);
 void genClears();
-void genRead(int type, char* variable);
+void genRead(int type, char* variable, char* variable2);
 void genIfElseHead();
 void genIfElseEnd();
 void genPostIf();

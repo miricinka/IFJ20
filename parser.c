@@ -43,6 +43,7 @@ bool mainCheck = false; //checks if main function is in program
  */
 int parse(tListOfInstr *instrList)
 {
+
         //initialization of string for names of functions
         strInit(&funName);
         //initialization of string for already declared function
@@ -995,19 +996,21 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 {
         int result = 0;
 
+
         //ID token
         token = get_new_token(&tokenStr);
         if (token != ID) errorMsg(ERR_SYNTAX, "ASSIGN statement - must be ID");
 
         //empty ID
-        string emptyID;
-        strInit(&emptyID);
-        strCopyString(&emptyID, &tokenStr);
+        string nextID;
+        strInit(&nextID);
+        strCopyString(&nextID, &tokenStr);
+
 
         //if variable is basic ID we check if it is declared,get type and add it to list
         //else if variable is empty we add EMPTY type variable to list
         assignVarCounter++;
-        if (strcmp(emptyID.str, "_") != 0)
+        if (strcmp(nextID.str, "_") != 0)
         {
                 //is ID declared?
                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
@@ -1023,8 +1026,7 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         {
                 //add empty variable to list
                 funListAdd(assignVariablesList,EMPTY,assignVarCounter);
-        }       
-        strFree(&emptyID);     
+        }          
 
 
         //comma or assign token
@@ -1043,7 +1045,7 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         int assignAssignmentCounter = 0;
 
         //handle ass_exps
-        return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter,readFunctionID);
+        return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter,readFunctionID, nextID);
 
         //clear list of variables
         funListDelete(assignVariablesList);
@@ -1060,7 +1062,7 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
  * 
  * @param treePtr tree for variables
  */
-int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,funList *assignAssignList,int assignAssignmentCounter, string readFunctionID)
+int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,funList *assignAssignList,int assignAssignmentCounter, string readFunctionID, string nextID)
 {
         int result = 0;
         prec_end_struct precResult;
@@ -1078,7 +1080,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         if (token == F_INPUTI)
         {
                 //generate read integer instruction
-                genRead(F_INPUTI,readFunctionID.str);
+                genRead(F_INPUTI,readFunctionID.str, nextID.str);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1104,7 +1106,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         else if (token == F_INPUTF)
         {
                 //generate read float instruction
-                genRead(F_INPUTF,readFunctionID.str);
+                genRead(F_INPUTF,readFunctionID.str, nextID.str);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1130,7 +1132,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         else if (token == F_INPUTS)
         {
                 //generate read string instruction
-                genRead(F_INPUTS,readFunctionID.str);
+                genRead(F_INPUTS,readFunctionID.str, nextID.str);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1412,7 +1414,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
         //if comma recursively call ass_exps
         if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
-        if (token == COMMA) return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter,readFunctionID);
+        if (token == COMMA) return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter,readFunctionID, nextID);
 
         //check if return types are equal
         compareLists(assignVariablesList,assignAssignList);

@@ -680,7 +680,7 @@ void checkListElement(funList *list, int type, int order){
 void compareLists (funList *list1, funList *list2){
 
     if ( list1->elementCount != list2->elementCount){
-	    printf("%d, %d\n",list1->elementCount ,list2->elementCount);
+			//printf("%d, %d\n",list1->elementCount ,list2->elementCount); // TODO delete me
             fprintf(stderr,"ERROR 5: Assigment has wrong ammount of returns\n");
             exit(5);
         }
@@ -691,6 +691,7 @@ void compareLists (funList *list1, funList *list2){
     while (element1 != NULL && element2 != NULL){
 
         if ( element1->type != element2->type && element1->type != EMPTY){
+			//printf("Elements n. %d have types %s, %s\n", element1->order, printType(element1->type), printType(element2->type)); // TODO delete me
             fprintf(stderr,"Error 5: Wrong return/parameter type of an assigment\n");
             exit(5);
         }

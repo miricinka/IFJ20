@@ -25,6 +25,8 @@
 int labelcnt = 1;
 int endif = 1;
 
+static int inputCnt = 0;
+
 tListOfInstr *list;
 
 void genStackPop(labelStack* stack){
@@ -47,7 +49,6 @@ void genStackPush(labelStack* stack, int newLabel){
     
 	(*stack) = newEStacklement;
 }
-
 
 void genStackDelete(labelStack* stack){
 	while (*stack != NULL){
@@ -134,19 +135,36 @@ char* stringconvertor(char* string_before){
     return string_after.str;
 }
 
+char* makeInputLabel(){
+    inputCnt++;
 
+    /* malloc(18) because goodType is 8 characters and int can be max 10 characters (1 character = 1 byte)*/
+    char* resultLabel = (char*) malloc(18);
+    sprintf(resultLabel,"goodType%d",inputCnt);
+    return resultLabel;
+}
 
 /*  
     .IFJcode20
     generating global variables for concatenation
+    generating global variables for input functions
     let's go to main function
 */
 void genFileHead(){
     generateInstruction(".IFJcode20\n", NULL, NULL, NULL);
     generateInstruction("DEFVAR", "GF@concat1", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concat2", NULL, NULL);
-    generateInstruction("DEFVAR", "GF@concatfin\n", NULL, NULL);
-    generateInstruction("JUMP", "_main", NULL, NULL);  
+    generateInstruction("DEFVAR", "GF@concatfin", NULL, NULL);
+
+    /* Checking correct type of a variable in inputs, inputy, input functions */
+    generateInstruction("DEFVAR", "GF@getType", NULL, NULL);
+    generateInstruction("DEFVAR", "GF@typeString", NULL, NULL);
+    generateInstruction("DEFVAR", "GF@typeFloat", NULL, NULL);
+    generateInstruction("DEFVAR", "GF@typeInt", NULL, NULL);
+    generateInstruction("MOVE", "GF@typeInt", "string@int", NULL);
+    generateInstruction("MOVE", "GF@typeFloat", "string@float", NULL);
+    generateInstruction("MOVE", "GF@typeString", "string@string", NULL);
+    generateInstruction("\nJUMP", "_main", NULL, NULL);  
 }
 
 /* start of main function */
@@ -226,19 +244,42 @@ void genClears(){
 }
 
 /* detecting input */
-void genRead(int type, char* variable){
+void genRead(int type, char* variable,  char* variable2){
     char* ans = (char*) malloc(sizeof(char) * strlen(variable) + 10);
     sprintf(ans, "TF@%s", variable);
+
+    char* ans2 = (char*) malloc(sizeof(char) * strlen(variable2) + 10);
+    sprintf(ans2, "TF@%s", variable2);
+
+    char *label = makeInputLabel();
+
     if(type == F_INPUTI){
         generateInstruction("READ", ans, "int", NULL);
-    }
-    else if(type == F_INPUTF){
+        generateInstruction("TYPE", "GF@getType", ans, NULL);
+        generateInstruction("MOVE", ans2, "int@0", NULL);
+
+        generateInstruction("JUMPIFEQ", label, "GF@getType", "GF@typeInt");
+        generateInstruction("MOVE", ans2, "int@1", NULL);
+        generateInstruction("LABEL", label, NULL, NULL);
+
+    }else if(type == F_INPUTF){
         generateInstruction("READ", ans, "float", NULL);
-    }
-    else if(type == F_INPUTS){
+        generateInstruction("TYPE", "GF@getType", ans, NULL);
+        generateInstruction("MOVE", ans2, "int@0", NULL);
+
+        generateInstruction("JUMPIFEQ", label, "GF@getType", "GF@typeFloat");
+        generateInstruction("MOVE", ans2, "int@1", NULL);
+        generateInstruction("LABEL", label, NULL, NULL);
+
+    }else if(type == F_INPUTS){
         generateInstruction("READ", ans, "string", NULL);
+        generateInstruction("TYPE", "GF@getType", ans, NULL);
+        generateInstruction("MOVE", ans2, "int@0", NULL);
+
+        generateInstruction("JUMPIFEQ", label, "GF@getType", "GF@typeString");
+        generateInstruction("MOVE", ans2, "int@1", NULL);
+        generateInstruction("LABEL", label, NULL, NULL);
     }
-    else{}
 }
 
 /* conditions head */
