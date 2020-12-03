@@ -34,7 +34,7 @@ tListOfInstr *list; //list of generated instructions
 //end checkers
 int returnCalled = 0; //checks if return is called in function with returns
 bool mainCheck = false; //checks if main function is in program
-
+labelStack stack = NULL;
 
 /**
  * @brief Start of parsing, initialization of structures
@@ -154,6 +154,7 @@ int fun_def_list()
                 isFunCallDec(funTree);
 
                 printList(list);
+                genStackTest(&stack);
                 return result;
                 break;
         }

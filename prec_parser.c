@@ -269,36 +269,33 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 
 	//E -> E==E
 	}else if(topNT->tokenNum == NT_EQ){
-		//printf("#####INTRUCTION EQS\n");
-		//print_precStack(stackPtr);
+		genEQS();
 		reduce_boolean(stackPtr);
-		//print_precStack(stackPtr);
 	//E -> E<E
 	}else if(topNT->tokenNum == NT_LESS){
-		//printf("#####INTRUCTION LTS\n");
+		genLTS();
 		reduce_boolean(stackPtr);
 	//E -> E>E
 	}else if(topNT->tokenNum == NT_GREAT){
-		//printf("#####INTRUCTION GTS\n");
+		genGTS();
 		reduce_boolean(stackPtr);
 	//E -> E!=E
 	}else if(topNT->tokenNum == NT_NEQ){
-		//printf("#####INTRUCTION EQS\n");
-		//printf("#####INTRUCTION NOTS\n");
+		genEQS();
+		genNOTS();
 		reduce_boolean(stackPtr);
 	//E -> E>=E
 	}else if(topNT->tokenNum == NT_LEQ){
-		//printf("#####INTRUCTION LTS\n");
-		//printf("#####INTRUCTION NOT\n");
+		genLTS();
+		genNOTS();
 		reduce_boolean(stackPtr);
 	//E -> E<=E
 	}else if(topNT->tokenNum == NT_GEQ){
-		//printf("#####INTRUCTION GTS\n");
-		//printf("#####INTRUCTION NOT\n");
+		genGTS();
+		genNOTS();
 		reduce_boolean(stackPtr);
 
 	}else{
-		//print_precStack(stackPtr);
 		errorMsg(ERR_SYNTAX, "Non existing rule for expression");
 	}
 
