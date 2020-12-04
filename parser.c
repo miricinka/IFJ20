@@ -30,8 +30,9 @@ int levelOfScope = 1; //scope of variables, increments with more levels of scope
 
 //generation
 tListOfInstr *list; //list of generated instructions
-labelStack* elses;
-labelStack* postifs;
+static int elsecount = 1;
+static int forcount = 1;
+static int setframe = 0;
 
 //end checkers
 int returnCalled = 0; //checks if return is called in function with returns
@@ -44,8 +45,6 @@ bool mainCheck = false; //checks if main function is in program
  */
 int parse(tListOfInstr *instrList)
 {
-        elses = NULL;
-        postifs = NULL;
 
         //initialization of string for names of functions
         strInit(&funName);
@@ -62,7 +61,6 @@ int parse(tListOfInstr *instrList)
         //initialize list of instructions
         list = instrList;
         listInit(list);
-
         //loads next token
         token = get_new_token(&tokenStr);
         //if token is end of file => error Empty File
@@ -397,24 +395,21 @@ int stat(varNode *treePtr)
         {
                 //increment level of scope
                 levelOfScope++;
-
+                int numberofif = elsecount;
                 //only tokens accepted in if condition
                 token = get_new_token(&tokenStr);
                 if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after IF statement");
 
                 //call precedence parser with tree of variables, current token, and string of token
                 precResult = prec_parse(treePtr, token, tokenStr);
-
                 //token loaded last first token after expression
                 token = precResult.end_token;
                 //if can have only bool value in condition
                 if (precResult.end_datatype != TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "IF statement expression must be boolean");
                 //left bracket was loaded in precedence parser
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing {");
-
-                //generate if head
-                // genIfHead(elses);
-
+                genIfHead(numberofif);
+                elsecount++;
                 //handle stat_list rule
                 result = stat_list(treePtr);
                 if (result != 0) return result;
@@ -425,10 +420,7 @@ int stat(varNode *treePtr)
 
                 //right bracket token after all statements in if
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
-
-                //generate if end
-                // genIfEnd(postifs);
-
+                genIfEnd(numberofif);
                 //else token
                 token = get_new_token(&tokenStr);
                 if (token != KW_ELSE)errorMsg(ERR_SYNTAX, "IF statement - missing 'ELSE'");
@@ -438,10 +430,7 @@ int stat(varNode *treePtr)
                 //left bracket token
                 token = get_new_token(&tokenStr);
                 if (token != L_BR) errorMsg(ERR_SYNTAX, "IF statement - missing { in ELSE");
-
-                //generate else head
-                // genElseHead(elses);
-
+                genElseHead(numberofif);
                 token = get_new_token(&tokenStr);
                 //EOL token
                 if (token != EOL) errorMsg(ERR_SYNTAX, "IF statement - no EOL after ELSE");
@@ -451,10 +440,7 @@ int stat(varNode *treePtr)
                 if (result != 0) return result;
                 //right bracket loaded in stat_list
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "IF statement - missing }");
-
-                //generate end of else
-                // genPostIf(postifs);
-
+                genPostIf(numberofif);
                 //end of else scope
                 levelOfScope--;
                 BSTScopeDelete(treePtr, levelOfScope);
@@ -466,18 +452,19 @@ int stat(varNode *treePtr)
         {
                 //scope in for header
                 levelOfScope++;
-
+                int numberoffor = forcount;
                 //semicol if first part of for header is missing or id which will go to precedence parser if not missing
                 token = get_new_token(&tokenStr);
                 if (token != SEMICOL && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after FOR kw");
 
                 if (token == ID) //first part of header is present
                 {
+                        setframe = 1;
                         //save id of variable to stringID
                         string stringID;
                         strInit(&stringID);
                         strCopyString(&stringID, &tokenStr);
-
+                        genDefvar(stringID.str, setframe);
                         //token for variable definition
                         token = get_new_token(&tokenStr);
                         if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
@@ -496,8 +483,12 @@ int stat(varNode *treePtr)
                         //add variable to tree
                         BSTInsert(treePtr, stringID, precResult.end_datatype, levelOfScope);
                         strFree(&stringID);
+                        setframe = 0;
                 }
                 //second part of for header is condition and it is not optional
+
+                genForHead(numberoffor);
+
                 //token for precedence parser
                 token = get_new_token(&tokenStr);
                 if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
@@ -510,11 +501,11 @@ int stat(varNode *treePtr)
 
                 //token loaded in precedence parser
                 if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
-
+                genForCheck(numberoffor);
                 //token for third part of for header or left bracket to star for body
                 token = get_new_token(&tokenStr);
                 if (token != ID && token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
-
+                genForContinue(numberoffor);
                 if (token == ID) //third part of for header
                 {
                         //assign token
@@ -533,9 +524,11 @@ int stat(varNode *treePtr)
                         //left bracket token loaded in precedence parser
                         if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
                 }
+                genForContinueEnd(numberoffor);
+                genForBody(numberoffor);
                 //scope in for body
                 levelOfScope++;
-
+                
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
@@ -546,10 +539,11 @@ int stat(varNode *treePtr)
 
                 //right bracket loaded in prec parser
                 if (token != R_BR) errorMsg(ERR_SYNTAX, "FOR statement - '}' missing");
+                genForBodyEnd(numberoffor);
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "FOR statement - EOL missing");
-
+                genForEnd(forcount);
                 //end of both scopes: for header, for body
                 levelOfScope = levelOfScope - 2;
                 BSTScopeDelete(treePtr, levelOfScope);
@@ -580,7 +574,7 @@ int stat(varNode *treePtr)
                         //if id on left side of definition was "_" it cannot be defined
                         if (strcmp(stringID.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
 
-                        genDefvar(stringID.str);
+                        genDefvar(stringID.str, setframe);
 
                         //token for precedence parser
                         token = get_new_token(&tokenStr);
@@ -882,6 +876,7 @@ int stat(varNode *treePtr)
                         {
                                 if (variableType != precResult.end_datatype){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment"); }
                         }
+                        genPops(stringID.str);
                 }
                 else if (token == COMMA)//more IDs on left side
                 {
@@ -1526,8 +1521,9 @@ int fun_params(varNode *treePtr)
         if (isIDDeclared == true) { errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared"); }
 
         //generate definition of variable in function header
-        genDefvar(tokenStr.str);
-
+        setframe = 2;
+        genDefvar(tokenStr.str, setframe);
+        setframe = 0;
         //token must be keyword for type
         token = get_new_token(&tokenStr);
         if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) errorMsg(ERR_SYNTAX, "Incorrect or missing param type");

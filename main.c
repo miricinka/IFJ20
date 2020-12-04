@@ -27,7 +27,7 @@ int main() {
    	listInit(&instrList);
 
    	int result = 0;
-   	result = parse(&instrList); // provedeme syntaktickou analyzu
+   	result = parse(&instrList); // execute syntactic analysis
 	if (result != 0) errorMsg(result, "Something went wrong");
 	if (result == 0)
 	{
