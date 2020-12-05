@@ -455,6 +455,9 @@ int stat(varNode *treePtr)
                 int numberoffor = forcount;
                 //semicol if first part of for header is missing or id which will go to precedence parser if not missing
                 token = get_new_token(&tokenStr);
+
+                //cannot add empty ID to declaration
+                if (strcmp(tokenStr.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
                 if (token != SEMICOL && token != ID) errorMsg(ERR_SYNTAX, "Incorrect token after FOR kw");
 
                 if (token == ID) //first part of header is present
@@ -470,6 +473,8 @@ int stat(varNode *treePtr)
                         if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
                         //token for precedence parser
                         token = get_new_token(&tokenStr);
+                        //cannot add empty ID to declaration
+                        if (strcmp(tokenStr.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not add '_' to declaration"); }
                         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "FOR statement - incorrect var def");
 
                         //call precedence parser
@@ -503,7 +508,7 @@ int stat(varNode *treePtr)
                 if (token != SEMICOL) errorMsg(ERR_SYNTAX, "FOR statement - semicolon missing");
                 genForCheck(numberoffor);
                 //token for third part of for header or left bracket to star for body
-                token = get_new_token(&tokenStr);
+                token = get_new_token(&tokenStr);                
                 if (token != ID && token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
                 genForContinue(numberoffor);
                 if (token == ID) //third part of for header
@@ -513,6 +518,8 @@ int stat(varNode *treePtr)
                         if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
                         //token for precedence parser
                         token = get_new_token(&tokenStr);
+                        //cannot add empty ID to declaration
+                        if (strcmp(tokenStr.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not assign '_' to ID"); }
                         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "FOR statement - incorrect expression");
 
                         //call precedence parser
@@ -578,8 +585,10 @@ int stat(varNode *treePtr)
 
                         //token for precedence parser
                         token = get_new_token(&tokenStr);
+                        //cannot assign empty ID to variable
+                        if (strcmp(tokenStr.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not add value '_' to declaration"); }
                         if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect statement - bad token after :=");
-                        
+        
                         //call precedence parser
                         precResult = prec_parse(treePtr, token, tokenStr);
                         token = precResult.end_token;
@@ -798,6 +807,8 @@ int stat(varNode *treePtr)
                                 }
                         }
                         //token for prec parser
+                        //cannot assign empty ID to variable
+                        if (strcmp(tokenStr.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
                         if (token == F_INPUTI || token == F_INPUTS || token == F_INPUTF || token == F_CHR || token == F_ORD || token == F_SUBSTR) {errorMsg(ERR_SEMANTIC_PARAM, "ASSIGN statement - wrong number of return types for built in function");}
                         else if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "ASSIGN statement - bad token after =");
 
@@ -853,6 +864,7 @@ int stat(varNode *treePtr)
                                         if (token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - EOL missing");
                                         return result;
                                 }
+                                                               
                         }
 
                         //call precedence parser 
@@ -1366,9 +1378,10 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
 
 
-
+        //cannot assign empty ID to variable
+        if (strcmp(tokenStr.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not asssign '_'"); }
         //token for precedence parser or user function
-        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
+        if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR ) errorMsg(ERR_SYNTAX, "Incorrect token after RETURN - must be ID, FLOAT, INT or STRING");
 
         //if it is ID check if it is declared
         if (token == ID)
@@ -1399,37 +1412,27 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         result = fun_call_param(treePtr);
                         if (result != 0) return result;
 
-                        //token must be comma or EOL
+                        //token must be EOL
                         token = get_new_token(&tokenStr);
 
                         //in this case where function is on right side of assign there cant be another id or function or vaule 
-                        if (token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - EOL missing");
+                        if (token != EOL) errorMsg(ERR_SYNTAX, "ASSIGN statement - EOL missing");
                         return result;
                 }
-                //precedence parser called
-                precResult = prec_parse(treePtr, token, tokenStr);
-                token = precResult.end_token;
-
-                //value from precedence parser can not be bool type
-                if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "RETURN statement - return type can't be BOOL");
-                //add right side of assign to list
-                assignAssignmentCounter++;
-                funListAdd(assignAssignList,precResult.end_datatype,assignAssignmentCounter);
+              
         }
-        else if (token != L_PAR)
-        {
-                assignAssignmentCounter++;
-                funListAdd(assignAssignList,token,assignAssignmentCounter);
-                token = get_new_token(&tokenStr);
-        }
+        //precedence parser called
+        precResult = prec_parse(treePtr, token, tokenStr);
+        token = precResult.end_token;
 
-
-        //funListAdd(assignAssignList,EMPTY,assignAssignmentCounter);
-
-        //funListAdd(assignAssignList,T_TYPE,assignAssignmentCounter);
+        //value from precedence parser can not be bool type
+        if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "ASSIGN statement - return type can't be BOOL");
+        //add right side of assign to list
+        assignAssignmentCounter++;
+        funListAdd(assignAssignList,precResult.end_datatype,assignAssignmentCounter);
 
         //if comma recursively call ass_exps
-        if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - ',' or EOL missing");
+        if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "ASSIGN statement - ',' or EOL missing");
         if (token == COMMA) return ass_exps(treePtr,assignVariablesList,assignVarCounter,assignAssignList,assignAssignmentCounter,readFunctionID, nextID);
 
         //check if return types are equal
@@ -1632,7 +1635,7 @@ int print_params(varNode *treePtr)
 
 
 /**
- * @brief Values in return function, this is <ass_exps> but with return checks
+ * @brief Values in return function, this is as <ass_exps> but with return checks
  * 
  * @param treePtr tree for variables
  */
