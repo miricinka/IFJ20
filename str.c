@@ -28,7 +28,7 @@
 #define STR_SUCCESS 0
 
 int strInit(string *s)
-// funkce vytvori novy retezec
+//creates new string
 {
    if ((s->str = (char*) malloc(sizeof(char) * STR_LEN_INC)) == NULL) //*size of char
       return STR_ERROR;
@@ -39,24 +39,24 @@ int strInit(string *s)
 }
 
 void strFree(string *s)
-// funkce uvolni retezec z pameti
+//frees string from memory
 {
    free(s->str);
 }
 
 void strClear(string *s)
-// funkce vymaze obsah retezce
+// clears contents of string
 {
    s->str[0] = '\0';
    s->length = 0;
 }
 
 int strAddChar(string *s1, char c)
-// prida na konec retezce jeden znak
+// adds one char at the end of string
 {   
    if ((*s1).length + 1 >= s1->allocSize)
    {
-      // pamet nestaci, je potreba provest realokaci
+      // memory not sufficient, reallocation is requiered
       if ((s1->str = (char*) realloc(s1->str, s1->length + STR_LEN_INC)) == NULL)
          return STR_ERROR;
       s1->allocSize = s1->length + STR_LEN_INC;
@@ -79,13 +79,13 @@ int strAddChars(string *s1, char *c) {
 }
 
 int strCopyString(string *s1, string *s2)
-// prekopiruje retezec s2 do s1
+// copies string s2 to string s1
 {
  
    int newLength = s2->length;
    if (newLength >= s1->allocSize)
    {
-      // pamet nestaci, je potreba provest realokaci
+      // memory not sufficient, reallocation is requiered
       if ((s1->str = (char*) realloc(s1->str, newLength + 1)) == NULL)
          return STR_ERROR;
       s1->allocSize = newLength + 1;
@@ -93,39 +93,30 @@ int strCopyString(string *s1, string *s2)
    strcpy(s1->str, s2->str);
    s1->length = newLength;
  
-
- /*
-  //char *new_string;
-  //new_string = (char*) malloc (sizeof(char) *STR_LEN_INC);
-
-  string *str1 = NULL;
-  strInit(str1);
-  strcpy(s1->str, s2->str);
-   */
    return STR_SUCCESS;
 
 }
 
 int strCmpString(string *s1, string *s2)
-// porovna oba retezce a vrati vysledek
+// compares two string and returns result
 {
    return strcmp(s1->str, s2->str);
 }
 
 int strCmpConstStr(string *s1, char* s2)
-// porovna nas retezec s konstantnim retezcem
+// compares our string with constant string
 {
    return strcmp(s1->str, s2);
 }
 
 char *strGetStr(string *s)
-// vrati textovou cast retezce
+// returns text of string
 {
    return s->str;
 }
 
 int strGetLength(string *s)
-// vrati delku daneho retezce
+// returns lenght of string
 {
    return s->length;
 }
