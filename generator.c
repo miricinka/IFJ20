@@ -85,6 +85,7 @@ void genFileHead(){
     generateInstruction("DEFVAR", "GF@concat1", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concat2", NULL, NULL);
     generateInstruction("DEFVAR", "GF@concatfin", NULL, NULL);
+    generateInstruction("DEFVAR", "GF@_", NULL, NULL);
     /* comparing in If-Else / for */
     generateInstruction("DEFVAR", "GF@compare", NULL, NULL);
     /* Checking correct type of a variable in inputs, inputi, inputf functions */
@@ -149,7 +150,7 @@ void genPushs(int type, char* content){
         sprintf(ans,"float@%a", number);
     }
     else if(type == NT_ID){
-        sprintf(ans,"TF@%s", content);
+        sprintf(ans,"LF@%s", content);
     }
     else{}
     generateInstruction("PUSHS", ans, NULL, NULL);
@@ -176,9 +177,25 @@ void genDefvar(char* variable, int frame){
 }
 
 /* pop from stack */
-void genPops(char* variable){
+void genPops(char* variable, int frame){
     char* ans = (char*) malloc(sizeof(char) * strlen(variable) + 10);
-    sprintf(ans, "TF@%s", variable);
+    switch (frame)
+    {
+    case 0:
+        sprintf(ans, "LF@%s", variable);
+        break;
+    case 1:
+        sprintf(ans, "GF@%s", variable);    
+        break;
+    case 2:
+        sprintf(ans, "TF@%s", variable);
+        break;
+    default:
+        break;
+    }
+    if(strcmp(variable, "_") == 0){
+        ans = "GF@_";
+    }
     generateInstruction("POPS", ans, NULL, NULL);
 }
 
@@ -188,13 +205,30 @@ void genClears(){
 }
 
 /* detecting input */
-void genRead(int type, char* variable,  char* variable2){
+void genRead(int type, char* variable,  char* variable2, int frame){
     char* ans = (char*) malloc(sizeof(char) * strlen(variable) + 10);
-    sprintf(ans, "TF@%s", variable);
-
+    switch (frame)
+    {
+    case 0:
+        sprintf(ans, "LF@%s", variable);
+        break;
+    case 1:
+        sprintf(ans, "GF@%s", variable);    
+        break;
+    case 2:
+        sprintf(ans, "TF@%s", variable);
+        break;
+    default:
+        break;
+    }
+    if(strcmp(variable, "_") == 0){
+        ans = "GF@_";
+    }
     char* ans2 = (char*) malloc(sizeof(char) * strlen(variable2) + 10);
-    sprintf(ans2, "TF@%s", variable2);
-
+    sprintf(ans2, "LF@%s", variable2);
+    if(strcmp(variable2, "_") == 0){
+        ans2 = "GF@_";
+    }
 
     if(type == F_INPUTI){
         char *label = makeLabel(++inputCnt,"inputi");
@@ -292,7 +326,7 @@ void genForEnd(int forcount){
 }
 
 /* print to output */
-void genWrite(int Type, char* content){
+void genWrite(int Type, char* content, int frame){
     char* ans = (char*) malloc(sizeof(char) * strlen(content) * 10);
     if(Type == T_INT){
         sprintf(ans, "int@%s", content);
@@ -306,7 +340,20 @@ void genWrite(int Type, char* content){
         sprintf(ans, "string@%s", content);
     }
     else if(Type == ID){
-        sprintf(ans, "TF@%s", content);
+        switch (frame)
+        {
+        case 0:
+            sprintf(ans, "LF@%s", content);
+            break;
+        case 1:
+            sprintf(ans, "GF@%s", content);    
+            break;
+        case 2:
+            sprintf(ans, "TF@%s", content);
+            break;
+        default:
+            break;
+        }
     }
     else{}
     generateInstruction("WRITE", ans, NULL, NULL);
@@ -364,41 +411,53 @@ void genFuncEnd(){
 
 void genInt2Fl(char* number, int type, char* string){
     char* ans = (char*) malloc(sizeof(char) * strlen(number) + 10);
-    sprintf(ans, "TF@%s", number);
+    sprintf(ans, "LF@%s", number);
+    if(strcmp(number, "_") == 0){
+        ans = "GF@_";
+    }
     char* line = (char*) malloc(sizeof(char) * strlen(string) + 10);
     if(type == T_INT){
         sprintf(line, "int@%s", string);
     }
     else{
-        sprintf(line, "TF@%s", string);
+        sprintf(line, "LF@%s", string);
+        if(strcmp(string, "_") == 0){
+            line = "GF@_";
+        }
     }
     generateInstruction("INT2FLOAT", ans, line, NULL);
 }
 
 void genFl2Int(char* number, int type, char* string){
     char* ans = (char*) malloc(sizeof(char) * strlen(number) * 10);
-    sprintf(ans, "TF@%s", number);
+    sprintf(ans, "LF@%s", number);
+    if(strcmp(number, "_") == 0){
+        ans = "GF@_";
+    }
     char* line = (char*) malloc(sizeof(char) * strlen(string) * 10);
     if(type == T_FLOAT){
-        double number = strtod(string,NULL);
-        sprintf(line, "float@%a", number);
+        double fl_number = strtod(string,NULL);
+        sprintf(line, "float@%a", fl_number);
     }
     else{
-        sprintf(line, "TF@%s", string);
+        sprintf(line, "LF@%s", string);
+        if(strcmp(string, "_") == 0){
+            line = "GF@_";
+        }
     }
     generateInstruction("FLOAT2INT", ans, line, NULL);
 }
 
 void genStrlen(char* number, int type, char* string){
     char* ans = (char*) malloc(sizeof(char) * strlen(number) + 10);
-    sprintf(ans, "TF@%s", number);
+    sprintf(ans, "LF@%s", number);
     char* line = (char*) malloc(sizeof(char) * strlen(string) + 10);
     if(type == T_STRING){
         string = stringconvertor(string);
         sprintf(line, "string@%s", string);
     }
     else{
-        sprintf(line, "TF@%s", string);
+        sprintf(line, "LF@%s", string);
     }
     generateInstruction("STRLEN", ans, line, NULL);
 }

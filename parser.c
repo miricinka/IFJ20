@@ -479,6 +479,8 @@ int stat(varNode *treePtr)
 
                         //call precedence parser
                         precResult = prec_parse(treePtr, token, tokenStr);
+
+                        genPops(stringID.str, setframe);
                         token = precResult.end_token;
                         //this is not conditional expression
                         if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - var def cannot be boolean");
@@ -513,6 +515,7 @@ int stat(varNode *treePtr)
                 genForContinue(numberoffor);
                 if (token == ID) //third part of for header
                 {
+                        setframe = 2;
                         //assign token
                         token = get_new_token(&tokenStr);
                         if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
@@ -530,6 +533,7 @@ int stat(varNode *treePtr)
 
                         //left bracket token loaded in precedence parser
                         if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
+                        setframe = 0;
                 }
                 genForContinueEnd(numberoffor);
                 genForBody(numberoffor);
@@ -600,7 +604,8 @@ int stat(varNode *treePtr)
 
                         //EOL token 
                         if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
-                        genPops(stringID.str);
+                        
+                        genPops(stringID.str, setframe);
                 }
                 
                 else if (token == ASSIGN) // <ass_stat> <ass_ids> = <ass_exps> ONLY FOR ONE VARIABLE!!!
@@ -888,7 +893,7 @@ int stat(varNode *treePtr)
                         {
                                 if (variableType != precResult.end_datatype){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment"); }
                         }
-                        genPops(stringID.str);
+                        genPops(stringID.str, setframe);
                 }
                 else if (token == COMMA)//more IDs on left side
                 {
@@ -1108,7 +1113,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         if (token == F_INPUTI)
         {
                 //generate read integer instruction
-                genRead(F_INPUTI,readFunctionID.str, nextID.str);
+                genRead(F_INPUTI,readFunctionID.str, nextID.str, setframe);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1134,7 +1139,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         else if (token == F_INPUTF)
         {
                 //generate read float instruction
-                genRead(F_INPUTF,readFunctionID.str, nextID.str);
+                genRead(F_INPUTF,readFunctionID.str, nextID.str, setframe);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1160,7 +1165,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         else if (token == F_INPUTS)
         {
                 //generate read string instruction
-                genRead(F_INPUTS,readFunctionID.str, nextID.str);
+                genRead(F_INPUTS,readFunctionID.str, nextID.str, setframe);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1526,7 +1531,6 @@ int fun_params(varNode *treePtr)
         //generate definition of variable in function header
         setframe = 2;
         genDefvar(tokenStr.str, setframe);
-        setframe = 0;
         //token must be keyword for type
         token = get_new_token(&tokenStr);
         if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) errorMsg(ERR_SYNTAX, "Incorrect or missing param type");
@@ -1547,6 +1551,7 @@ int fun_params(varNode *treePtr)
 
         //recursively call fun_params if it is comma or end parameterrs
         token = get_new_token(&tokenStr);
+        setframe = 0;
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
         if (token == COMMA) return fun_params(treePtr);
         //sucesfully handled
@@ -1624,7 +1629,7 @@ int print_params(varNode *treePtr)
                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                 if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
         }
-        genWrite(token, tokenStr.str);
+        genWrite(token, tokenStr.str, setframe);
         //if comma multiple parameters are present recursively call print_params
         token = get_new_token(&tokenStr);
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
