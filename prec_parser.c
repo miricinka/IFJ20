@@ -221,9 +221,6 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 			arithm_semantic_check(stackPtr);
 			genAdds();
 		}
-
-		//arithm_semantic_check(stackPtr);
-		//genAdds();
 	//E -> E+E
 	}else if(topNT->tokenNum == NT_MUL){
 		arithm_semantic_check(stackPtr);
@@ -269,31 +266,31 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
 
 	//E -> E==E
 	}else if(topNT->tokenNum == NT_EQ){
-		genEQS();
 		reduce_boolean(stackPtr);
+		genEQS();
 	//E -> E<E
 	}else if(topNT->tokenNum == NT_LESS){
-		genLTS();
 		reduce_boolean(stackPtr);
+		genLTS();
 	//E -> E>E
 	}else if(topNT->tokenNum == NT_GREAT){
-		genGTS();
 		reduce_boolean(stackPtr);
+		genGTS();
 	//E -> E!=E
 	}else if(topNT->tokenNum == NT_NEQ){
+		reduce_boolean(stackPtr);
 		genEQS();
 		genNOTS();
-		reduce_boolean(stackPtr);
 	//E -> E>=E
 	}else if(topNT->tokenNum == NT_LEQ){
+		reduce_boolean(stackPtr);
 		genLTS();
 		genNOTS();
-		reduce_boolean(stackPtr);
 	//E -> E<=E
 	}else if(topNT->tokenNum == NT_GEQ){
+		reduce_boolean(stackPtr);
 		genGTS();
 		genNOTS();
-		reduce_boolean(stackPtr);
 
 	}else{
 		errorMsg(ERR_SYNTAX, "Non existing rule for expression");
@@ -306,8 +303,6 @@ void reduce(varNode *treePtr, struc_prec_stack *stackPtr, struc_token *topNT){
  checks syntax and semantics of expression
  returns final datatype and end token */
 prec_end_struct prec_parse(varNode *treePtr, int new_token, string tokenStr){
-
-	genClears();
 
 	string testStr; strInit(&testStr); strClear(&testStr);
 	//string tokenStr; strInit(&tokenStr);

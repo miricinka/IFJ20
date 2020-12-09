@@ -13,6 +13,7 @@
  * 
  * AUTHORS:
  *  Aleš Řezáč          <xrezac21@stud.fit.vutbr.cz>
+ *  Taken from reference compiler by VUT FIT in Brno
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +50,6 @@ void listNext(tListOfInstr *L);
 void listGoto(tListOfInstr *L, void *gotoInstr);
 void *listGetPointerLast(tListOfInstr *L);
 tInstr *listGetData(tListOfInstr *L);
-void printList(tListOfInstr *L);
+void printList(tListOfInstr *L); // print all saved instructions, delete list afterwards
 
 #endif //IFJ_ILIST_H
