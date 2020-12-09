@@ -93,12 +93,13 @@ tInstr *listGetData(tListOfInstr *L)
   else return &(L->active->Instruction);
 }
 
+/* List printing */
 void printList(tListOfInstr *L)
 {
-  listFirst(L);
-  while (L->active != NULL)
+  listFirst(L); // start from first instruction
+  while (L->active != NULL) // active part is not empty
   {
-    if(L->active->Instruction.instType != NULL){
+    if(L->active->Instruction.instType != NULL){ // if there is something, print it or print EOL and go to next instruction
       printf("%s", L->active->Instruction.instType);
     }
     else{

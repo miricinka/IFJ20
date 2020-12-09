@@ -32,7 +32,7 @@ int levelOfScope = 1; //scope of variables, increments with more levels of scope
 tListOfInstr *list; //list of generated instructions
 static int elsecount = 1;
 static int forcount = 1;
-static int setframe = 0;
+
 
 //end checkers
 int returnCalled = 0; //checks if return is called in function with returns
@@ -462,12 +462,11 @@ int stat(varNode *treePtr)
 
                 if (token == ID) //first part of header is present
                 {
-                        setframe = 1;
                         //save id of variable to stringID
                         string stringID;
                         strInit(&stringID);
                         strCopyString(&stringID, &tokenStr);
-                        genDefvar(stringID.str, setframe);
+                        genDefvar(stringID.str);
                         //token for variable definition
                         token = get_new_token(&tokenStr);
                         if (token != VAR_DEF) errorMsg(ERR_SYNTAX, "FOR statement - must be var def");
@@ -480,7 +479,7 @@ int stat(varNode *treePtr)
                         //call precedence parser
                         precResult = prec_parse(treePtr, token, tokenStr);
 
-                        genPops(stringID.str, setframe);
+                        genPops(stringID.str);
                         token = precResult.end_token;
                         //this is not conditional expression
                         if (precResult.end_datatype == TYPE_BOOL) errorMsg(ERR_SEMANTIC_COMPATIBILITY, "FOR statement - var def cannot be boolean");
@@ -490,7 +489,6 @@ int stat(varNode *treePtr)
                         //add variable to tree
                         BSTInsert(treePtr, stringID, precResult.end_datatype, levelOfScope);
                         strFree(&stringID);
-                        setframe = 0;
                 }
                 //second part of for header is condition and it is not optional
 
@@ -515,7 +513,6 @@ int stat(varNode *treePtr)
                 genForContinue(numberoffor);
                 if (token == ID) //third part of for header
                 {
-                        setframe = 2;
                         //assign token
                         token = get_new_token(&tokenStr);
                         if (token != ASSIGN) errorMsg(ERR_SYNTAX, "FOR statement - must be assign statement");
@@ -533,7 +530,6 @@ int stat(varNode *treePtr)
 
                         //left bracket token loaded in precedence parser
                         if (token != L_BR) errorMsg(ERR_SYNTAX, "FOR statement - '{' missing");
-                        setframe = 0;
                 }
                 genForContinueEnd(numberoffor);
                 genForBody(numberoffor);
@@ -585,7 +581,7 @@ int stat(varNode *treePtr)
                         //if id on left side of definition was "_" it cannot be defined
                         if (strcmp(stringID.str, "_") == 0) { errorMsg(ERR_SEMANTIC_DEFINITION, "Can not declare '_'"); }
 
-                        genDefvar(stringID.str, setframe);
+                        genDefvar(stringID.str);
 
                         //token for precedence parser
                         token = get_new_token(&tokenStr);
@@ -605,7 +601,7 @@ int stat(varNode *treePtr)
                         //EOL token 
                         if (token != EOL) errorMsg(ERR_SYNTAX, "Incorrect statement declaration - missing EOL");
                         
-                        genPops(stringID.str, setframe);
+                        genPops(stringID.str);
                 }
                 
                 else if (token == ASSIGN) // <ass_stat> <ass_ids> = <ass_exps> ONLY FOR ONE VARIABLE!!!
@@ -818,7 +814,7 @@ int stat(varNode *treePtr)
                         else if (token != T_INT && token != T_STRING && token != T_FLOAT && token != ID && token != L_PAR) errorMsg(ERR_SYNTAX, "ASSIGN statement - bad token after =");
 
 
-                        //ulozit typ navratovej hodnoty premennej
+                        //save variable return value type
                         //if it is ID check if it is declared
                         if (token == ID)
                         {
@@ -865,8 +861,9 @@ int stat(varNode *treePtr)
                                         //token must be comma or EOL
                                         token = get_new_token(&tokenStr);
 
-                                        //in this case where function is on right side of assign there cant be another id or function or vaule 
+                                        //in this case where function is on right side of assign there cant be another id or function or value 
                                         if (token != EOL) errorMsg(ERR_SYNTAX, "RETURN statement - EOL missing");
+                                        genPops(stringID.str);
                                         return result;
                                 }
                                                                
@@ -893,7 +890,7 @@ int stat(varNode *treePtr)
                         {
                                 if (variableType != precResult.end_datatype){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "Incorrect statement assign - wrong type assigment"); }
                         }
-                        genPops(stringID.str, setframe);
+                        genPops(stringID.str);
                 }
                 else if (token == COMMA)//more IDs on left side
                 {
@@ -953,7 +950,7 @@ int stat(varNode *treePtr)
                         
                 }
                 
-                // return was call so it is set to zero
+                // return was called so it is set to zero
                 returnCalled = 0;             
                 
                 return return_values(treePtr);
@@ -1097,6 +1094,7 @@ int ass_stat(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
  */
 int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,funList *assignAssignList,int assignAssignmentCounter, string readFunctionID, string nextID)
 {
+        printf("%s\n\n %s\n", readFunctionID.str, nextID.str);
         int result = 0;
         prec_end_struct precResult;
 
@@ -1113,7 +1111,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         if (token == F_INPUTI)
         {
                 //generate read integer instruction
-                genRead(F_INPUTI,readFunctionID.str, nextID.str, setframe);
+                genRead(F_INPUTI,readFunctionID.str, nextID.str);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1139,7 +1137,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         else if (token == F_INPUTF)
         {
                 //generate read float instruction
-                genRead(F_INPUTF,readFunctionID.str, nextID.str, setframe);
+                genRead(F_INPUTF,readFunctionID.str, nextID.str);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1165,7 +1163,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         else if (token == F_INPUTS)
         {
                 //generate read string instruction
-                genRead(F_INPUTS,readFunctionID.str, nextID.str, setframe);
+                genRead(F_INPUTS,readFunctionID.str, nextID.str);
 
                 //left param token
                 token = get_new_token(&tokenStr);
@@ -1192,6 +1190,13 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         {
                 string stringSUBSTR;                                     
 
+                int type1;
+                int type2;
+                int type3;
+                char* content1;
+                char* content2;
+                char* content3;
+
                 //left param token
                 token = get_new_token(&tokenStr);
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing '(' ");
@@ -1201,6 +1206,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 
                 if (token == ID)
                 {
+                        type1 = ID;
                         //check if ID is declared
                         bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                         if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
@@ -1212,6 +1218,10 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_COMPATIBILITY, "SUBSTR statement - ID must be string"); }
                         strFree(&stringSUBSTR);
                 }
+                else{
+                        type1 = T_STRING;
+                }
+                content1 = tokenStr.str;
 
                 //comma token
                 token = get_new_token(&tokenStr);
@@ -1223,6 +1233,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 
                 if (token == ID)
                 {
+                        type2 = ID;
                         //check if ID is declared
                         bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                         if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
@@ -1234,6 +1245,10 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - ID must be integer"); }
                         strFree(&stringSUBSTR);
                 }
+                else{
+                        type2 = T_INT;
+                }
+                content2 = tokenStr.str;
 
                 //comma token
                 token = get_new_token(&tokenStr);
@@ -1245,6 +1260,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 
                 if (token == ID)
                 {
+                        type3 = ID; 
                         //check if ID is declared
                         bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                         if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "SUBSTR not declared");
@@ -1256,7 +1272,12 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "SUBSTR statement - ID must be integer"); }
                         strFree(&stringSUBSTR);
                 }
-
+                else{
+                        type3 = T_INT;
+                }
+                content3 = tokenStr.str;
+                
+                genSubstrFunc(type1, content1, type2, content2, type3, content3);
                 //Right param token
                 token = get_new_token(&tokenStr);
                 if (token != R_PAR) errorMsg(ERR_SYNTAX, "SUBSTR statement -missing ')'");
@@ -1265,6 +1286,10 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "SUBSTR statement - missing EOL ");
 
+                //save substr function values
+                genPops(readFunctionID.str);
+                genPops(nextID.str);
+                
                 //check if return types are equal
                 assignAssignmentCounter++;
                 funListAdd(assignAssignList,T_STRING,assignAssignmentCounter);
@@ -1293,10 +1318,14 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
                         strInit(&stringCHR);
                         strCopyString(&stringCHR, &tokenStr);
+                        genChr(ID, tokenStr.str);
                         //check if type of input is float
                         int variableType = getType(*treePtr, stringCHR);
                         if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "CHR statement - ID must be integer"); }
                         strFree(&stringCHR);
+                }
+                else{
+                        genChr(T_INT, tokenStr.str);
                 }
 
                 //Right param token
@@ -1306,6 +1335,9 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "CHR statement - missing EOL ");
+
+                genPops(readFunctionID.str);
+                genPops(nextID.str);
 
                 //check if return types are equal
                 assignAssignmentCounter++;
@@ -1320,6 +1352,11 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
         {
                 string stringORD;                                     
 
+                int type1;
+                int type2;
+                char* content1;
+                char* content2;
+
                 //left param token
                 token = get_new_token(&tokenStr);
                 if (token != L_PAR) errorMsg(ERR_SYNTAX, "ORD statement - missing '(' ");
@@ -1329,6 +1366,7 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 
                 if (token == ID)
                 {
+                        type1 = ID; 
                         //check if ID is declared
                         bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                         if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
@@ -1340,17 +1378,21 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         if (variableType != T_STRING){ errorMsg(ERR_SEMANTIC_PARAM, "CHR statement - ID must be string"); }
                         strFree(&stringORD);
                 }
-
+                else{
+                        type1 = T_STRING;
+                }
+                content1 = tokenStr.str;
                 //comma token
                 token = get_new_token(&tokenStr);
                 if (token != COMMA) errorMsg(ERR_SYNTAX, "ORD statement - comma missing between parameters");
 
-                //token for precedence parser
+                //token must be ID or integer
                 token = get_new_token(&tokenStr);
                 if (token != ID && token != T_INT) errorMsg(ERR_SEMANTIC_PARAM, "ORD statement - token must be ID or integer");
                 
                 if (token == ID)
                 {
+                        type2 = ID;
                         //check if ID is declared
                         bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                         if (isIDDeclared == false) errorMsg(ERR_SEMANTIC_DEFINITION, "ID not declared");
@@ -1362,7 +1404,14 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                         if (variableType != T_INT){ errorMsg(ERR_SEMANTIC_PARAM, "ORD statement - ID must be integer"); }
                         strFree(&stringORD);
                 }
+                else{
+                        type2 = T_INT;
+                }
+                content2 = tokenStr.str;
 
+                //generate function
+                genOrdFunc(type1, content1, type2, content2);
+                
                 //Right param token
                 token = get_new_token(&tokenStr);
                 if (token != R_PAR) errorMsg(ERR_SYNTAX, "ORD statement -missing ')'");
@@ -1370,6 +1419,10 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
                 //EOL token
                 token = get_new_token(&tokenStr);
                 if (token != EOL) errorMsg(ERR_SYNTAX, "ORD statement - missing EOL ");
+                
+                //save results
+                genPops(readFunctionID.str);
+                genPops(nextID.str);
 
                 //check if return types are equal
                 assignAssignmentCounter++;
@@ -1422,6 +1475,8 @@ int ass_exps(varNode *treePtr,funList *assignVariablesList,int assignVarCounter,
 
                         //in this case where function is on right side of assign there cant be another id or function or vaule 
                         if (token != EOL) errorMsg(ERR_SYNTAX, "ASSIGN statement - EOL missing");
+                        genPops(nextID.str);
+                        genPops(readFunctionID.str);
                         return result;
                 }
               
@@ -1529,8 +1584,7 @@ int fun_params(varNode *treePtr)
         if (isIDDeclared == true) { errorMsg(ERR_SEMANTIC_DEFINITION, "ID is already declared"); }
 
         //generate definition of variable in function header
-        setframe = 2;
-        genDefvar(tokenStr.str, setframe);
+        genDefvar(tokenStr.str);
         //token must be keyword for type
         token = get_new_token(&tokenStr);
         if (token != KW_FLOAT64 && token != KW_INT && token != KW_STRING) errorMsg(ERR_SYNTAX, "Incorrect or missing param type");
@@ -1551,7 +1605,6 @@ int fun_params(varNode *treePtr)
 
         //recursively call fun_params if it is comma or end parameterrs
         token = get_new_token(&tokenStr);
-        setframe = 0;
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "Incorrect params");
         if (token == COMMA) return fun_params(treePtr);
         //sucesfully handled
@@ -1629,7 +1682,7 @@ int print_params(varNode *treePtr)
                 bool isIDDeclared = isDeclared(*treePtr, tokenStr);
                 if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
         }
-        genWrite(token, tokenStr.str, setframe);
+        genWrite(token, tokenStr.str);
         //if comma multiple parameters are present recursively call print_params
         token = get_new_token(&tokenStr);
         if (token != COMMA && token != R_PAR) errorMsg(ERR_SYNTAX, "PRINT function - Incorrect params");
@@ -1667,9 +1720,10 @@ int return_values(varNode *treePtr)
         else if (token == EOL && multipleParams == 1)  errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
 
         //check if variable is declared
-        bool isIDDeclared = isDeclared(*treePtr, tokenStr);
-        if (isIDDeclared != true && token == ID) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
-
+        if(token == ID){
+                bool isIDDeclared = isDeclared(*treePtr, tokenStr);
+                if (isIDDeclared != true) {errorMsg(ERR_SEMANTIC_DEFINITION, "ID is not declared");}
+        }
         //call precedence parser with tree of variables, current token, and string of token
         precResult = prec_parse(treePtr, token, tokenStr);
         //token loaded last first token after expression
@@ -1678,12 +1732,12 @@ int return_values(varNode *treePtr)
         //check return types
         funReturnCounter++;
         addReturn(&funTree,funDeclaredName,precResult.end_datatype,funReturnCounter);
-        
+             
         //token was already loaded in precedence parser
         //recursively calling values if comma or end handling if EOL
         if (token != COMMA && token != EOL) errorMsg(ERR_SYNTAX, "Return function - Incorrect params");
         if (token == COMMA) return return_values(treePtr);
-
+        
         //sanity check
         funReturnCheck(&funTree,funDeclaredName,funReturnCounter);
         return result;
