@@ -5,7 +5,7 @@
 
 ## Stakeholders 
 * [Tomáš Hrúz](https://github.com/Zokinko), main author of Parser
-* [Mirka Kolaříková](https://github.com/miricinka), main author of Scanner, Precedence parser, Generator
+* [Mirka Kolaříková](https://github.com/miricinka), main author of Scanner, Precedence parser, Code Generator
 * [Aleš Řezáč](https://github.com/xrezac21), touched Generator
 * [Martin Žovinec](https://github.com/xzovin00), team leader, tester, main author of Symtable
 
