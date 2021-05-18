@@ -1,13 +1,13 @@
 # Compiler for Go-like programming language
 
-* Implementation of a Go-like language compiler done in C. 
+* Implementation of a Go-like language IFJ20 compiler done in C. 
 * [BUT FIT](https://www.fit.vut.cz/) school project from the subject [Formal Languages and Compilers](https://www.fit.vut.cz/study/course/13305/.en) (IFJ).
 
 ## Stakeholders 
 * [Tomáš Hrúz](https://github.com/Zokinko), main author of Parser
-* [Mirka Kolaříková](https://github.com/miricinka), main author of Scanner
+* [Mirka Kolaříková](https://github.com/miricinka), main author of Scanner, Precedence parser
 * [Aleš Řezáč](https://github.com/xrezac21), touched Generator
-* [Martin Žovinec](https://github.com/xzovin00), team leader, main author of Symtable
+* [Martin Žovinec](https://github.com/xzovin00), team leader, tester, main author of Symtable
 
 ## Timeline
 * Deadlines:
