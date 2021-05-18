@@ -1,6 +1,6 @@
 # Compiler for Go-like programming language
 
-* Implementation of a Go-like language IFJ20 compiler done in C. 
+* Implementation of a Go-like language IFJ20 compiler in C. 
 * [BUT FIT](https://www.fit.vut.cz/) school project from the subject [Formal Languages and Compilers](https://www.fit.vut.cz/study/course/13305/.en) (IFJ).
 
 ## Stakeholders 
