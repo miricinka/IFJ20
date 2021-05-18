@@ -4,15 +4,13 @@
 * [BUT FIT](https://www.fit.vut.cz/) school project from the subject [Formal Languages and Compilers](https://www.fit.vut.cz/study/course/13305/.en) (IFJ).
 
 ## Stakeholders 
-* [Tomáš Hrúz](https://github.com/Zokinko), the One with the C# Mind
-* [Mirka Kolaříková](https://github.com/miricinka), the One who actually codes
-* [Aleš Řezáč](https://github.com/xrezac21), the brilliant Mathematician
-* [Martin Žovinec](https://github.com/xzovin00), the planning Mastermind
+* [Tomáš Hrúz](https://github.com/Zokinko), main author of Parser
+* [Mirka Kolaříková](https://github.com/miricinka), main author of Scanner
+* [Aleš Řezáč](https://github.com/xrezac21), touched Generator
+* [Martin Žovinec](https://github.com/xzovin00), team leader, main author of Symtable
 
 ## Timeline
 * Deadlines:
 	* 30.9.2020 Team leader registration
 	* 2.10.2020 Adding members to the team
-	* 20.11.2020 The Ideal Deadline
-	* 27.11.2020 The Soft Deadline
 	* **9.12.2020 The Absolute Deadline**
