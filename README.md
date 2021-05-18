@@ -14,3 +14,11 @@
 	* 30.9.2020 Team leader registration
 	* 2.10.2020 Adding members to the team
 	* **9.12.2020 The Final Deadline**
+
+##Hodnocení
+Procentuální hodnocení modulů překladače:
+Lexikální analýza (detekce chyb): 100 % (170/170)
+Syntaktická analýza (detekce chyb): 96 % (192/200)
+Sémantická analýza (detekce chyb): 87 % (297/338)
+Sémantické/běhové chyby (detekce): 50 % (13/26)
+Interpretace přeloženého kódu: 39 % (332/850)
